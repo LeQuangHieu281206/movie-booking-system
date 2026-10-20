@@ -9,7 +9,9 @@ import com.ttcsn.movie.showtime.entity.enums.SeatStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 /**
  *
  * @author quanghieu
@@ -18,4 +20,6 @@ import java.util.List;
 public interface ShowtimeSeatRepository extends JpaRepository<ShowtimeSeat, Long> {
     List<ShowtimeSeat> findByShowtime_ShowtimeId(Long showtimeId);
     List<ShowtimeSeat> findByShowtime_ShowtimeIdAndStatus(Long showtimeId, SeatStatus status);
+    Optional<ShowtimeSeat> findByShowtime_ShowtimeIdAndSeatId(Long showtimeId, Long seatId);
+    List<ShowtimeSeat> findByShowtime_ShowtimeIdAndSeatIdIn(Long showtimeId, Collection<Long> seatIds);
 }

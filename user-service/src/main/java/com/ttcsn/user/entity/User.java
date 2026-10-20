@@ -14,9 +14,7 @@ import com.ttcsn.user.entity.enums.UserRole;
 import com.ttcsn.user.entity.User;
 import com.ttcsn.user.entity.enums.UserRole;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 /**
@@ -50,7 +48,6 @@ public class User {
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false)
     private UserRole role;
 

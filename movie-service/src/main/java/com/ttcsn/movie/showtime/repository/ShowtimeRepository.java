@@ -12,6 +12,11 @@ import java.util.List;
 @Repository
 public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
     List<Showtime> findByMovie_MovieId(Long movieId);
+
+    /** JOIN FETCH phim trong 1 câu — danh sách 1.000+ suất/phim không quét lazy từng dòng. */
+    @Query("SELECT s FROM Showtime s JOIN FETCH s.movie WHERE s.movie.movieId = :movieId")
+    List<Showtime> findAllWithMovieByMovieId(@Param("movieId") Long movieId);
+
     List<Showtime> findByRoomId(Long roomId);
 
     // SOA: s.room -> s.roomId (Room đã deproxy thành FK id)

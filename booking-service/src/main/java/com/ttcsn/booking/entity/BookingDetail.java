@@ -21,12 +21,13 @@ public class BookingDetail {
     @Column(name = "booking_detail_id")
     private Long bookingDetailId;
 
-    // SOA: Booking cùng module; ShowtimeSeat thuộc movie-service -> FK id thuần
+    // SOA: Booking cùng module; Seat vật lý thuộc venue-service -> FK id thuần (mô hình showtime_seats theo tương tác)
     @Column(name = "booking_id", nullable = false)
     private Long bookingId;
 
-    @Column(name = "showtime_seat_id", nullable = false)
-    private Long showtimeSeatId;
+    /** Id ghế vật lý (bảng seats của venue-service) — ghế chưa có bản ghi mặc định AVAILABLE. */
+    @Column(name = "seat_id", nullable = false)
+    private Long seatId;
 
     @Column(nullable = false, columnDefinition = "numeric")
     private BigDecimal price;

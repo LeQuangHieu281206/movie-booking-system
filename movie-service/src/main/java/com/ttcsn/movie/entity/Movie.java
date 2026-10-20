@@ -17,8 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
  
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -62,13 +60,11 @@ public class Movie {
     private String trailerUrl;
  
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "age_restriction", columnDefinition = "age_restriction_enum")
+    @Column(name = "age_restriction", columnDefinition = "varchar(32)")
     private AgeRestriction ageRestriction;
  
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "status", columnDefinition = "movie_status_enum")
+    @Column(name = "status", columnDefinition = "varchar(32)")
     private MovieStatus status;
  
     @Column(name = "director")
