@@ -62,14 +62,14 @@ public class PaymentCompletedListener {
     }
 
     private void releaseSeatsOnFailure(Booking booking) {
-        List<Long> showtimeSeatIds = bookingDetailRepository.findByBookingId(booking.getBookingId()).stream()
-                .map(BookingDetail::getShowtimeSeatId)
+        List<Long> seatIds = bookingDetailRepository.findByBookingId(booking.getBookingId()).stream()
+                .map(BookingDetail::getSeatId)
                 .toList();
-        if (showtimeSeatIds.isEmpty()) {
+        if (seatIds.isEmpty()) {
             return;
         }
         try {
-            showtimeClient.releaseSeats(new SeatIdsRequest(booking.getShowtimeId(), showtimeSeatIds));
+            showtimeClient.releaseSeats(new SeatIdsRequest(booking.getShowtimeId(), seatIds, null));
             log.info("[booking-service] Đã trả ghế về AVAILABLE cho booking {} (bù trừ sau FAILED)",
                     booking.getBookingId());
         } catch (RuntimeException ex) {

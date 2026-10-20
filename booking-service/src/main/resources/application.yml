@@ -11,8 +11,8 @@ spring:
 
   # ---------- DataSource: Supabase (DB chính, cấu hình mặc định) ----------
   datasource:
-    url: jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0
-    username: postgres.eyiwxhziwivaodmjtsqc
+    url: jdbc:postgresql://aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0
+    username: postgres.tpofaymsrfgveiqjtocx
     password: daihoccongnghiephanoi
     driver-class-name: org.postgresql.Driver
   jpa:

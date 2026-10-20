@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface BookingDetailRepository extends JpaRepository<BookingDetail, Long> {
-    List<BookingDetail> findByBookingId(Long bookingId);            // SOA: thay findByBooking_BookingId
-    List<BookingDetail> findByShowtimeSeatId(Long showtimeSeatId);  // SOA: thay findByShowtimeSeat_ShowtimeSeatId
+    List<BookingDetail> findByBookingId(Long bookingId); // SOA: thay findByBooking_BookingId
+
+    List<BookingDetail> findBySeatId(Long seatId); // mô hình showtime_seats theo tương tác: ghế vật lý của venue
 }

@@ -104,16 +104,16 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Không tìm thấy phòng chiếu với roomId = " + showtime.roomId());
         }
 
-        // 4. Giữ các ghế (movie-service cập nhật SeatStatus trong internal transaction)
+        // 4. Chốt các ghế (movie-service chèn/update bản ghi theo seatId vật lý; kiểm tra bên service đó)
         SeatHoldResult hold = showtimeClient.holdSeats(
-                new SeatIdsRequest(request.showtimeId(), request.showtimeSeatIds()));
+                new SeatIdsRequest(request.showtimeId(), request.seatIds(), request.holdBy()));
         if (!hold.success()) {
             throw new SeatAlreadyBookedException("Một hoặc nhiều ghế đã được đặt bởi người khac: "
                     + String.join(", ", hold.unavailableSeatIds().stream().map(String::valueOf).toList()));
         }
 
         try {
-            // 4. Booking + BookingDetail (transaction cục bộ)
+            // 5. Booking + BookingDetail (transaction cục bộ)
             String generatedBookingCode = "BK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             Booking booking = Booking.builder()
                     .bookingCode(generatedBookingCode)
@@ -127,11 +127,11 @@ public class BookingServiceImpl implements BookingService {
             Booking savedBooking = bookingRepository.save(booking);
 
             BigDecimal pricePerSeat = request.totalAmount()
-                    .divide(BigDecimal.valueOf(request.showtimeSeatIds().size()), 2, RoundingMode.HALF_UP);
-            List<BookingDetail> details = request.showtimeSeatIds().stream()
+                    .divide(BigDecimal.valueOf(request.seatIds().size()), 2, RoundingMode.HALF_UP);
+            List<BookingDetail> details = request.seatIds().stream()
                     .map(seatId -> BookingDetail.builder()
                             .bookingId(savedBooking.getBookingId())
-                            .showtimeSeatId(seatId)
+                            .seatId(seatId)
                             .price(pricePerSeat)
                             .createdAt(OffsetDateTime.now())
                             .build())
@@ -141,8 +141,8 @@ public class BookingServiceImpl implements BookingService {
             return convertToResponse(savedBooking);
 
         } catch (RuntimeException ex) {
-            // 5. Bỏ transaction sẽ được thay bằng Saga orchestration (Step 5) — bù trừ ghế ngay bây giờ
-            showtimeClient.releaseSeats(new SeatIdsRequest(request.showtimeId(), request.showtimeSeatIds()));
+            // 6. Bù trừ ghế ngay khi transaction cục bộ fail (Saga orchestration ở bước sau)
+            showtimeClient.releaseSeats(new SeatIdsRequest(request.showtimeId(), request.seatIds(), request.holdBy()));
             throw ex;
         }
     }
@@ -165,11 +165,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void releaseBookingSeats(Long bookingId, Long showtimeId) {
-        List<Long> showtimeSeatIds = bookingDetailRepository.findByBookingId(bookingId).stream()
-                .map(BookingDetail::getShowtimeSeatId)
+        List<Long> seatIds = bookingDetailRepository.findByBookingId(bookingId).stream()
+                .map(BookingDetail::getSeatId)
                 .toList();
         try {
-            showtimeClient.releaseSeats(new SeatIdsRequest(showtimeId, showtimeSeatIds));
+            showtimeClient.releaseSeats(new SeatIdsRequest(showtimeId, seatIds, null));
             log.info("[booking-service] Đã trả ghế về AVAILABLE cho booking {} (bù trừ)", bookingId);
         } catch (RuntimeException ex) {
             log.error("[booking-service] KHÔNG trả được ghế về AVAILABLE cho booking {}: {}",

@@ -25,7 +25,7 @@ spring:
             - id: movie-service
               uri: http://localhost:8081
               predicates:
-                - Path=/api/getMovies,/api/searchMovies,/api/getMovieById,/api/createMovie,/api/updateMovie,/api/deleteMovie,/api/getGenres,/api/getGenreById,/api/createGenre,/api/updateGenre,/api/deleteGenre,/api/getShowtimes,/api/getShowtimeById,/api/getShowtimeSeats,/api/createShowtime,/api/updateShowtime,/api/deleteShowtime
+                - Path=/api/getMovies,/api/searchMovies,/api/getMovieById,/api/createMovie,/api/updateMovie,/api/deleteMovie,/api/getGenres,/api/getGenreById,/api/createGenre,/api/updateGenre,/api/deleteGenre,/api/getShowtimes,/api/getShowtimeById,/api/getShowtimeSeats,/api/holdShowtimeSeat,/api/releaseShowtimeSeat,/api/createShowtime,/api/updateShowtime,/api/deleteShowtime
 
             # ---------------- venue-service :8083 (Cinema + Room + Seat) ----------------
             - id: venue-service

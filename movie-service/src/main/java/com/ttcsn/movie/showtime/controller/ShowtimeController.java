@@ -53,6 +53,22 @@ public class ShowtimeController {
         return ResponseEntity.ok(showtimeService.getShowtimeSeats(showtimeId));
     }
 
+    /** Giữ chỗ tạm 10 phút khi khách bấm chọn ghế (mô hình showtime_seats phát sinh theo tương tác). */
+    @PostMapping("/holdShowtimeSeat")
+    public ResponseEntity<com.ttcsn.movie.showtime.dto.response.ShowtimeSeatView> holdShowtimeSeat(
+            @Valid @RequestBody com.ttcsn.movie.showtime.dto.request.ShowtimeSeatInteractionRequest request) {
+        return ResponseEntity.ok(showtimeService.holdShowtimeSeat(
+                request.showtimeId(), request.seatId(), request.holdBy()));
+    }
+
+    /** Bỏ giữ chỗ khi khách bỏ chọn ghế (chỉ người giữ hoặc giữ đã hết hạn). */
+    @PostMapping("/releaseShowtimeSeat")
+    public ResponseEntity<com.ttcsn.movie.showtime.dto.response.ShowtimeSeatView> releaseShowtimeSeat(
+            @Valid @RequestBody com.ttcsn.movie.showtime.dto.request.ShowtimeSeatInteractionRequest request) {
+        return ResponseEntity.ok(showtimeService.releaseShowtimeSeat(
+                request.showtimeId(), request.seatId(), request.holdBy()));
+    }
+
     @PostMapping("/createShowtime")
     public ResponseEntity<ShowtimeResponse> createShowtime(@Valid @RequestBody ShowtimeRequest request) {
         ShowtimeResponse response = showtimeService.createShowtime(request);

@@ -23,7 +23,10 @@ public record BookingCreateRequest(
         Long showtimeId,
 
         @NotEmpty(message = "Danh sách ghế đặt không được để trống")
-        List<Long> showtimeSeatIds,
+        List<Long> seatIds,
+
+        /** Định danh phiên giữ ghế của client (mô hình showtime_seats phát sinh theo tương tác). */
+        String holdBy,
 
         @NotNull(message = "Tổng tiền không được để trống")
         @Positive(message = "Tổng tiền phải lớn hơn 0")
