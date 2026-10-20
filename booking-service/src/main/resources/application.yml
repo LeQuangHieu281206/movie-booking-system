@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: booking-service
+
+  # ---------- RabbitMQ (SOA Step 3) ----------
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+  # ---------- DataSource: Supabase (DB chính, cấu hình mặc định) ----------
+  datasource:
+    url: jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0
+    username: postgres.eyiwxhziwivaodmjtsqc
+    password: daihoccongnghiephanoi
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+server:
+  port: 8082
+
+# ---------- Feign targets ----------
+app:
+  services:
+    user-url: http://localhost:8084
+    movie-url: http://localhost:8081
+    venue-url: http://localhost:8083

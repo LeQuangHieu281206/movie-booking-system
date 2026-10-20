@@ -1,0 +1,19 @@
+package com.ttcsn.payment;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+
+/**
+ * Payment Service — cổng thanh toán (mô phỏng / sau này nối VNPay/MoMo/Stripe).
+ * Port 8086. Publish PaymentCompletedEvent lên RabbitMQ khi thanh toán xong.
+ * (common mang JPA trên classpath -> loại trừ DataSource/JPA auto-config: service không cần DB)
+ */
+@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class })
+public class PaymentServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(PaymentServiceApplication.class, args);
+    }
+}
+

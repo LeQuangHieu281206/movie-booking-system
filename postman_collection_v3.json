@@ -1,0 +1,1224 @@
+{
+  "info": {
+    "name": "MovieBooking SOA — E2E asserts v3",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "PHIÊN BẢN 3 — mỗi request PM.TEST() thật (không còn console.log/deprecated tests).\n\n- Id tự nối từ response (collectionVariables) ⇒ chạy lại nhiều lần không cần sửa tay.\n- Dữ liệu test gọi 'SOA-...' + timestamp ⇒ mỗi lần chạy tạo dữ liệu mới, không đụng dư liệu cũ.\n- Case âm assert đúng mã HTTP đã dò theo code backend (ApiExceptionHandler): 400/404/409.\n- Thứ tự payment SỬA LẠI: thanh toán success trên booking PENDING (→ PAID), rồi cancel trên booking khác. Bản cũ cancel xong vẫn pay ⇒ bug CANCELLED→PAID bị che mất.\n\nChạy bằng Collection Runner."
+  },
+  "variable": [
+    { "key": "base", "value": "http://localhost:8080" },
+    { "key": "cinemaId", "value": "" },
+    { "key": "city", "value": "" },
+    { "key": "roomId", "value": "" },
+    { "key": "genreName", "value": "" },
+    { "key": "genreId", "value": "" },
+    { "key": "movieId", "value": "" },
+    { "key": "showtimeId", "value": "" },
+    { "key": "seatIds", "value": "[]" },
+    { "key": "userEmail", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "bookingId2", "value": "" },
+    { "key": "bookingId3", "value": "" },
+    { "key": "cleanupOk", "value": "false" }
+  ],
+  "item": [
+    {
+      "name": "1 · venue — Cinema/Room/Seat",
+      "item": [
+        {
+          "name": "1.01 createCinema (tên + city độc nhất mỗi lần chạy)",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createCinema",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"CGV SOA {{$timestamp}}\",\n  \"address\": \"191 Ba Trieu\",\n  \"city\": \"Ha Noi {{$timestamp}}\",\n  \"phoneNumber\": \"024123456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Tên/city có timestamp ⇒ chạy lại nhiều lần vẫn độc lập với dữ liệu cũ."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });",
+                  "pm.test('Trả về cinemaId, name, city', function () {",
+                  "  pm.expect(b).to.have.property('cinemaId');",
+                  "  pm.expect(b.name).to.include('CGV SOA');",
+                  "  pm.expect(b.city).to.include('Ha Noi');",
+                  "});",
+                  "pm.collectionVariables.set('cinemaId', b.cinemaId);",
+                  "pm.collectionVariables.set('city', b.city);",
+                  "console.log('>> cinemaId =', b.cinemaId, '| city =', b.city);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.02 createRoom (totalSeats=3)",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createRoom",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cinemaId\": \"{{cinemaId}}\",\n  \"name\": \"Room SOA\",\n  \"totalSeats\": 3,\n  \"roomType\": \"2D\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });",
+                  "pm.test('Trả về roomId, tổng ghế và loại phòng đúng', function () {",
+                  "  pm.expect(b).to.have.property('roomId');",
+                  "  pm.expect(b.totalSeats).to.eql(3);",
+                  "  pm.expect(b.roomType).to.eql('2D');",
+                  "});",
+                  "pm.collectionVariables.set('roomId', b.roomId);",
+                  "console.log('>> roomId =', b.roomId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.03 createSeat A1",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createSeat",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomId\": \"{{roomId}}\",\n  \"seatRow\": \"A\",\n  \"seatNumber\": 1,\n  \"seatType\": \"NORMAL\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 2xx (API trả id hoặc seatId)', function () { pm.expect(pm.response.code).to.be.below(300); pm.expect(b.id ?? b.seatId).to.exist; });",
+                  "pm.test('seatType = NORMAL', function () { pm.expect(b.seatType).to.eql('NORMAL'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.04 createSeat trùng vị trí (A1 lần 2) → 400",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createSeat",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomId\": \"{{roomId}}\",\n  \"seatRow\": \"A\",\n  \"seatNumber\": 1,\n  \"seatType\": \"NORMAL\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "NEGATIVE — SeatServiceImpl chặn trùng (room, row, number) bằng IllegalArgumentException → ApiExceptionHandler trả 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 400 khi tạo ghế trùng vị trí', function () { pm.expect(pm.response.code).to.eql(400); });",
+                  "pm.test('Message nêu rõ vị trí ghế bị trùng', function () { pm.expect(b.message).to.include('Vị trí ghế'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.05 createSeat A2",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createSeat",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomId\": \"{{roomId}}\",\n  \"seatRow\": \"B\",\n  \"seatNumber\": 2,\n  \"seatType\": \"NORMAL\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.06 createSeat B3",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createSeat",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomId\": \"{{roomId}}\",\n  \"seatRow\": \"B\",\n  \"seatNumber\": 3,\n  \"seatType\": \"NORMAL\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.07 getSeatsByRoomId → đủ 3 ghế",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getSeatsByRoomId?roomId={{roomId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const seats = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Phòng có đúng 3 ghế đã tạo', function () { pm.expect(seats).to.be.an('array').with.lengthOf(3); });",
+                  "pm.test('Mỗi ghế có id, row, number, type', function () {",
+                  "  seats.forEach(function (s) {",
+                  "    pm.expect(s).to.have.property('id');",
+                  "    pm.expect(s).to.have.property('seatRow');",
+                  "    pm.expect(s).to.have.property('seatNumber');",
+                  "    pm.expect(s).to.have.property('seatType');",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.08 getSeatsByRoomId roomId ảo → 404",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getSeatsByRoomId?roomId=999999",
+            "header": []
+          },
+          "description": "NEGATIVE — RoomNotFoundException → 404 (ApiExceptionHandler)."
+          ,
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 khi phòng không tồn tại', function () { pm.expect(pm.response.code).to.eql(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.09 getCinemasByCity → đúng 1 cinema vừa tạo",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getCinemasByCity?city={{city}}",
+            "header": []
+          },
+          "description": "City có timestamp nên chỉ lọc đúng cinema của lần chạy này."
+          ,
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const list = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Đúng 1 cinema ở city này', function () { pm.expect(list).to.be.an('array').with.lengthOf(1); });",
+                  "pm.test('Đó chính là cinema vừa tạo', function () {",
+                  "  pm.expect(list[0].cinemaId).to.eql(Number(pm.collectionVariables.get('cinemaId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.10 getCinemaById",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getCinemaById?id={{cinemaId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Id + name khớp lúc tạo', function () {",
+                  "  pm.expect(b.cinemaId).to.eql(Number(pm.collectionVariables.get('cinemaId')));",
+                  "  pm.expect(b.name).to.include('CGV SOA');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.11 updateCinema — verify dữ liệu mới",
+          "request": {
+            "method": "PUT",
+            "url": "{{base}}/api/updateCinema?id={{cinemaId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"CGV SOA (cập nhật)\",\n  \"address\": \"191 Ba Trieu\",\n  \"city\": \"{{city}}\",\n  \"phoneNumber\": \"0999888777\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Cập nhật thật: name + phoneNumber mới', function () {",
+                  "  pm.expect(b.name).to.eql('CGV SOA (cập nhật)');",
+                  "  pm.expect(b.phoneNumber).to.eql('0999888777');",
+                  "});",
+                  "pm.test('updatedAt khác createdAt', function () { pm.expect(b.updatedAt).to.not.eql(b.createdAt); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 · movie — Genre/Movie/Showtime",
+      "item": [
+        {
+          "name": "2.01 createGenre (tên độc nhất)",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createGenre",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{genreName}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Pre-request tạo tên 'SOA-G-<ts>' ⇒ lần nào cũng tạo mới được (không phụ thuộc genre cũ của DB)."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('genreName', 'SOA-G-' + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });",
+                  "pm.test('Trả về genreId khớp tên vừa tạo', function () { pm.expect(b.genreId).to.exist; pm.expect(b.name).to.eql(pm.collectionVariables.get('genreName')); });",
+                  "pm.collectionVariables.set('genreId', b.genreId);",
+                  "console.log('>> genreId =', b.genreId, '(' + b.name + ')');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.02 createGenre trùng tên → 400",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createGenre",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{genreName}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "NEGATIVE — DÙNG LẠI đúng tên của 2.01 (biến genreName) ⇒ GenreServiceImpl throws IllegalArgumentException → 400. Chạy trong Runner sau 2.01."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 400 khi genre trùng tên', function () { pm.expect(pm.response.code).to.eql(400); });",
+                  "pm.test('Message nêu tên bị trùng', function () { pm.expect(b.message).to.include('đã tồn tại'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.03 createMovie (genreIds = {{genreId}})",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createMovie",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Lao Hac (SOA {{$timestamp}})\",\n  \"durationMinutes\": 100,\n  \"language\": \"VN\",\n  \"releaseDate\": \"2026-10-01\",\n  \"ageRestriction\": \"T13\",\n  \"status\": \"SHOWING\",\n  \"director\": \"Victor Vu\",\n  \"actors\": \"A, B\",\n  \"genreIds\": [{{genreId}}]\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });",
+                  "pm.test('Trả về movieId + title khớp', function () { pm.expect(b.movieId).to.exist; pm.expect(b.title).to.include('Lao Hac (SOA'); });",
+                  "pm.test('Movie được gán đúng genre vừa tạo', function () {",
+                  "  pm.expect(b.genres).to.be.an('array').with.lengthOf(1);",
+                  "  pm.expect(b.genres[0].genreId).to.eql(Number(pm.collectionVariables.get('genreId')));",
+                  "});",
+                  "pm.collectionVariables.set('movieId', b.movieId);",
+                  "console.log('>> movieId =', b.movieId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.04 createMovie genreIds ảo → 400",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createMovie",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Movie ảo (SOA)\",\n  \"durationMinutes\": 90,\n  \"language\": \"VN\",\n  \"releaseDate\": \"2026-10-01\",\n  \"ageRestriction\": \"T13\",\n  \"status\": \"SHOWING\",\n  \"director\": \"X\",\n  \"actors\": \"Y\",\n  \"genreIds\": [999999]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "NEGATIVE — resolveGenres ném IllegalArgumentException('Một hoặc nhiều genreId không tồn tại') → 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 400 khi genreId không tồn tại', function () { pm.expect(pm.response.code).to.eql(400); });",
+                  "pm.test('Message nhắc genreId', function () { pm.expect(b.message).to.include('genreId'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.05 getMovieById — genre kèm đúng",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getMovieById?id={{movieId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Id + status SHOWING', function () { pm.expect(b.movieId).to.eql(Number(pm.collectionVariables.get('movieId'))); pm.expect(b.status).to.eql('SHOWING'); });",
+                  "pm.test('Kèm đúng 1 genre', function () { pm.expect(b.genres).to.be.an('array').with.lengthOf(1); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.06 createShowtime (seed showtime_seats qua venue)",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createShowtime",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": \"{{movieId}}\",\n  \"roomId\": \"{{roomId}}\",\n  \"startTime\": \"2026-11-01T08:00:00+07:00\",\n  \"endTime\": \"2026-11-01T10:00:00+07:00\",\n  \"basePrice\": 100000,\n  \"status\": \"SCHEDULED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });",
+                  "pm.test('Trả về showtimeId + info phòng/cinema nối đúng', function () {",
+                  "  pm.expect(b.showtimeId).to.exist;",
+                  "  pm.expect(b.roomName).to.eql('Room SOA');",
+                  "  pm.expect(b.cinemaName).to.eql('CGV SOA (cập nhật)');",
+                  "});",
+                  "pm.test('basePrice + status đúng lúc tạo', function () { pm.expect(Number(b.basePrice)).to.eql(100000); pm.expect(b.status).to.eql('SCHEDULED'); });",
+                  "pm.collectionVariables.set('showtimeId', b.showtimeId);",
+                  "console.log('>> showtimeId =', b.showtimeId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.07 getShowtimes?movieId= — thấy suất vừa tạo",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getShowtimes?movieId={{movieId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const list = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Danh sách chứa showtime vừa tạo', function () {",
+                  "  pm.expect(list).to.be.an('array');",
+                  "  const targetId = Number(pm.collectionVariables.get('showtimeId'));",
+                  "  pm.expect(list.some(function (s) { return s.showtimeId === targetId; })).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 · user",
+      "item": [
+        {
+          "name": "3.01 createUser (email độc nhất mỗi lần chạy)",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createUser",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Nguyen Hieu (SOA)\",\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"123456\",\n  \"phoneNumber\": \"0987654321\",\n  \"role\": \"CUSTOMER\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Pre-request tạo email 'soa-<ts>@medic.com' ⇒ re-run không dính EmailAlreadyExists."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('userEmail', 'soa-' + Date.now() + '@medic.com');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });",
+                  "pm.test('Trả về userId + role CUSTOMER', function () { pm.expect(b.userId).to.exist; pm.expect(b.role).to.eql('CUSTOMER'); });",
+                  "pm.test('Response KHÔNG rò rỉ password', function () { pm.expect(Object.keys(b)).to.not.include('password'); });",
+                  "pm.collectionVariables.set('userId', b.userId);",
+                  "console.log('>> userId =', b.userId, '| email =', pm.collectionVariables.get('userEmail'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.02 createUser trùng email → 409",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createUser",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Nguyen Hieu (duplicate)\",\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"123456\",\n  \"phoneNumber\": \"0000000000\",\n  \"role\": \"CUSTOMER\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "NEGATIVE — DÙNG LẠI email của 3.01 ⇒ EmailAlreadyExistsException (extends ConflictException) → 409. Chạy trong Runner sau 3.01."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 409 khi email đã dùng', function () { pm.expect(pm.response.code).to.eql(409); });",
+                  "pm.test('Message nêu email trùng', function () { pm.expect(b.message).to.include('Email đã được sử dụng'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.03 getUserById",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getUserById?id={{userId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Id + email khớp user vừa tạo', function () {",
+                  "  pm.expect(b.userId).to.eql(Number(pm.collectionVariables.get('userId')));",
+                  "  pm.expect(b.email).to.eql(pm.collectionVariables.get('userEmail'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 · booking — tạo, negative, huỷ (nhả ghế)",
+      "item": [
+        {
+          "name": "4.01 getShowtimeSeats — soi sơ đồ & chọn ghế cho booking #1",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getShowtimeSeats?showtimeId={{showtimeId}}",
+            "header": []
+          },
+          "description": "Chọn 2 ghế AVAILABLE đầu → biến {{seatIds}} (mảng JSON) dùng cho createBooking #1 và case 409."
+          ,
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const seats = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Phòng seed đúng 3 ghế cho suất chiếu', function () { pm.expect(seats).to.be.an('array').with.lengthOf(3); });",
+                  "pm.test('Tất cả ghế AVAILABLE', function () {",
+                  "  seats.forEach(function (s) { pm.expect(s.status).to.eql('AVAILABLE'); });",
+                  "});",
+                  "const avail = seats.filter(function (s) { return s.status === 'AVAILABLE'; }).slice(0, 2).map(function (s) { return s.showtimeSeatId; });",
+                  "pm.collectionVariables.set('seatIds', JSON.stringify(avail));",
+                  "console.log('>> seatIds (booking #1) =', JSON.stringify(avail));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.02 createBooking #1 → PENDING",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createBooking",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"showtimeId\": \"{{showtimeId}}\",\n  \"showtimeSeatIds\": {{seatIds}},\n  \"totalAmount\": 200000,\n  \"paymentMethod\": \"CASH\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "HOLD ghế qua movie-service (Feign) ở trạng thái BOOKED ⇒ booking sau đó trùng ghế phải bị 409."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });",
+                  "pm.test('bookingId + bookingCode định dạng BK-XXXX', function () {",
+                  "  pm.expect(b.bookingId).to.exist;",
+                  "  pm.expect(b.bookingCode).to.match(/^BK-[A-Z0-9]{8}$/);",
+                  "});",
+                  "pm.test('Trạng thái ban đầu PENDING', function () { pm.expect(b.status).to.eql('PENDING'); });",
+                  "pm.collectionVariables.set('bookingId', b.bookingId);",
+                  "console.log('>> bookingId #1 =', b.bookingId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.03 createBooking trùng ghế → 409",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createBooking",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"showtimeId\": \"{{showtimeId}}\",\n  \"showtimeSeatIds\": {{seatIds}},\n  \"totalAmount\": 200000,\n  \"paymentMethod\": \"CASH\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "NEGATIVE — Chạy ngay sau 4.02, cùng {{seatIds}} đang bị BOOKED ⇒ SeatAlreadyBookedException → 409. Chạy trong Runner sau 4.02."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 409 khi ghế đã bị đặt', function () { pm.expect(pm.response.code).to.eql(409); });",
+                  "pm.test('Message nói ghế đã được đặt', function () { pm.expect(b.message).to.include('ghế'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.04 createBooking showtime ảo → 404",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createBooking",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"showtimeId\": \"999999\",\n  \"showtimeSeatIds\": [1],\n  \"totalAmount\": 100000,\n  \"paymentMethod\": \"CASH\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "NEGATIVE — BookingServiceImpl không tìm thấy showtime (movieClient → Feign 404) → NotFoundException → 404."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 404 khi showtime không tồn tại', function () { pm.expect(pm.response.code).to.eql(404); });",
+                  "pm.test('Message nêu suất chiếu', function () { pm.expect(b.message).to.include('suất chiếu'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.05 createBooking user ảo → 404",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createBooking",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"999999\",\n  \"showtimeId\": \"{{showtimeId}}\",\n  \"showtimeSeatIds\": [1],\n  \"totalAmount\": 100000,\n  \"paymentMethod\": \"CASH\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "NEGATIVE — userClient.userExists false → NotFoundException → 404 (check user diễn ra TRƯỚC hold ghế nên không cần lo ghế)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 404 khi user không tồn tại', function () { pm.expect(pm.response.code).to.eql(404); });",
+                  "pm.test('Message nêu người dùng', function () { pm.expect(b.message).to.include('người dùng'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.06 getBookings — thấy booking #1",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getBookings",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const list = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Danh sách chứa booking #1', function () {",
+                  "  const target = Number(pm.collectionVariables.get('bookingId'));",
+                  "  pm.expect(list.some(function (x) { return x.bookingId === target; })).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.07 getBookingsByUserId — lọc theo user",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getBookingsByUserId?userId={{userId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const list = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Booking #1 thuộc đúng user này', function () {",
+                  "  const target = Number(pm.collectionVariables.get('bookingId'));",
+                  "  pm.expect(list.some(function (x) { return x.bookingId === target; })).to.be.true;",
+                  "  list.forEach(function (x) { pm.expect(x.userId).to.eql(Number(pm.collectionVariables.get('userId'))); });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.08 getBookingById #1 → vẫn PENDING",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getBookingById?id={{bookingId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('bookingCode + totalAmount khớp', function () {",
+                  "  pm.expect(b.bookingCode).to.match(/^BK-/);",
+                  "  pm.expect(Number(b.totalAmount)).to.eql(200000);",
+                  "});",
+                  "pm.test('Vẫn PENDING trước khi thanh toán', function () { pm.expect(b.status).to.eql('PENDING'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.09 updateBooking #1 → CANCELLED (nhả ghế)",
+          "request": {
+            "method": "PUT",
+            "url": "{{base}}/api/updateBooking?id={{bookingId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Huỷ booking #1 trước khi payment — ghế phải được trả về AVAILABLE (verify ở 4.10). CHÚ Ý: KHÔNG pay booking đã huỷ (thứ tự sai của bản cũ)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Booking #1 chuyển CANCELLED', function () { pm.expect(b.status).to.eql('CANCELLED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.10 getShowtimeSeats — ghế #1 đã được NHẢ VỀ AVAILABLE (saga bù trừ)",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getShowtimeSeats?showtimeId={{showtimeId}}",
+            "header": []
+          },
+          "description": "Sau CANCELLED, releaseSeats phải trả ghế về AVAILABLE. Đồng thời chọn 2 ghế trống cho booking #2 (folder 5)."
+          ,
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const seats = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Ca 3 ghế quay về AVAILABLE sau khi huỷ', function () {",
+                  "  seats.forEach(function (s) { pm.expect(s.status).to.eql('AVAILABLE'); });",
+                  "});",
+                  "const avail = seats.filter(function (s) { return s.status === 'AVAILABLE'; }).slice(0, 2).map(function (s) { return s.showtimeSeatId; });",
+                  "pm.collectionVariables.set('seatIds', JSON.stringify(avail));",
+                  "console.log('>> seatIds (booking #2) =', JSON.stringify(avail));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 · payment (RabbitMQ async) — thành công & thất bại",
+      "item": [
+        {
+          "name": "5.01 createBooking #2 → PENDING",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createBooking",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"showtimeId\": \"{{showtimeId}}\",\n  \"showtimeSeatIds\": {{seatIds}},\n  \"totalAmount\": 200000,\n  \"paymentMethod\": \"CASH\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Booking luôn là PENDING — rồi mới pay. (Đây là thứ tự đúng mà bản cũ làm ngược.)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });",
+                  "pm.test('bookingId2 + status PENDING', function () {",
+                  "  pm.expect(b.bookingId).to.exist;",
+                  "  pm.expect(b.status).to.eql('PENDING');",
+                  "});",
+                  "pm.collectionVariables.set('bookingId2', b.bookingId);",
+                  "console.log('>> bookingId #2 =', b.bookingId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.02 createPayment SUCCESS (booking #2)",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createPayment",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{bookingId2}}\",\n  \"userId\": \"{{userId}}\",\n  \"amount\": 200000,\n  \"simulateFailure\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Publish event payment.completed(SUCCESS) sang RabbitMQ."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });",
+                  "pm.test('paymentId + status SUCCESS', function () { pm.expect(b.paymentId).to.exist; pm.expect(b.status).to.eql('SUCCESS'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.03 verify booking #2 → PAID (poll RabbitMQ)",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getBookingById?id={{bookingId2}}",
+            "header": []
+          },
+          "description": "Event RabbitMQ async — test poll tối đa 3 lần (cách nhau 1.5s) cho tới khi thấy PAID."
+      ,
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const base = pm.collectionVariables.get('base');",
+                  "const bookingId = pm.collectionVariables.get('bookingId2');",
+                  "if (!bookingId) { throw new Error('bookingId2 chưa có — 5.01 chưa chạy thành công?'); }",
+                  "const check = function (tries) {",
+                  "  pm.sendRequest(base + '/api/getBookingById?id=' + bookingId, function (err, res) {",
+                  "    let st = 'PARSE_ERROR';",
+                  "    try { st = res.json().status; } catch (e) { /* giữ nhãn lỗi */ }",
+                  "    if (st === 'PAID') {",
+                  "      pm.test('Booking #2 = PAID sau event RabbitMQ', function () { pm.expect(st).to.eql('PAID'); });",
+                  "      console.log('>> Booking #2 = PAID');",
+                  "    } else if (tries > 1) {",
+                  "      setTimeout(function () { check(tries - 1); }, 1500);",
+                  "    } else {",
+                  "      pm.test('Booking #2 = PAID sau event RabbitMQ', function () { pm.expect(st, 'Booking vẫn là ' + st + ' sau khi poll — event RabbitMQ chưa xử lý?').to.eql('PAID'); });",
+                  "    }",
+                  "  });",
+                  "};",
+                  "check(3);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.04 getShowtimeSeats — chọn ghế trống cho booking #3",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getShowtimeSeats?showtimeId={{showtimeId}}",
+            "header": []
+          },
+          "description": "Booking #2 (PAID) giữ 2 ghế —ghế còn AVAILABLE phải đúng 1 (ghế B3) cho booking #3."
+          ,
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const seats = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Đúng 2 ghế BOOKED (booking #2 giữ) + 1 ghế AVAILABLE', function () {",
+                  "  const book = seats.filter(function (s) { return s.status === 'BOOKED'; }).length;",
+                  "  const avail = seats.filter(function (s) { return s.status === 'AVAILABLE'; }).length;",
+                  "  pm.expect(book, 'BOOKED').to.eql(2);",
+                  "  pm.expect(avail, 'AVAILABLE').to.eql(1);",
+                  "});",
+                  "const availIds = seats.filter(function (s) { return s.status === 'AVAILABLE'; }).map(function (s) { return s.showtimeSeatId; });",
+                  "pm.collectionVariables.set('seatIds', JSON.stringify(availIds));",
+                  "console.log('>> seatIds (booking #3) =', JSON.stringify(availIds));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.05 createBooking #3 → PENDING",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createBooking",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"showtimeId\": \"{{showtimeId}}\",\n  \"showtimeSeatIds\": {{seatIds}},\n  \"totalAmount\": 100000,\n  \"paymentMethod\": \"E_WALLET\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });",
+                  "pm.test('bookingId3 + status PENDING', function () {",
+                  "  pm.expect(b.bookingId).to.exist;",
+                  "  pm.expect(b.status).to.eql('PENDING');",
+                  "});",
+                  "pm.collectionVariables.set('bookingId3', b.bookingId);",
+                  "console.log('>> bookingId #3 =', b.bookingId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.06 createPayment FAILED (booking #3)",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/createPayment",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{bookingId3}}\",\n  \"userId\": \"{{userId}}\",\n  \"amount\": 100000,\n  \"simulateFailure\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Publish event payment.completed(FAILED)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('HTTP 2xx', function () { pm.expect(pm.response.code).to.be.below(300); });",
+                  "pm.test('status FAILED như mô phỏng', function () { pm.expect(b.status).to.eql('FAILED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.07 verify booking #3 → CANCELLED + trả ghế (poll)",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getBookingById?id={{bookingId3}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const base = pm.collectionVariables.get('base');",
+                  "const bookingId = pm.collectionVariables.get('bookingId3');",
+                  "if (!bookingId) { throw new Error('bookingId3 chưa có — 5.05 chưa chạy thành công?'); }",
+                  "const check = function (tries) {",
+                  "  pm.sendRequest(base + '/api/getBookingById?id=' + bookingId, function (err, res) {",
+                  "    let st = 'PARSE_ERROR';",
+                  "    try { st = res.json().status; } catch (e) { /* giữ nhãn lỗi */ }",
+                  "    if (st === 'CANCELLED') {",
+                  "      pm.test('Booking #3 = CANCELLED sau event FAILED', function () { pm.expect(st).to.eql('CANCELLED'); });",
+                  "      console.log('>> Booking #3 = CANCELLED (nhả ghế)');",
+                  "    } else if (tries > 1) {",
+                  "      setTimeout(function () { check(tries - 1); }, 1500);",
+                  "    } else {",
+                  "      pm.test('Booking #3 = CANCELLED sau event FAILED', function () { pm.expect(st, 'Booking vẫn là ' + st + ' sau khi poll').to.eql('CANCELLED'); });",
+                  "    }",
+                  "  });",
+                  "};",
+                  "check(3);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.08 getShowtimeSeats — #3 nhả ghế, #2 vẫn giữ ghế PAID",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getShowtimeSeats?showtimeId={{showtimeId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const seats = pm.response.json();",
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "pm.test('Cuối cùng: 2 BOOKED (PAID booking #2) + 1 AVAILABLE (nhả từ booking #3)', function () {",
+                  "  const book = seats.filter(function (s) { return s.status === 'BOOKED'; }).length;",
+                  "  const avail = seats.filter(function (s) { return s.status === 'AVAILABLE'; }).length;",
+                  "  pm.expect(book, 'BOOKED').to.eql(2);",
+                  "  pm.expect(avail, 'AVAILABLE').to.eql(1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "9 · cleanup + tổng kết",
+      "item": [
+        {
+          "name": "9.01 deleteCinema (chấp nhận cascade hoặc bị chặn)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base}}/api/deleteCinema?id={{cinemaId}}",
+            "header": []
+          },
+          "description": "Tuỳ schema FK ở venue DB: nếu FK có cascade thì xoá sạch room/seat; nếu có ràng buộc chặn thì 409/500. Cả 2 đều chấp nhận (chỉ log result)."
+          ,
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const code = pm.response.code;",
+                  "pm.test('deleteCinema trả mã hợp lý (' + code + ')', function () { pm.expect([200, 204, 409, 500]).to.include(code); });",
+                  "if (code === 200 || code === 204) {",
+                  "  pm.collectionVariables.set('cleanupOk', 'true');",
+                  "  console.log('>> Cinema ' + pm.collectionVariables.get('cinemaId') + ' ĐÃ XÓA (cascade)');",
+                  "} else {",
+                  "  pm.collectionVariables.set('cleanupOk', 'false');",
+                  "  console.warn('>> deleteCinema BỊ CHẶN (HTTP ' + code + ') — cinema ' + pm.collectionVariables.get('cinemaId') + ' còn lại; xoá tay sau nếu cần.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9.02 getCinemaById — xác nhận cleanup",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/getCinemaById?id={{cinemaId}}",
+            "header": []
+          },
+          "description": "Nếu 9.01 xoá thành công → kỳ vọng 404. Nếu 9.01 bị FK chặn → cinema còn đó (200), chỉ log hướng dẫn xoá tay."
+          ,
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const code = pm.response.code;",
+                  "if (pm.collectionVariables.get('cleanupOk') === 'true') {",
+                  "  pm.test('Cinema không còn (404) sau khi xoá', function () { pm.expect(code).to.eql(404); });",
+                  "} else {",
+                  "  pm.test('Cinema còn nguyên vì cleanup bị chặn', function () { pm.expect(code).to.eql(200); });",
+                  "  console.warn('Cần xoá tay: cinemaId=' + pm.collectionVariables.get('cinemaId') + ' roomId=' + pm.collectionVariables.get('roomId') + ' bookingId=' + pm.collectionVariables.get('bookingId'));",
+                  "}",
+                  "console.log('TỔNG KẾT: cinemaId=' + pm.collectionVariables.get('cinemaId') + ' | movieId=' + pm.collectionVariables.get('movieId') + ' | showtimeId=' + pm.collectionVariables.get('showtimeId') + ' | userId=' + pm.collectionVariables.get('userId') + ' | bookings=' + [pm.collectionVariables.get('bookingId'), pm.collectionVariables.get('bookingId2'), pm.collectionVariables.get('bookingId3')].join(','));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

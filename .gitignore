@@ -1,0 +1,24 @@
+# Build output (Maven)
+*/target/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Logs & runtime
+logs/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+nbproject/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+
+SOA_REFACTOR_PLAN.md
