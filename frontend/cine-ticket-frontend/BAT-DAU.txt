@@ -1,0 +1,16 @@
+CINEROOM — CHẠY FRONTEND
+
+1. Máy cần có Node.js 18 trở lên.
+2. Bấm đúp CHAY-FRONTEND.bat trong thư mục này.
+3. Mở http://localhost:5173 và giữ cửa sổ chạy đang mở.
+
+KHÔNG CẦN npm install. KHÔNG CẦN Docker để xem giao diện mẫu.
+Mặc định là dữ liệu mẫu, vé mẫu, không ghi database thật.
+
+ĐỂ DÙNG BACKEND THẬT:
+Đọc mục 2 trong HUONG-DAN.md. Cần chép một file Java bổ sung
+vào backend đã gửi, khởi động lại backend, rồi chuyển chế độ trên giao diện.
+
+CHƯA CÓ ĐĂNG NHẬP, QUẢN TRỊ VÀ THANH TOÁN TRỰC TUYẾN.
+Đặt vé thật trong bản này là đơn chờ thanh toán tại quầy.
+Chưa kiểm tra tích hợp với backend trên máy của bạn.
