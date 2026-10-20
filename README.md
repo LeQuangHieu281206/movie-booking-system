@@ -2,8 +2,6 @@
 
 Hệ thống đặt vé xem phim trực tuyến được phát triển trong khuôn khổ đồ án môn học của **Nhóm 8**, kiến trúc theo hướng dịch vụ (**SOA** — Service-Oriented Architecture): một **API Gateway** duy nhất tiếp nhận request từ frontend và điều hướng đến **7 service backend độc lập** (Spring Boot), liên lạc với nhau qua **REST đồng bộ (OpenFeign)** và **bất đồng bộ (RabbitMQ)**, lưu dữ liệu trên **Supabase PostgreSQL**. Frontend dùng **React + Vite**.
 
-> **Trạng thái dự án:** Đang phát triển theo lộ trình SOA (xem [SOA\_REFACTOR\_PLAN.md](SOA_REFACTOR_PLAN.md)). Phần backend (các service dùng chung 1 DB Supabase — quyết định chính thức của nhóm) đã chạy được và kiểm thử bằng bộ collection Postman trong repository; frontend hiện ở giai đoạn Step 0 (tầng gọi API tập trung, giao diện đang xây).
-
 ## Mục lục
 
 - [Giới thiệu](#giới-thiệu)
@@ -18,7 +16,6 @@ Hệ thống đặt vé xem phim trực tuyến được phát triển trong khu
 - [Phạm vi chức năng](#phạm-vi-chức-năng)
 - [Cơ sở dữ liệu và biến môi trường](#cơ-sở-dữ-liệu-và-biến-môi-trường)
 - [Ghi chú Lombok / NetBeans](#ghi-chú-lombok--netbeans)
-- [Lộ trình phát triển](#lộ-trình-phát-triển)
 - [Nhóm thực hiện](#nhóm-thực-hiện)
 
 ## Giới thiệu
@@ -29,8 +26,8 @@ Hệ thống hỗ trợ tra cứu phim, xem lịch chiếu, chọn ghế theo s�
 - **movie** — phim (Movie), thể loại (Genre), suất chiếu (Showtime) và **ghế-theo-suất** (ShowtimeSeat — seat inventory)
 - **user** — tài khoản người dùng
 - **booking** — đơn đặt vé, chi tiết vé
-- **payment** — cổng thanh toán mô phỏng (publish event khi xong)
-- **notification** — nhận event thanh toán, gửi thông báo/email vé (hiện log; sau nối SMTP)
+- **payment** — cổng thanh toán mô phỏng
+- **notification** — nhận event thanh toán, gửi thông báo/email
 - **api-gateway** — điểm vào duy nhất cho frontend, router + CORS
 
 Dự án được tổ chức theo mô hình **monorepo**, chứa toàn bộ backend, frontend, hạ tầng Docker và tài liệu trong cùng một repository.
@@ -41,13 +38,13 @@ Repository: [lequanghieu-haui/movie-booking-system](https://github.com/lequanghi
 
 ### Backend
 
-- **Java 21**, **Maven multi-module** (pom cha: `movie-booking-parent`)
+- **Java 21**, **Maven multi-module**
 - **Spring Boot 3.5.x** — Web MVC cho API, Validation, Data JPA/Hibernate
 - **Spring Cloud OpenFeign** — giao tiếp đồng bộ giữa các service
 - **Spring AMQP (RabbitMQ)** — giao tiếp bất đồng bộ (Saga choreography)
 - **PostgreSQL** qua JDBC — **một database Supabase Postgres dùng chung cho các service** (quyết định của nhóm; tham chiếu giữa service là ID thuần, tính toàn vẹn đảm bảo ở tầng ứng dụng qua Feign)
-- **Lombok** (đã cấu hình `annotationProcessorPaths` ở pom cha)
-- **common** (`com.ttcsn.common`) — thư viện dùng chung: DTO (`RoomDto`, `SeatDto`, `ShowtimeView`, ...), event (`BookingCreatedEvent`, `PaymentCompletedEvent`, ...), exception handler chung (`ApiExceptionHandler`)
+- **Lombok**
+- **common**
 
 ### Frontend
 
@@ -163,7 +160,7 @@ movie-service/src/main/java/com/ttcsn/movie/
 ### 1. Chuẩn bị hạ tầng
 
 ```bash
-docker compose up -d rabbitmq   # RabbitMQ :5672 (UI :15672) — bắt buộc cho event Saga
+docker compose up -d rabbitmq   # RabbitMQ :5672 (UI :15672)
 ```
 
 `docker-compose.yml` hiện chỉ còn **RabbitMQ** (bắt buộc) và **Redis** (dự phòng cho TTL hold ghế ở Step 5 — mặc định tắt, cần thì `docker compose up -d redis`). Database PostgreSQL cục bộ đã bị xoá khỏi compose vì nhóm dùng chung Supabase (xem mục [Cơ sở dữ liệu](#cơ-sở-dữ-liệu-và-biến-môi-trường)).
@@ -259,18 +256,6 @@ Lưu ý: xoá rạp (`deleteCinema`) hiện tại sẽ cascade xoá phòng/ghế
 
 - Lombok được khai báo ở từng service và pin ở pom cha qua `<lombok.version>`; `annotationProcessorPaths` đã cấu hình trong `<plugins>` của pom cha để **Maven CLI lẫn NetBeans** đều nhận diện được processor.
 - Khi mở bằng NetBeans 26+, sau khi clone/nhận pom mới hãy **Close/Reload Project** để IDE re-enroll Lombok; nếu vẫn còn gạch đỏ hãy chạy lại `mvn clean install` rồi Clean and Build trong IDE.
-
-## Lộ trình phát triển
-
-Chi tiết vòng lặp từng giai đoạn (Step 0–7) nằm tại [SOA\_REFACTOR\_PLAN.md](SOA_REFACTOR_PLAN.md). Tóm tắt:
-
-- [x] Step 0–1 — tách module Maven, gateway route toàn bộ `/api/**`
-- [x] Step 2 — Feign client giữa các service (venue/movie/user/booking)
-- [x] Step 3 — RabbitMQ + event `payment.completed` (Saga-lite)
-- [x] Step 4 — booking PENDING → PAID/CANCELLED + trả ghế (bù trừ)
-- [ ] Step 5 — TTL hold ghế (Redis), outbox, idempotency chi tiết
-- [ ] Step 6 — payment gateway thật (DB giữ nguyên dùng chung Supabase theo quyết định nhóm)
-- [ ] Step 7 — Spring Security/JWT, sản phẩm hoá frontend
 
 ## Nhóm thực hiện
 
