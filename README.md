@@ -1,6 +1,6 @@
 # Movie Ticket Booking System (SOA)
 
-Hệ thống đặt vé xem phim trực tuyến được phát triển trong khuôn khổ đồ án môn học của **Nhóm 8**, kiến trúc theo hướng dịch vụ (**SOA** — Service-Oriented Architecture): một **API Gateway** duy nhất tiếp nhận request từ frontend và điều hướng đến **7 service backend độc lập** (Spring Boot), liên lạc với nhau qua **REST đồng bộ (OpenFeign)** và **bất đồng bộ (RabbitMQ)**, lưu dữ liệu trên **Supabase PostgreSQL**. Frontend **CineRoom** dùng HTML/CSS/JavaScript thuần chạy trên server Node (cổng 5173) proxy về gateway.
+Hệ thống đặt vé xem phim trực tuyến được phát triển trong khuôn khổ đồ án môn học của **Nhóm 8**, kiến trúc theo hướng dịch vụ: một **API Gateway** duy nhất tiếp nhận request từ frontend và điều hướng đến **7 service backend độc lập**, liên lạc với nhau qua **REST đồng bộ (OpenFeign)** và **bất đồng bộ (RabbitMQ)**, lưu dữ liệu trên **Supabase PostgreSQL**. Frontend **CineRoom** dùng HTML/CSS/JavaScript thuần chạy trên server Node proxy về gateway.
 
 ## Mục lục
 
@@ -49,14 +49,11 @@ Repository: [lequanghieu-haui/movie-booking-system](https://github.com/lequanghi
 
 ### Frontend (CineRoom — `frontend/cine-ticket-frontend`)
 
-- **HTML/CSS/JavaScript thuần** (module ES) — không React, không Vite, **không có package phụ thuộc** (`package.json` chỉ khai báo `node server.mjs`)
-- `server.mjs` (Node ≥ 18): phục vụ file tĩnh + **proxy `/api/**` về gateway** (`BACKEND_URL`, mặc định `http://localhost:8080`) → không vướng CORS khi chạy local
-- Dữ liệu luôn thật: phim/suất/ghế/booking đọc qua gateway từ Supabase; **poster lấy từ CDN TMDB**
-- Hướng dẫn người dùng + cấu trúc code chi tiết: `frontend/cine-ticket-frontend/HUONG-DAN.md`
+- **HTML/CSS/JavaScript thuần**
 
 ### Hạ tầng
 
-- **Docker Compose** — RabbitMQ (cần cho sự kiện Saga thanh toán); Redis chỉ còn trong compose làm dự phòng, không service nào dùng (TTL giữ ghế đã làm bằng cột `hold_until` trên Postgres)
+- **Docker Compose** — RabbitMQ
 - **RabbitMQ 3.13** — topic exchange `mb.topic.exchange` cho các event Saga
 
 ## Kiến trúc tổng quan
@@ -157,9 +154,9 @@ movie-service/src/main/java/com/ttcsn/movie/
 
 ## Yêu cầu môi trường
 
-- **JDK 21** và **Maven** (kiểm tra bằng `mvn -v`) để build và chạy backend
-- **Node.js ≥ 18** cho frontend — **không cần `npm install`** (`server.mjs` chỉ dùng thư viện chuẩn của Node)
-- **Docker** chỉ cần để bật RabbitMQ (`docker compose up -d rabbitmq`); không cần Postgres local nếu dùng Supabase chung của nhóm
+- **JDK 21** và **Maven** để build và chạy backend
+- **Node.js ≥ 18** cho frontend
+- **Docker** chỉ cần để bật RabbitMQ (`docker compose up -d rabbitmq`)
 - **Database PostgreSQL** — người mới có thể dùng ngay Supabase chung với thông tin kết nối đã cấu hình sẵn (xem mục [Cơ sở dữ liệu](#cơ-sở-dữ-liệu-và-biến-môi-trường))
 - Optional: **Postman** để chạy bộ kiểm thử E2E
 
