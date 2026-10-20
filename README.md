@@ -1,6 +1,6 @@
 # Movie Ticket Booking System (SOA)
 
-Hệ thống đặt vé xem phim trực tuyến được phát triển trong khuôn khổ đồ án môn học của **Nhóm 8**, kiến trúc theo hướng dịch vụ (**SOA** — Service-Oriented Architecture): một **API Gateway** duy nhất tiếp nhận request từ frontend và điều hướng đến **7 service backend độc lập** (Spring Boot), liên lạc với nhau qua **REST đồng bộ (OpenFeign)** và **bất đồng bộ (RabbitMQ)**, lưu dữ liệu trên **Supabase PostgreSQL**. Frontend dùng **React + Vite**.
+Hệ thống đặt vé xem phim trực tuyến được phát triển trong khuôn khổ đồ án môn học của **Nhóm 8**, kiến trúc theo hướng dịch vụ (**SOA** — Service-Oriented Architecture): một **API Gateway** duy nhất tiếp nhận request từ frontend và điều hướng đến **7 service backend độc lập** (Spring Boot), liên lạc với nhau qua **REST đồng bộ (OpenFeign)** và **bất đồng bộ (RabbitMQ)**, lưu dữ liệu trên **Supabase PostgreSQL**. Frontend **CineRoom** dùng HTML/CSS/JavaScript thuần chạy trên server Node (cổng 5173) proxy về gateway.
 
 ## Mục lục
 
@@ -29,6 +29,7 @@ Hệ thống hỗ trợ tra cứu phim, xem lịch chiếu, chọn ghế theo s�
 - **payment** — cổng thanh toán mô phỏng
 - **notification** — nhận event thanh toán, gửi thông báo/email
 - **api-gateway** — điểm vào duy nhất cho frontend, router + CORS
+- **frontend/cine-ticket-frontend** — giao diện web **CineRoom** (vanilla JS) chạy server Node :5173, proxy `/api` về gateway
 
 Dự án được tổ chức theo mô hình **monorepo**, chứa toàn bộ backend, frontend, hạ tầng Docker và tài liệu trong cùng một repository.
 
@@ -46,25 +47,28 @@ Repository: [lequanghieu-haui/movie-booking-system](https://github.com/lequanghi
 - **Lombok**
 - **common**
 
-### Frontend
+### Frontend (CineRoom — `frontend/cine-ticket-frontend`)
 
-- **React 19** + **Vite 8**
-- **React Router** để định tuyến
-- **Axios** để gọi API (qua tầng `src/services/api.js`, base URL mặc định `http://localhost:8080`)
-- **Lucide React** cho icon giao diện
+- **HTML/CSS/JavaScript thuần** (module ES) — không React, không Vite, **không có package phụ thuộc** (`package.json` chỉ khai báo `node server.mjs`)
+- `server.mjs` (Node ≥ 18): phục vụ file tĩnh + **proxy `/api/**` về gateway** (`BACKEND_URL`, mặc định `http://localhost:8080`) → không vướng CORS khi chạy local
+- Dữ liệu luôn thật: phim/suất/ghế/booking đọc qua gateway từ Supabase; **poster lấy từ CDN TMDB**
+- Hướng dẫn người dùng + cấu trúc code chi tiết: `frontend/cine-ticket-frontend/HUONG-DAN.md`
 
 ### Hạ tầng
 
-- **Docker Compose** — RabbitMQ (bắt buộc cho event Saga); Redis giữ trong compose làm dự phòng cho TTL hold ghế (Step 5, mặc định tắt)
+- **Docker Compose** — RabbitMQ (cần cho sự kiện Saga thanh toán); Redis chỉ còn trong compose làm dự phòng, không service nào dùng (TTL giữ ghế đã làm bằng cột `hold_until` trên Postgres)
 - **RabbitMQ 3.13** — topic exchange `mb.topic.exchange` cho các event Saga
 
 ## Kiến trúc tổng quan
 
 ```
-Người dùng / Postman
+Trình duyệt / Postman
         |
         v
-API Gateway :8080  (routes /api/** theo service, CORS frontend)
+CineRoom frontend :5173  (Node server.mjs — file tĩnh + proxy /api/** về gateway)
+        |
+        v
+API Gateway :8080  (routes /api/** theo service, CORS cho frontend)
         |
         +-> venue-service :8083   (Cinema / Room / Seat)
         |     ^  Feign /internal/rooms/{id}, /internal/rooms/{id}/seats
@@ -90,7 +94,7 @@ Quy ước API: các endpoint dạng **verb-path** dưới gateway `/api/**`, v�
 | --- | ---: | --- | --- |
 | api-gateway | 8080 | — | Router `/api/**` đến từng service, CORS cho `http://localhost:*` |
 | venue-service | 8083 | Cinema, Room, Seat | CRUD rạp/phòng/ghế; expose `/internal/rooms/**` cho movie/booking |
-| movie-service | 8081 | Movie, Genre, Showtime, ShowtimeSeat | CRUD phim/thể loại/suất chiếu; tự sinh `showtime_seats` từ venue qua Feign khi tạo suất; giữ/trả/chốt ghế cho booking |
+| movie-service | 8081 | Movie, Genre, Showtime, ShowtimeSeat | CRUD phim/thể loại/suất chiếu; **tồn kho ghế phát sinh theo tương tác** — tạo suất không chèn ghế, giữ/nhả/chốt mới sinh bản ghi `showtime_seats` (native SQL 1 lượt/truy vấn); giữ/trả/chốt ghế cho booking |
 | booking-service | 8082 | Booking, BookingDetail | Saga orchestrator-lite: kiểm user/suất/phòng, hold ghế, tạo Booking PENDING + chi tiết; consume `payment.completed` |
 | user-service | 8084 | User | CRUD người dùng; expose `/internal/users/{id}/exists` |
 | payment-service | 8086 | Payment (mô phỏng) | Ghi nhận thanh toán, publish `PaymentCompletedEvent` (`payment.completed`) lên RabbitMQ |
@@ -99,13 +103,15 @@ Quy ước API: các endpoint dạng **verb-path** dưới gateway `/api/**`, v�
 
 ## Luồng nghiệp vụ Saga-lite (đặt vé – thanh toán)
 
-1. `POST /api/createBooking` (booking-service): kiểm tra **user** (user-service) → kiểm tra **suất chiếu** (movie-service) → kiểm tra **phòng** (venue-service) → **hold ghế** (movie-service đặt các `showtime_seat` từ `AVAILABLE` sang `BOOKED`) → tạo **Booking PENDING** + BookingDetail
+1. `POST /api/createBooking` (booking-service): kiểm tra **user** (user-service) → kiểm tra **suất chiếu** (movie-service) → kiểm tra **phòng** (venue-service) → **chốt ghế** (movie-service upsert `showtime_seats` sang `BOOKED` bằng 1 truy vấn; ghế đang `HOLDING` của cùng khách tự chuyển thành `BOOKED`) → tạo **Booking PENDING** + BookingDetail
 2. `POST /api/createPayment` (payment-service): xử lý mô phỏng → publish **`payment.completed`** (SUCCESS/FAILED)
 3. booking-service nhận event:
     - **SUCCESS** → Booking `PENDING → PAID`
     - **FAILED** → Booking `PENDING → CANCELLED` **+ trả ghế về AVAILABLE** (bù trừ)
     - Event trễ/FAILED khi booking đã PAID được bỏ qua (idempotent)
 4. notification-service nhận event SUCCESS → gửi vé (hiện log)
+
+**Mô hình ghế-theo-suất (lazy inventory)**: tạo suất chiếu **không** sinh sẵn ghế — bảng `showtime_seats` chỉ sinh bản ghi khi có thao tác: khách bấm chọn ghế → `HOLDING` với `hold_until` = +10 phút (`POST /api/holdShowtimeSeat`); bỏ chọn → xoá bản ghi (`POST /api/releaseShowtimeSeat`); chốt vé → `BOOKED`. Ghế giữ quá hạn được lọc coi như `AVAILABLE` ngay tại truy vấn — không cần worker hay Redis. Ghế trống của một suất bằng tổng ghế vật lý của phòng (truy vấn venue-service) trừ các bản ghi còn hiệu lực.
 
 Bù trừ trực tiếp: `PUT /api/updateBooking` chuyển `CANCELLED`/`EXPIRED` cũng trả ghế về `AVAILABLE`. Đặt trùng ghế đang `BOOKED` trả về **409 CONFLICT**.
 
@@ -121,12 +127,14 @@ movie-booking-system/
 ├── payment-service/        # Payment mô phỏng :8086 (publish RabbitMQ)
 ├── notification-service/   # Notification :8087 (consume RabbitMQ)
 ├── common/                 # DTO/event/exception dùng chung (com.ttcsn.common)
-├── frontend/               # React 19 + Vite 8 (Step 0)
+├── frontend/                   # Giao diện web
+│   └── cine-ticket-frontend/   # "CineRoom" — vanilla JS + Node server.mjs :5173 (không cần npm install)
+├── frontend-/                  # Bản mẫu React/Vite cũ từ ZIP ban đầu — chỉ để tham khảo, không dùng để chạy
 ├── logs/                   # Log khi chạy bằng run-services.sh (bỏ qua commit)
-├── docker-compose.yml      # RabbitMQ (dùng thật) + Redis (dự phòng TTL hold — Step 5)
+├── docker-compose.yml      # RabbitMQ (dùng cho Saga) + Redis (chỉ dự phòng, không dùng)
 ├── run-services.sh         # Chạy 7 service Spring Boot (mvn spring-boot:run background)
 ├── stop-services.sh        # Dừng toàn bộ service
-├── postman_collection.json # Smoke-test toàn luồng qua gateway :8080
+├── postman_collection_v3.json # Bộ assert E2E toàn luồng (chạy bằng Collection Runner qua gateway :8080)
 ├── SOA_REFACTOR_PLAN.md    # Lộ trình tách service chi tiết
 ├── pom.xml                 # Parent pom (movie-booking-parent)
 └── README.md
@@ -149,11 +157,11 @@ movie-service/src/main/java/com/ttcsn/movie/
 
 ## Yêu cầu môi trường
 
-- **JDK 21** và **Maven** (hoặc dùng Maven cài sẵn trên máy)
-- **Docker + Docker Compose** (RabbitMQ/Redis/Postgres local)
-- **Node.js + npm** tương thích `frontend/package.json` (Vite 8)
-- Tài khoản **Supabase** (hoặc PostgreSQL local) cho database dùng chung
-- Optional: **Postman** để chạy bộ kiểm thử
+- **JDK 21** và **Maven** (kiểm tra bằng `mvn -v`) để build và chạy backend
+- **Node.js ≥ 18** cho frontend — **không cần `npm install`** (`server.mjs` chỉ dùng thư viện chuẩn của Node)
+- **Docker** chỉ cần để bật RabbitMQ (`docker compose up -d rabbitmq`); không cần Postgres local nếu dùng Supabase chung của nhóm
+- **Database PostgreSQL** — người mới có thể dùng ngay Supabase chung với thông tin kết nối đã cấu hình sẵn (xem mục [Cơ sở dữ liệu](#cơ-sở-dữ-liệu-và-biến-môi-trường))
+- Optional: **Postman** để chạy bộ kiểm thử E2E
 
 ## Cài đặt và chạy dự án
 
@@ -163,16 +171,16 @@ movie-service/src/main/java/com/ttcsn/movie/
 docker compose up -d rabbitmq   # RabbitMQ :5672 (UI :15672)
 ```
 
-`docker-compose.yml` hiện chỉ còn **RabbitMQ** (bắt buộc) và **Redis** (dự phòng cho TTL hold ghế ở Step 5 — mặc định tắt, cần thì `docker compose up -d redis`). Database PostgreSQL cục bộ đã bị xoá khỏi compose vì nhóm dùng chung Supabase (xem mục [Cơ sở dữ liệu](#cơ-sở-dữ-liệu-và-biến-môi-trường)).
+`docker-compose.yml` hiện chỉ còn **RabbitMQ** (dùng cho sự kiện Saga thanh toán) và **Redis** (chỉ là dự phòng, không service nào dùng — TTL giữ ghế làm bằng cột `hold_until` trên Postgres). Database PostgreSQL cục bộ đã bị xoá khỏi compose vì nhóm dùng chung Supabase (xem mục [Cơ sở dữ liệu](#cơ-sở-dữ-liệu-và-biến-môi-trường)).
 
 ### 2. Cấu hình kết nối Supabase
 
 Mỗi service có file cấu hình riêng:
 
 - `venue-service`, `movie-service`, `user-service`: `src/main/resources/application.properties`
-- `booking-service`: `src/main/resources/application.yml`
+- `booking-service`, `payment-service`, `notification-service`, `api-gateway`: `src/main/resources/application.yml`
 
-Cấu hình khuyến nghị là chuyển thông tin kết nối sang biến môi trường thay vì lưu mật khẩu trong repository:
+**Hiện trạng**: các file trên đã chứa thông tin kết nối tới **Supabase chung của nhóm** — người mới chạy theo các bước trên là thấy ngay dữ liệu demo (khoảng 50 phim, 12.000 ghế vật lý, 84.600 suất chiếu; `showtime_seats` sẽ sinh dần theo thao tác). Khuyến nghị lâu dài là chuyển sang biến môi trường:
 
 ```
 spring.datasource.url=${DB_URL}
@@ -180,7 +188,7 @@ spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
 ```
 
-Với Supabase, lấy host/port/user/database và tham số SSL từ dashboard (direct connection hoặc connection pooler). **Không commit mật khẩu/token thật.**
+Nếu dùng **database riêng** (Postgres local hoặc Supabase dự án khác): sửa thẳng `spring.datasource.url/username/password` trong 5 file trên — ví dụ Postgres local `docker run -d --name movie-db -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16-alpine` với URL `jdbc:postgresql://localhost:5432/postgres?sslmode=disable`. Schema tự sinh nhờ Hibernate `ddl-auto=update` — **không cần chạy SQL seed**; tạo dữ liệu bằng bộ Postman ở mục trên, sau đó giao diện CineRoom phát sinh ghế khi khách thao tác. **Không commit mật khẩu/token thật.**
 
 ### 3. Build và chạy backend
 
@@ -198,42 +206,43 @@ mvn -q -pl movie-service -DskipTests spring-boot:run
 
 Kiểm tra trạng thái port (8080–8087) ví dụ bằng `ss -ltn` sau khi chạy \~45 giây.
 
-### 4. Chạy frontend
+### 4. Chạy frontend (CineRoom)
 
 ```
-cd frontend
-npm install
-npm run dev
+cd frontend/cine-ticket-frontend
+node server.mjs       # Windows: bấm đúp CHAY-FRONTEND.bat
 ```
 
-Frontend mặc định gọi gateway `http://localhost:8080` (override bằng `VITE_API_BASE_URL` trong `frontend/.env` nếu cần).
+Mở **http://localhost:5173** — phải chạy backend trước, vì server này chỉ phục vụ giao diện và proxy `/api/**` về gateway. Biến môi trường tùy chọn: `BACKEND_URL` (mặc định `http://localhost:8080`) và `PORT` (mặc định 5173). Chi tiết đầy đủ ở `frontend/cine-ticket-frontend/HUONG-DAN.md`.
+
+Chạy thành công khi: trang phim hiển thị phim đang chiếu (có poster), bấm vào phim thấy lịch chiếu, chọn suất thấy sơ đồ ghế.
 
 ## Kiểm thử bằng Postman
 
-Import `postman_collection.json` (base url biến `{{base}}` = `http://localhost:8080`). Bộ collection bao phủ toàn luồng qua gateway:
+Import `postman_collection_v3.json` (base url biến `{{base}}` = `http://localhost:8080`). Bộ collection bao phủ toàn luồng qua gateway, chạy bằng **Collection Runner** để giữ đúng thứ tự assertion:
 
 1. **venue** — tạo rạp → phòng → ghế → truy vấn theo thành phố/id
-2. **movie** — thể loại (tự tái sử dụng genre trùng thay vì báo 400) → phim → suất chiếu (tự sinh ghế-theo-suất) → sơ đồ ghế
+2. **movie** — thể loại (tự tái sử dụng genre trùng thay vì báo 400) → phim → suất chiếu → sơ đồ ghế (bản ghi `showtime_seats` chỉ xuất hiện khi đã có thao tác giữ/đặt)
 3. **user** — tạo user
 4. **booking** — 2 lần đặt **trùng ghế** (lần 2 kỳ vọng 409) → huỷ booking (trả ghế)
 5. **payment** — thanh toán SUCCESS/FAILED qua RabbitMQ → verify `getBookingById` trạng thái `PAID`/`CANCELLED`
 
-Collection chính các id động (`cinemaId`, `roomId`, `seatId`, `showtimeId`, `userId`, `bookingId`, `seatIds`) giữa các request qua collection variables.
+Collection tự nối các id động (`cinemaId`, `roomId`, `seatId`, `showtimeId`, `userId`, `bookingId`, `seatIds`) giữa các request qua collection variables, chạy lại được nhiều lần mà không cần sửa tay.
 
 ## Phạm vi chức năng
 
 - [x] CRUD rạp/phòng/ghế + truy vấn theo thành phố
 - [x] CRUD phim/thể loại + tìm kiếm/lọc phim (status, genre, từ khoá)
-- [x] Tạo suất chiếu + tự sinh sơ đồ ghế-theo-suất (`showtime_seats`)
-- [x] Sơ đồ ghế theo suất (AVAILABLE/BOOKED)
+- [x] Tạo suất chiếu (tồn kho ghế phát sinh theo tương tác — tạo suất không chèn sẵn ghế)
+- [x] Sơ đồ ghế theo suất: `AVAILABLE` suy ra từ ghế vật lý + `HOLDING` (giữ 10 phút qua `hold_until`) + `BOOKED`
 - [x] Đặt vé Saga-lite: hold ghế, Booking PENDING, chi tiết vé
 - [x] Thanh toán mô phỏng (REST + publish event qua RabbitMQ)
 - [x] Cập nhật trạng thái vé theo event (PAID/CANCELLED) + trả ghế cho bù trừ
 - [x] Thông báo nhận event (log — phát triển tiếp SMTP)
-- [ ] Giao diện frontend hoàn chỉnh (duyệt phim, chọn ghế, đặt vé)
+- [x] Giao diện CineRoom: duyệt phim, lịch chiếu, chọn ghế, đặt vé, vé của tôi (`frontend/cine-ticket-frontend`)
 - [ ] Transactional outbox + idempotency chi tiết cho event Saga (vẫn trên DB Supabase dùng chung)
 - [ ] Xác thực/phân quyền (Spring Security/JWT)
-- [ ] TTL hold ghế (Redis) + worker dọn ghế hết hạn
+- [x] TTL giữ ghế 10 phút (cột `hold_until`; hết hạn tự coi như trống tại truy vấn — không cần Redis/worker)
 - [ ] Cổng thanh toán thật (VNPay/MoMo/Stripe)
 - [ ] Kiểm thử tự động + tài liệu OpenAPI
 
@@ -248,7 +257,8 @@ Lưu ý với DB dùng chung: xoá rạp (`deleteCinema`) sẽ cascade xoá phò
 | `DB_URL` | JDBC URL PostgreSQL (Supabase pooler hoặc Postgres local) |
 | `DB_USERNAME` | Username PostgreSQL |
 | `DB_PASSWORD` | Mật khẩu PostgreSQL |
-| `VITE_API_BASE_URL` | Base URL gateway cho frontend (mặc định `http://localhost:8080`) |
+| `BACKEND_URL` | Gateway cho server frontend Node (mặc định `http://localhost:8080`) |
+| `PORT` | Cổng server frontend (mặc định `5173`) |
 
 Lưu ý: xoá rạp (`deleteCinema`) hiện tại sẽ cascade xoá phòng/ghế tương ứng ở DB, và các pha xóa dọn dữ liệu test được đặt cuối collection Postman (mục `99 · deleteCinema (cleanup)`).
 
