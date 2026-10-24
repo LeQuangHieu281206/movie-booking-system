@@ -1,0 +1,25 @@
+CINEROOM REACT - BAT DAU O DAY
+
+1. Giai nen ZIP. Chep thu muc frontend-react vao:
+   E:\ProjectGH\movie-booking-system\frontend-react
+
+2. Co the nhap doi CHAY-REACT.bat de cai thu vien va chay frontend.
+   Hoac mo PowerShell, chay tung lenh:
+
+   cd E:\ProjectGH\movie-booking-system\frontend-react
+   npm.cmd ci
+   npm.cmd run dev
+
+3. Mo http://localhost:5173
+   Neu chi xem giao dien: bam Thu du lieu mau.
+   Backend that: giu Docker + Java services chay, Gateway 8088.
+
+4. Doc README.md de xem huong dan chi tiet.
+   Doc docs/PHAN-CONG-3-NGUOI.md de giao viec.
+   Doc docs/KIEM-THU-VA-NOP-BAI.md truoc khi nop.
+
+5. Giu frontend cu de doi chieu. Ban React moi khong dung server.mjs.
+   Neu cong 5173 ban, dung frontend cu bang Ctrl+C trong dung cua so.
+
+Ban mau da duoc build va kiem tra frontend; can thu voi backend that
+tren may nhom truoc khi ket luan hoan thanh toan bo he thong.
