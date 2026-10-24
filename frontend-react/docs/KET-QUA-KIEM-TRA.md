@@ -41,7 +41,7 @@
 - Lấy ngày theo Việt Nam khi qua nửa đêm UTC.
 - Tạo mã bằng crypto.getRandomValues khi HTTP preview không có randomUUID.
 
-## Chưa được xác nhận
+## Chưa được xác nhận tại thời điểm bàn giao bản đầu
 
 - Chưa chạy end-to-end với Supabase, RabbitMQ và các service Java trên máy nhóm.
 - Chưa kiểm chứng xử lý cạnh tranh nhiều khách đặt cùng ghế; đây là trách nhiệm chính của backend.
@@ -49,3 +49,38 @@
 - Chưa đánh dấu thay cho các thành viên rằng họ đã tự làm/kiểm thử các nhiệm vụ trong bảng phân công.
 
 Sử dụng `KIEM-THU-VA-NOP-BAI.md` để nhóm ghi kết quả thực tế và hoàn tất nghiệm thu.
+## Cập nhật kiểm thử backend trên máy nhóm — 24/10/2026
+
+Môi trường:
+- Frontend React: http://localhost:5173
+- API Gateway: http://localhost:8088
+- Chế độ sử dụng: Backend thật.
+- Nhánh: feature/PVT/booking-flow
+- Suất chiếu thử: Spirited Away, CGV Landmark 81,
+  Phòng 1, ngày 25/10/2026 lúc 19:00.
+- Có bổ sung suất chiếu thử qua API backend.
+
+### Kết quả đã quan sát
+
+| Kiểm tra | Kết quả |
+|---|---|
+| Tải phim từ backend | Thành công, website hiển thị dữ liệu phim thật |
+| Hiển thị suất chiếu tương lai và chọn ghế | Thành công |
+| Tạo booking qua backend | Booking #18, khách hàng #14 |
+| Ghế và tổng tiền | A1, A2; 85.000đ/ghế; tổng 170.000đ |
+| Thanh toán mô phỏng qua backend | Giao diện hiển thị Đã thanh toán |
+
+### Cần ghi nhận thêm sau khi thực hiện
+
+| Kiểm tra | Kết quả |
+|---|---|
+| Tải lại trang Vé của tôi, đơn vẫn còn | Chưa ghi nhận |
+| Mở lại suất chiếu, A1/A2 không chọn được | Chưa ghi nhận |
+| Hủy đơn PENDING và kiểm tra trả ghế | Chưa ghi nhận |
+| Thanh toán thất bại và kiểm tra trả ghế | Chưa ghi nhận |
+| npm test trên bản hiện tại | Chưa ghi nhận |
+| npm run build trên bản hiện tại | Chưa ghi nhận |
+| Nhiều khách đặt cùng một ghế đồng thời | Chưa kiểm tra |
+
+Thanh toán đang sử dụng cơ chế mô phỏng của dự án.
+Kết quả trên chưa xác nhận toàn bộ các tình huống của hệ thống.
