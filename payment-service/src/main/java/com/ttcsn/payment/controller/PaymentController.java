@@ -1,14 +1,14 @@
 package com.ttcsn.payment.controller;
 
-import com.ttcsn.common.event.PaymentCompletedEvent;
 import com.ttcsn.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 /**
- * API thanh toán (mô phỏng) — sau này booking-service gọi đến khi booking PENDING,
- * hoặc frontend redirect sang payment-gateway rồi callback vào đây.
+ * REST Controller quản lý các API liên quan đến thao tác thanh toán từ phía Client.
  */
 @RestController
 @RequestMapping("/api")
@@ -20,17 +20,26 @@ public class PaymentController {
     public record PaymentRequest(
             Long bookingId,
             Long userId,
-            java.math.BigDecimal amount,
-            Boolean simulateFailure
+            BigDecimal amount
     ) {}
 
+    public record PaymentResponse(
+            String qrUrl,
+            String message
+    ) {}
+
+    /**
+     * Khởi tạo giao dịch thanh toán và trả về đường dẫn ảnh mã QR.
+     * Tích hợp theo cơ chế VietQR thông qua SePay API.
+     */
     @PostMapping("/createPayment")
-    public ResponseEntity<PaymentCompletedEvent> createPayment(@RequestBody PaymentRequest request) {
-        PaymentCompletedEvent event = paymentService.processPayment(
+    public ResponseEntity<PaymentResponse> createPayment(@RequestBody PaymentRequest request) {
+        String qrUrl = paymentService.generateSePayQrUrl(
                 request.bookingId(),
                 request.userId(),
-                request.amount(),
-                Boolean.TRUE.equals(request.simulateFailure()));
-        return ResponseEntity.status(201).body(event);
+                request.amount()
+        );
+
+        return ResponseEntity.status(201).body(new PaymentResponse(qrUrl, "Vui lòng quét mã QR để hoàn tất thanh toán."));
     }
 }
