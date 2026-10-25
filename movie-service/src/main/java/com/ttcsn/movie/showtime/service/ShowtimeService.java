@@ -25,11 +25,11 @@ public interface ShowtimeService {
     /** Sơ đồ ghế của 1 suất chiếu (ghế phòng + bản ghi giữ/đặt theo tương tác). */
     List<ShowtimeSeatView> getShowtimeSeats(Long showtimeId);
 
-    /** Giữ chỗ tạm 10 phút khi khách bấm chọn ghế. */
-    ShowtimeSeatView holdShowtimeSeat(Long showtimeId, Long seatId, String holdBy);
+    /** Giữ chỗ tạm 10 phút; holdBy do server gán từ userId. */
+    ShowtimeSeatView holdShowtimeSeat(Long showtimeId, Long seatId, Long userId);
 
-    /** Bỏ giữ chỗ khi khách bỏ chọn ghế. */
-    ShowtimeSeatView releaseShowtimeSeat(Long showtimeId, Long seatId, String holdBy);
+    /** Bỏ giữ chỗ: chỉ người giữ hoặc ADMIN. */
+    ShowtimeSeatView releaseShowtimeSeat(Long showtimeId, Long seatId, Long userId, boolean admin);
 
     /** Internal: booking-service chốt ghế BOOKED khi tạo vé. */
     SeatHoldResult bookSeats(Long showtimeId, List<Long> seatIds, String holdBy);

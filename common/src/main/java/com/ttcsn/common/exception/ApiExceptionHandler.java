@@ -33,6 +33,18 @@ public class ApiExceptionHandler {
         return ErrorResponseFactory.build(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
+    // ---- 401: mọi UnauthorizedException subclass (sai đăng nhập, token sai/hết hạn...) ----
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex, HttpServletRequest request) {
+        return ErrorResponseFactory.build(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
+
+    // ---- 403: đã xác thực nhưng không đủ quyền ----
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex, HttpServletRequest request) {
+        return ErrorResponseFactory.build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
     // ---- 409 ----
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex, HttpServletRequest request) {

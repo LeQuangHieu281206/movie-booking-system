@@ -23,7 +23,7 @@ export function createServer({backend = process.env.BACKEND_URL || 'http://local
         for await (const chunk of req) {length+=chunk.length; if(length>1024*1024){res.writeHead(413);return res.end();} chunks.push(chunk);}
         const upstream = await fetch(new URL(url.pathname+url.search, target.origin), {
           method:req.method,
-          headers:{'Accept':'application/json',...(req.headers['content-type']?{'Content-Type':req.headers['content-type']}:{})},
+          headers:{'Accept':'application/json',...(req.headers['content-type']?{'Content-Type':req.headers['content-type']}:{}),...(req.headers.authorization?{'Authorization':req.headers.authorization}:{})},
           body:['GET','HEAD'].includes(req.method)?undefined:Buffer.concat(chunks),
           signal:AbortSignal.timeout(15000), redirect:'error'
         });
