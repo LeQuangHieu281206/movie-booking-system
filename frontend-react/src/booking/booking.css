@@ -1,0 +1,228 @@
+.pvt-seat-stats {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: #1b2430;
+  border: 1px solid #354151;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 10px;
+  color: #a9b3c2;
+  margin: 15px 0;
+}
+.pvt-seat-stats b {
+  color: #edce99;
+  font-size: 14px;
+  margin-right: 3px;
+}
+.pvt-seat-stats small {
+  margin-left: auto;
+  font-size: 9px;
+  color: #8e9caf;
+}
+.pvt-seat-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.pvt-seat-chips button {
+  background: #3c3426;
+  border: 1px solid #8d714a;
+  border-radius: 4px;
+  color: #f1d7a8;
+  font-size: 11px;
+  padding: 4px 7px;
+}
+.pvt-seat-chips button:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.pvt-seat-chips button span {
+  opacity: 0.65;
+  margin-left: 3px;
+}
+.pvt-booking .seat:disabled.held {
+  background: #413d31;
+  border-color: #716349;
+  color: #b5a27f;
+}
+.pvt-booking .seat-legend .held {
+  background: #413d31;
+  border-color: #716349;
+}
+.pvt-booking .pvt-exit {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #342c20;
+  box-shadow: 0 7px 18px #0005;
+  margin-top: 0;
+}
+.pvt-recovery h3 {
+  font-size: 16px;
+}
+.pvt-recovery .checkbox-label {
+  margin-bottom: 15px;
+}
+.pvt-receipt {
+  margin-top: 24px;
+  border: 1px dashed #46515f;
+  background: #18212c;
+  border-radius: 8px;
+  padding: 20px;
+}
+.pvt-receipt h3 {
+  font-size: 16px;
+  margin: 0 0 15px;
+}
+.pvt-receipt dl {
+  display: grid;
+  grid-template-columns: 135px 1fr;
+  gap: 10px;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+.pvt-receipt dt {
+  color: #97a5b6;
+}
+.pvt-receipt dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.pvt-receipt > .hint {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+.pvt-ticket-details {
+  padding: 0 24px 24px;
+  border-top: 1px dashed #414b59;
+}
+.pvt-ticket-details .payment-panel {
+  padding: 0;
+  border: 0;
+}
+.pvt-ticket-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.pvt-ticket-tabs > button {
+  background: #18212d;
+  border: 1px solid #3c4858;
+  border-radius: 6px;
+  padding: 9px 12px;
+  color: #aeb8c7;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.pvt-ticket-tabs > button.active {
+  background: #342d22;
+  color: #edcc96;
+  border-color: #947749;
+}
+.pvt-ticket-tabs > button > span {
+  min-width: 20px;
+  text-align: center;
+  font-size: 9px;
+  border-radius: 20px;
+  background: #ffffff09;
+  padding: 1px 5px;
+}
+.pvt-ticket-filters {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  margin-bottom: 25px;
+}
+.pvt-ticket-filters > .search-field {
+  max-width: 450px;
+}
+.pvt-ticket-filters > label > select {
+  margin: 0;
+}
+.pvt-ticket-filters > .hint {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.pvt-ticket-seats {
+  margin-top: 9px;
+  font-size: 10px;
+  color: #a3b0bf;
+}
+.pvt-ticket-seats b {
+  color: #d8c39f;
+  font-weight: 500;
+}
+.pvt-clear-filter {
+  margin: 15px auto 0;
+  display: flex;
+}
+.pvt-payment .notice {
+  overflow-wrap: anywhere;
+}
+.pvt-ticket-details .pvt-receipt {
+  margin-top: 22px;
+}
+.pvt-receipt .button {
+  max-width: 100%;
+}
+.pvt-ticket-details .subheading > h3 {
+  font-size: 16px;
+}
+@media (max-width: 560px) {
+  .pvt-seat-stats {
+    gap: 9px;
+    font-size: 9px;
+    padding: 9px;
+  }
+  .pvt-seat-stats b {
+    font-size: 12px;
+  }
+  .pvt-seat-stats small {
+    width: 100%;
+    margin: 0;
+  }
+  .pvt-receipt {
+    padding: 15px;
+  }
+  .pvt-receipt dl {
+    grid-template-columns: 95px 1fr;
+    gap: 9px;
+    font-size: 10px;
+  }
+  .pvt-ticket-tabs {
+    gap: 6px;
+  }
+  .pvt-ticket-tabs > button {
+    font-size: 10px;
+    padding: 7px 8px;
+    gap: 6px;
+  }
+  .pvt-ticket-filters {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .pvt-ticket-filters > .search-field {
+    width: 100%;
+  }
+  .pvt-ticket-filters > label > select {
+    font-size: 10px;
+  }
+  .pvt-ticket-filters > .hint {
+    font-size: 9px;
+  }
+  .pvt-ticket-details {
+    padding: 0 16px 16px;
+  }
+  .pvt-receipt h3 {
+    font-size: 14px;
+  }
+  .pvt-ticket-details .payment-panel .button-row {
+    gap: 8px;
+  }
+}
