@@ -5,6 +5,7 @@ import com.ttcsn.common.dto.SeatDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -17,6 +18,9 @@ public interface VenueClient {
 
     @GetMapping("/internal/rooms/{roomId}")
     RoomDto getRoom(@PathVariable("roomId") Long roomId);
+
+    @GetMapping("/internal/rooms/by-ids")
+    List<RoomDto> getRoomsByIds(@RequestParam("ids") List<Long> ids);
 
     @GetMapping("/internal/rooms/{roomId}/seats")
     List<SeatDto> getSeatsByRoom(@PathVariable("roomId") Long roomId);
