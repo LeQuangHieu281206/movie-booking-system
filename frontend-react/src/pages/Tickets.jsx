@@ -5,7 +5,7 @@ import { Button, Empty, ErrorBox, Icon, Loading } from "../components/UI.jsx";
 import CustomerForm from "../components/CustomerForm.jsx";
 import PaymentPanel from "../components/PaymentPanel.jsx";
 
-function TicketList({ api, mode, user, movies, revision }) {
+function TicketList({ api, user, movies, revision }) {
   const result = useLoad(
     (options) => api.bookings(user.userId, options),
     [api, user.userId, revision],
@@ -97,7 +97,6 @@ function TicketList({ api, mode, user, movies, revision }) {
                   <PaymentPanel
                     key={booking.bookingId}
                     api={api}
-                    mode={mode}
                     booking={booking}
                     onUpdate={(latest) =>
                       setUpdates((current) => ({
@@ -115,7 +114,7 @@ function TicketList({ api, mode, user, movies, revision }) {
   );
 }
 
-export default function Tickets({ api, mode, user, onUser, movies, revision }) {
+export default function Tickets({ api, user, onUser, movies, revision }) {
   return (
     <section className="container page-section">
       <span className="eyebrow">NHỮNG CUỘC HẸN TRÊN MÀN ẢNH LỚN</span>
@@ -124,9 +123,8 @@ export default function Tickets({ api, mode, user, onUser, movies, revision }) {
       <CustomerForm api={api} user={user} onUser={onUser} />
       {user && (
         <TicketList
-          key={`${mode}-${user.userId}`}
+          key={user.userId}
           api={api}
-          mode={mode}
           user={user}
           movies={movies}
           revision={revision}

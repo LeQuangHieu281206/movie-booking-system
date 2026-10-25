@@ -1,5 +1,4 @@
 import { joinSeats } from "../lib/domain.js";
-import { createDemoApi } from "./demo.js";
 import { randomId } from "../lib/randomId.js";
 
 export function createHttpClient(fetchImpl = globalThis.fetch) {
@@ -126,6 +125,6 @@ export function createLiveApi(request = createHttpClient()) {
   };
 }
 
-export function createApi(mode) {
-  return mode === "demo" ? createDemoApi() : createLiveApi();
+export function createApi() {
+  return createLiveApi();
 }

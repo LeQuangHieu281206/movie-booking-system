@@ -15,7 +15,6 @@ import PaymentPanel from "../components/PaymentPanel.jsx";
 
 export default function Booking({
   api,
-  mode,
   showtimeId,
   movie,
   user,
@@ -261,15 +260,10 @@ export default function Booking({
                   <p>
                     Khách hàng #{booking.userId} · Booking #{booking.bookingId}
                   </p>
-                  <p>
-                    {mode === "demo"
-                      ? "Vé mẫu, chỉ lưu trong trình duyệt này."
-                      : "Booking đã được trả về từ backend."}
-                  </p>
+                  <p>Booking đã được trả về từ backend.</p>
                 </div>
                 <PaymentPanel
                   api={api}
-                  mode={mode}
                   booking={booking}
                   onUpdate={setBooking}
                   onBusy={setBusy}
@@ -355,10 +349,7 @@ export default function Booking({
                 )}
               </strong>
             </div>
-            <p className="hint">
-              {selected.length} vé ·{" "}
-              {mode === "demo" ? "Dữ liệu mẫu" : "Dữ liệu backend"}
-            </p>
+            <p className="hint">{selected.length} vé · Dữ liệu backend</p>
           </aside>
         </div>
       )}

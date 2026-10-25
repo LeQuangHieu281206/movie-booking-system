@@ -1,5 +1,3 @@
-import { randomId } from "../lib/randomId.js";
-
 const STORAGE_KEY = "cineroom-auth";
 
 // Chuyển UserSummary của backend ({id, email, fullName, role}) sang shape
@@ -86,71 +84,3 @@ export function createAuthService(request) {
     },
   };
 }
-
-// Demo mode: không gọi backend — đăng nhập/đăng ký ghi user vào cùng kho dữ
-// liệu mẫu với đặt vé (qua ensureDemoUser) để booking tìm thấy khách hàng.
-// Mật khẩu lưu riêng theo email; tài khoản mẫu: demo@cineroom / demopass.
-import { ensureDemoUser } from "./demo.js";
-
-export function createDemoAuthService() {
-  const USERS_KEY = "cineroom-demo-users";
-  const readUsers = () => {
-    try {
-      return JSON.parse(localStorage.getItem(USERS_KEY)) || [
-        { email: "demo@cineroom", password: "demopass" },
-      ];
-    } catch {
-      return [{ email: "demo@cineroom", password: "demopass" }];
-    }
-  };
-  const saveUsers = (users) => {
-    try {
-      localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    } catch {
-      /* bỏ qua nếu trình duyệt chặn localStorage. */
-    }
-  };
-  const checkPassword = (email, password) => {
-    const users = readUsers();
-    if (users.some((item) => item.email === email.trim() && item.password === password))
-      return users;
-    throw Object.assign(
-      new Error("Email hoặc mật khẩu không đúng (chế độ dữ liệu mẫu)."),
-      { status: 401 },
-    );
-  };
-  return {
-    restore: () => read(),
-    persist: (session) => write(session),
-    logout: () => write(null),
-    async login(email, password) {
-      checkPassword(email, password);
-      // Đồng bộ user vào kho đặt vé và dùng userId của kho đó.
-      const user = await ensureDemoUser({
-        email,
-        fullName: email.split("@")[0],
-      });
-      const session = { accessToken: null, refreshToken: null, user };
-      write(session);
-      return session;
-    },
-    async register(fields) {
-      const users = readUsers();
-      if (users.some((item) => item.email === fields.email.trim()))
-        throw Object.assign(new Error("Email này đã được đăng ký."), {
-          status: 409,
-        });
-      const user = await ensureDemoUser(fields);
-      users.push({ email: user.email, password: fields.password });
-      saveUsers(users);
-      const session = { accessToken: null, refreshToken: null, user };
-      write(session);
-      return session;
-    },
-    async refresh() {
-      return this.restore();
-    },
-  };
-}
-
-export { randomId };

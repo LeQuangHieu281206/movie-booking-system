@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, ErrorBox, Icon } from "../components/UI.jsx";
 
-export default function Auth({ auth, mode, user, onUser, onDone }) {
+export default function Auth({ auth, user, onUser, onDone }) {
   const [tab, setTab] = useState("login");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -54,12 +54,6 @@ export default function Auth({ auth, mode, user, onUser, onDone }) {
             Đăng ký
           </button>
         </div>
-        {mode === "demo" && (
-          <p className="auth-hint">
-            Chế độ dữ liệu mẫu: dùng tài khoản <b>demo@cineroom / demopass</b>{" "}
-            hoặc đăng ký tài khoản mới (chỉ lưu trong trình duyệt).
-          </p>
-        )}
         {error && <ErrorBox message={error} />}
         <form onSubmit={submit} key={tab}>
           <fieldset disabled={busy}>
