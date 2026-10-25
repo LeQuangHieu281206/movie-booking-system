@@ -1,6 +1,7 @@
 package com.ttcsn.user.controller;
 
 import com.ttcsn.user.dto.request.LoginRequest;
+import com.ttcsn.user.dto.request.RefreshTokenRequest;
 import com.ttcsn.user.dto.request.RegisterRequest;
 import com.ttcsn.user.dto.response.AuthResponse;
 import com.ttcsn.user.dto.response.UserSummary;
@@ -33,9 +34,15 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-    /** Đăng nhập: sai thông tin -> 401 với thông báo chung; đúng -> 200 + AuthResponse. */
+    /** Đăng nhập: sai thông tin -> 401 với thông báo chung; đúng -> 200 + AuthResponse (access + refresh token). */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    /** Đổi refresh token lấy cặp token mới. Token sai/hết hạn/sai loại -> 401 (InvalidTokenException). */
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refresh(request.refreshToken()));
     }
 }
