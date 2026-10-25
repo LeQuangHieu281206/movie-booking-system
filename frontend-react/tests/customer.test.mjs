@@ -7,7 +7,6 @@ import {
   toCustomerProfile,
 } from "../src/lib/customer.js";
 import { createLiveApi } from "../src/services/api.js";
-import { createDemoApi } from "../src/services/demo.js";
 
 test("Mã khách hàng: nhận số nguyên dương và dạng #12, từ chối phần còn lại", () => {
   assert.equal(parseCustomerId(" 12 "), 12);
@@ -82,17 +81,4 @@ test("Tạo hồ sơ qua API thật luôn gửi role CUSTOMER dù dữ liệu fo
   const profile = toCustomerProfile(await api.createCustomer(fields));
   assert.equal(sent.body.role, "CUSTOMER");
   assert.equal(profile.userId, 9);
-});
-
-test("Demo: email trùng bị từ chối, mã lạ báo không tìm thấy, mã đúng trả hồ sơ", async () => {
-  const store = new Map();
-  const api = createDemoApi({ getItem: (k) => store.get(k), setItem: (k, v) => store.set(k, v) });
-  const fields = normalizeCustomerFields({ fullName: "An", email: "An@Example.com" });
-  const user = toCustomerProfile(await api.createCustomer(fields));
-  await assert.rejects(
-    api.createCustomer({ ...fields, email: "an@example.com" }),
-    (e) => /đã có hồ sơ/.test(customerErrorMessage(e, "create")),
-  );
-  await assert.rejects(api.user(999), (e) => /Không tìm thấy/.test(customerErrorMessage(e, "lookup")));
-  assert.equal(toCustomerProfile(await api.user(user.userId), user.userId).email, "An@Example.com");
 });

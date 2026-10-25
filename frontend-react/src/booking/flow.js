@@ -174,12 +174,10 @@ export function filterTickets(
       return order === "oldest" ? aTime - bTime : bTime - aTime;
     });
 }
-export function receiptText(booking, receipt, mode) {
+export function receiptText(booking, receipt) {
   return [
     "CINEROOM — THÔNG TIN ĐẶT VÉ",
-    mode === "demo"
-      ? "DỮ LIỆU MẪU — KHÔNG CÓ GIÁ TRỊ VÀO RẠP"
-      : "Bản ghi tham khảo — không thay thế vé do rạp phát hành",
+    "Bản ghi tham khảo — không thay thế vé do rạp phát hành",
     `Mã đặt vé: ${booking.bookingCode}`,
     `Booking: #${booking.bookingId}`,
     `Khách hàng: #${booking.userId}`,

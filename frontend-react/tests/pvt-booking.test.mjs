@@ -226,8 +226,8 @@ test("Trình duyệt chặn storage không làm vỡ luồng lưu bản ghi", ()
   assert.equal(store.action("live", b).kind, "pay");
 });
 test("Bản ghi tải xuống không giả làm vé thật hoặc tự bổ sung ghế không có", () => {
-  const text = receiptText(booking(), null, "demo");
-  assert.match(text, /KHÔNG CÓ GIÁ TRỊ/);
+  const text = receiptText(booking(), null);
+  assert.match(text, /Bản ghi tham khảo/);
   assert.match(text, /Không có bản ghi ghế/);
   assert.doesNotMatch(text, /Ghế theo bản ghi/);
 });

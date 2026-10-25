@@ -5,12 +5,11 @@ import { statusText, money } from "../lib/domain.js";
 // Payment is a simulator in the supplied backend, not a bank integration.
 export default function PaymentPanel({
   api,
-  mode,
   booking,
   onUpdate,
   onBusy = () => {},
 }) {
-  const key = `cineroom-payment-attempt:${mode}:${booking.bookingId}`;
+  const key = `cineroom-payment-attempt:${booking.bookingId}`;
   const [sent, setSent] = useState(() => sessionStorage.getItem(key) === "1");
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),

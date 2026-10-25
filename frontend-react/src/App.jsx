@@ -8,10 +8,7 @@ import { Cinemas, Showtimes } from "./pages/Venues.jsx";
 import Booking from "./pages/Booking.jsx";
 import Tickets from "./pages/Tickets.jsx";
 import Auth from "./pages/Auth.jsx";
-import {
-  createAuthService,
-  createDemoAuthService,
-} from "./services/auth.js";
+import { createAuthService } from "./services/auth.js";
 
 const nav = [
   ["home", "Trang chủ"],
@@ -42,15 +39,9 @@ function save(key, value) {
   }
 }
 
-function Workspace({ mode, onMode }) {
-  const api = useMemo(() => createApi(mode), [mode]);
-  const auth = useMemo(
-    () =>
-      mode === "demo"
-        ? createDemoAuthService()
-        : createAuthService(createHttpClient()),
-    [mode],
-  );
+function Workspace() {
+  const api = useMemo(() => createApi(), []);
+  const auth = useMemo(() => createAuthService(createHttpClient()), []);
   const [route, setRoute] = useState(readRoute),
     [movie, setMovie] = useState(null),
     [showtime, setShowtime] = useState(null),
@@ -86,11 +77,11 @@ function Workspace({ mode, onMode }) {
     const session = auth.restore();
     if (session?.user) {
       setUser(session.user);
-      save(`cineroom-user:${mode}`, String(session.user.userId));
+      save("cineroom-user", String(session.user.userId));
     }
-  }, [auth, mode]);
+  }, [auth]);
   useEffect(() => {
-    const storedId = safeGet(`cineroom-user:${mode}`);
+    const storedId = safeGet("cineroom-user");
     if (!storedId) return;
     let active = true;
     const controller = new AbortController();
@@ -109,11 +100,11 @@ function Workspace({ mode, onMode }) {
       active = false;
       controller.abort();
     };
-  }, [api, mode]);
+      }, [api]);
   function remember(customer) {
     setUser(customer);
     setUserError("");
-    save(`cineroom-user:${mode}`, customer ? String(customer.userId) : null);
+    save("cineroom-user", customer ? String(customer.userId) : null);
   }
   function navigate(next) {
     setRoute(next);
@@ -172,13 +163,6 @@ function Workspace({ mode, onMode }) {
           </nav>
           <div className="header-actions">
             <button
-              className={`mode-pill ${mode}`}
-              onClick={() => onMode(mode === "demo" ? "live" : "demo")}
-            >
-              <span />
-              {mode === "demo" ? "Dữ liệu mẫu" : "Backend thật"}
-            </button>
-            <button
               className="profile-button"
               aria-label={user ? `Hồ sơ ${user.fullName}` : "Hồ sơ khách hàng"}
               onClick={() => setProfileOpen(true)}
@@ -193,7 +177,7 @@ function Workspace({ mode, onMode }) {
                 onClick={() => {
                   auth.logout();
                   setUser(null);
-                  save(`cineroom-user:${mode}`, null);
+                  save("cineroom-user", null);
                   navigate("home");
                 }}
               >
@@ -213,17 +197,6 @@ function Workspace({ mode, onMode }) {
           </div>
         </div>
       </header>
-      <div className={`mode-banner ${mode}`}>
-        <span>
-          {mode === "demo"
-            ? "Bạn đang trải nghiệm dữ liệu mẫu. Vé chỉ được lưu trong trình duyệt, không gửi đến backend."
-            : "Đang sử dụng API backend. Thanh toán của dự án là mô phỏng, không thu tiền thật."}
-        </span>
-        <button onClick={() => onMode(mode === "demo" ? "live" : "demo")}>
-          {mode === "demo" ? "Chuyển sang backend" : "Thử dữ liệu mẫu"}
-          <Icon name="arrow" size={13} />
-        </button>
-      </div>
       {userError && (
         <div className="container">
           <ErrorBox message={userError} />
@@ -257,7 +230,6 @@ function Workspace({ mode, onMode }) {
         {route === "auth" && (
           <Auth
             auth={auth}
-            mode={mode}
             user={user}
             onUser={remember}
             onDone={() => navigate("home")}
@@ -266,7 +238,6 @@ function Workspace({ mode, onMode }) {
         {route === "tickets" && (
           <Tickets
             api={api}
-            mode={mode}
             user={user}
             onUser={remember}
             movies={movies}
@@ -308,9 +279,8 @@ function Workspace({ mode, onMode }) {
       )}
       {showtime && (
         <Booking
-          key={`${mode}-${showtime.showtimeId}`}
+          key={showtime.showtimeId}
           api={api}
-          mode={mode}
           showtimeId={showtime.showtimeId}
           movie={movies.find((movie) => movie.movieId === showtime.movieId)}
           user={user}
@@ -344,19 +314,5 @@ function Workspace({ mode, onMode }) {
 }
 
 export default function App() {
-  const [mode, setMode] = useState(() =>
-    new URLSearchParams(location.search).get("mode") === "demo"
-      ? "demo"
-      : safeGet("cineroom-react-mode") === "demo"
-        ? "demo"
-        : "live",
-  );
-  function changeMode(next) {
-    save("cineroom-react-mode", next);
-    const url = new URL(location.href);
-    url.searchParams.delete("mode");
-    history.replaceState(null, "", url);
-    setMode(next);
-  }
-  return <Workspace key={mode} mode={mode} onMode={changeMode} />;
+  return <Workspace />;
 }
