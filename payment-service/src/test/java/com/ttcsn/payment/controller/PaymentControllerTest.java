@@ -2,7 +2,6 @@ package com.ttcsn.payment.controller;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ttcsn.common.event.PaymentCompletedEvent;
 import com.ttcsn.payment.service.PaymentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -10,14 +9,13 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class PaymentControllerTest {
@@ -25,10 +23,8 @@ class PaymentControllerTest {
     @Test
     void createPaymentUsesHeaderUserAndIgnoresClientUserAndAmount() throws Exception {
         PaymentService service = mock(PaymentService.class);
-        PaymentCompletedEvent event = new PaymentCompletedEvent(
-                UUID.randomUUID(), 1L, 42L, new BigDecimal("100000"),
-                OffsetDateTime.now(), PaymentCompletedEvent.STATUS_SUCCESS);
-        when(service.processPayment(1L, 42L, false)).thenReturn(event);
+        when(service.createSePayPayment(1L, 42L))
+                .thenReturn("https://qr.sepay.vn/img?acc=123&bank=MB&amount=100000&des=DH1");
 
         ObjectMapper mapper = new ObjectMapper().findAndRegisterModules()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -46,8 +42,27 @@ class PaymentControllerTest {
                                   "amount": 1
                                 }
                                 """))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.qrUrl").value(
+                        "https://qr.sepay.vn/img?acc=123&bank=MB&amount=100000&des=DH1"));
 
-        verify(service).processPayment(1L, 42L, false);
+        verify(service).createSePayPayment(1L, 42L);
+    }
+
+    @Test
+    void createPaymentWithoutUserIdHeaderIsRejected() throws Exception {
+        PaymentService service = mock(PaymentService.class);
+
+        ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(new PaymentController(service))
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
+                .build();
+
+        mvc.perform(post("/api/createPayment")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookingId\": 1}"))
+                .andExpect(status().isBadRequest());
+
+        verify(service, never()).createSePayPayment(anyLong(), anyLong());
     }
 }

@@ -2,6 +2,7 @@ package com.ttcsn.payment.service;
 
 import com.ttcsn.common.dto.BookingPaymentView;
 import com.ttcsn.common.event.PaymentCompletedEvent;
+import com.ttcsn.common.event.Topics;
 import com.ttcsn.common.exception.ConflictException;
 import com.ttcsn.common.exception.NotFoundException;
 import com.ttcsn.payment.client.BookingClient;
