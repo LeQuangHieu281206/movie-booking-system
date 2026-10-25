@@ -4,6 +4,7 @@
  */
 package com.ttcsn.movie.showtime.service;
 
+import com.ttcsn.common.dto.SeatHoldResult;
 import com.ttcsn.movie.showtime.dto.request.ShowtimeRequest;
 import com.ttcsn.movie.showtime.dto.response.ShowtimeResponse;
 import com.ttcsn.movie.showtime.dto.response.ShowtimeSeatView;
@@ -21,8 +22,20 @@ public interface ShowtimeService {
 
     ShowtimeResponse getShowtimeById(Long showtimeId);
 
-    /** Sơ đồ ghế của 1 suất chiếu (id + trạng thái) — dùng cho booking & frontend. */
+    /** Sơ đồ ghế của 1 suất chiếu (ghế phòng + bản ghi giữ/đặt theo tương tác). */
     List<ShowtimeSeatView> getShowtimeSeats(Long showtimeId);
+
+    /** Giữ chỗ tạm 10 phút; holdBy do server gán từ userId. */
+    ShowtimeSeatView holdShowtimeSeat(Long showtimeId, Long seatId, Long userId);
+
+    /** Bỏ giữ chỗ: chỉ người giữ hoặc ADMIN. */
+    ShowtimeSeatView releaseShowtimeSeat(Long showtimeId, Long seatId, Long userId, boolean admin);
+
+    /** Internal: booking-service chốt ghế BOOKED khi tạo vé. */
+    SeatHoldResult bookSeats(Long showtimeId, List<Long> seatIds, String holdBy);
+
+    /** Internal: booking-service trả ghế về AVAILABLE (hủy vé / bù trừ). */
+    void releaseSeatsInternal(Long showtimeId, List<Long> seatIds);
 
     ShowtimeResponse createShowtime(ShowtimeRequest request);
 

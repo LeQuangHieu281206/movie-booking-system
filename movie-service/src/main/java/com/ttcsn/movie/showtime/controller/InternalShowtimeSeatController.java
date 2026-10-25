@@ -1,65 +1,36 @@
 package com.ttcsn.movie.showtime.controller;
 
-import com.ttcsn.common.dto.SeatIdsRequest;
 import com.ttcsn.common.dto.SeatHoldResult;
-import com.ttcsn.movie.showtime.entity.ShowtimeSeat;
-import com.ttcsn.movie.showtime.entity.enums.SeatStatus;
-import com.ttcsn.movie.showtime.repository.ShowtimeSeatRepository;
+import com.ttcsn.common.dto.SeatIdsRequest;
+import com.ttcsn.movie.showtime.service.ShowtimeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Internal API — booking-service gọi sang để giữ/trả/chốt ghế.
- * KHÔNG expose qua gateway bên ngoài. (Step 5 sẽ thêm lock optimistic + TTL Redis)
+ * Internal API — booking-service gọi sang để chốt/trả ghế theo mô hình
+ * showtime_seats phát sinh theo tương tác (seatId = ghế vật lý của venue).
+ * KHÔNG expose qua gateway bên ngoài.
  */
 @RestController
 @RequestMapping("/internal/showtime-seats")
 @RequiredArgsConstructor
 public class InternalShowtimeSeatController {
 
-    private final ShowtimeSeatRepository showtimeSeatRepository;
+    private final ShowtimeService showtimeService;
 
-    /** Đặt trạng thái ghế về BOOKED khi booking thành công. */
+    /** Chốt ghế BOOKED khi booking tạo thành công (chèn bản ghi nếu ghế chưa có). */
     @PostMapping("/hold")
-    @Transactional
     public SeatHoldResult hold(@RequestBody SeatIdsRequest request) {
-        List<Long> unavailable = request.showtimeSeatIds().stream()
-                .filter(this::isSeatUnavailable)
-                .toList();
-        if (!unavailable.isEmpty()) {
-            return new SeatHoldResult(false, unavailable, "Một hoặc nhiều ghế đã được đặt / đang giữ");
-        }
-        setSeatsStatus(request.showtimeSeatIds(), SeatStatus.BOOKED);
-        return SeatHoldResult.ok();
+        return showtimeService.bookSeats(request.showtimeId(), request.seatIds(), request.holdBy());
     }
 
-    /** Bù trừ (compensation) khi booking fail: trả ghế về AVAILABLE. */
+    /** Bù trừ (compensation) khi booking fail / hủy vé: trả ghế về AVAILABLE. */
     @PostMapping("/release")
-    @Transactional
     public SeatHoldResult release(@RequestBody SeatIdsRequest request) {
-        setSeatsStatus(request.showtimeSeatIds(), SeatStatus.AVAILABLE);
+        showtimeService.releaseSeatsInternal(request.showtimeId(), request.seatIds());
         return SeatHoldResult.ok();
-    }
-
-    /** Xác nhận sau khi payment completed (chốt thêm — hiện BOOKED đã là trạng thái chốt). */
-    @PostMapping("/confirm")
-    @Transactional
-    public SeatHoldResult confirm(@RequestBody SeatIdsRequest request) {
-        return SeatHoldResult.ok();
-    }
-
-    private boolean isSeatUnavailable(Long showtimeSeatId) {
-        return showtimeSeatRepository.findById(showtimeSeatId)
-                .map(ss -> ss.getStatus() != SeatStatus.AVAILABLE)
-                .orElse(true);
-    }
-
-    private void setSeatsStatus(List<Long> showtimeSeatIds, SeatStatus status) {
-        List<ShowtimeSeat> seats = showtimeSeatRepository.findAllById(showtimeSeatIds);
-        seats.forEach(ss -> ss.setStatus(status));
-        showtimeSeatRepository.saveAll(seats);
     }
 }

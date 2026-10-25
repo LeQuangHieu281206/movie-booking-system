@@ -1,24 +1,19 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
- */
 package com.ttcsn.booking.service;
 
 import com.ttcsn.booking.dto.request.BookingCreateRequest;
 import com.ttcsn.booking.dto.request.BookingUpdateRequest;
 import com.ttcsn.booking.dto.response.BookingResponse;
+import com.ttcsn.common.dto.BookingPaymentView;
 
 import java.util.List;
-/**
- *
- * @author quanghieu
- */
+
 public interface BookingService {
-    List<BookingResponse> getAllBookings();
-    BookingResponse getBookingById(Long id);
-    List<BookingResponse> getBookingsByUserId(Long userId);
-    List<BookingResponse> getBookingsByShowtimeId(Long showtimeId);
-    BookingResponse createBooking(BookingCreateRequest request);
-    BookingResponse updateBooking(Long id, BookingUpdateRequest request);
-    void deleteBooking(Long id);
+    List<BookingResponse> getAllBookings(String role);
+    BookingResponse getBookingById(Long id, Long userId, String role);
+    List<BookingResponse> getBookingsByUserId(Long requestedUserId, Long currentUserId, String role);
+    List<BookingResponse> getBookingsByShowtimeId(Long showtimeId, String role);
+    BookingResponse createBooking(BookingCreateRequest request, Long userId);
+    BookingResponse updateBooking(Long id, BookingUpdateRequest request, Long userId, String role);
+    void deleteBooking(Long id, Long userId, String role);
+    BookingPaymentView getPaymentView(Long id);
 }
