@@ -7,8 +7,10 @@ import com.ttcsn.common.exception.ConflictException;
 import com.ttcsn.common.exception.NotFoundException;
 import com.ttcsn.payment.client.BookingClient;
 import com.ttcsn.payment.config.RabbitMQConfig;
+import com.ttcsn.payment.dto.request.SePayWebhookDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,7 +20,8 @@ import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.times;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -34,73 +37,97 @@ class PaymentServiceTest {
     @InjectMocks
     private PaymentService service;
 
+    private static BookingPaymentView booking(Long bookingId, Long userId, String amount, String status) {
+        return new BookingPaymentView(bookingId, userId, amount == null ? null : new BigDecimal(amount), status);
+    }
+
+    // ---------- createSePayPayment ----------
+
     @Test
-    void paysOnlyOwnPendingBookingUsingServerAmount() {
+    void generatesQrForOwnPendingBookingUsingServerAmount() {
         when(bookingClient.getBooking(1L))
-                .thenReturn(new BookingPaymentView(1L, 7L, new BigDecimal("100000"), "PENDING"));
+                .thenReturn(booking(1L, 7L, "100000", "PENDING"));
 
-        PaymentCompletedEvent event = service.processPayment(1L, 7L, false);
+        String qrUrl = service.createSePayPayment(1L, 7L);
 
-        assertThat(event.bookingId()).isEqualTo(1L);
-        assertThat(event.userId()).isEqualTo(7L);
-        assertThat(event.amount()).isEqualByComparingTo("100000");
-        assertThat(event.status()).isEqualTo(PaymentCompletedEvent.STATUS_SUCCESS);
-        verify(rabbitTemplate).convertAndSend(
-                RabbitMQConfig.EXCHANGE, Topics.PAYMENT_COMPLETED, event);
+        assertThat(qrUrl).contains("amount=100000").contains("des=DH1");
+        verifyNoInteractions(rabbitTemplate);
     }
 
     @Test
     void rejectsBookingOfAnotherUser() {
         when(bookingClient.getBooking(1L))
-                .thenReturn(new BookingPaymentView(1L, 8L, new BigDecimal("100000"), "PENDING"));
+                .thenReturn(booking(1L, 8L, "100000", "PENDING"));
 
-        assertThrows(NotFoundException.class, () -> service.processPayment(1L, 7L, false));
+        assertThrows(NotFoundException.class, () -> service.createSePayPayment(1L, 7L));
         verifyNoInteractions(rabbitTemplate);
     }
 
     @Test
     void rejectsBookingThatIsNotPending() {
         when(bookingClient.getBooking(1L))
-                .thenReturn(new BookingPaymentView(1L, 7L, new BigDecimal("100000"), "PAID"));
+                .thenReturn(booking(1L, 7L, "100000", "PAID"));
 
-        assertThrows(ConflictException.class, () -> service.processPayment(1L, 7L, false));
+        assertThrows(ConflictException.class, () -> service.createSePayPayment(1L, 7L));
         verifyNoInteractions(rabbitTemplate);
     }
 
     @Test
     void rejectsInvalidServerAmount() {
         when(bookingClient.getBooking(1L))
-                .thenReturn(new BookingPaymentView(1L, 7L, BigDecimal.ZERO, "PENDING"));
+                .thenReturn(booking(1L, 7L, "0", "PENDING"));
 
-        assertThrows(ConflictException.class, () -> service.processPayment(1L, 7L, false));
+        assertThrows(ConflictException.class, () -> service.createSePayPayment(1L, 7L));
         verifyNoInteractions(rabbitTemplate);
     }
 
     @Test
-    void duplicatePaymentForSameBookingIsIdempotent() {
-        when(bookingClient.getBooking(1L))
-                .thenReturn(new BookingPaymentView(1L, 7L, new BigDecimal("100000"), "PENDING"));
+    void rejectsMissingBookingId() {
+        assertThrows(IllegalArgumentException.class, () -> service.createSePayPayment(null, 7L));
+        verifyNoInteractions(bookingClient, rabbitTemplate);
+    }
 
-        PaymentCompletedEvent first = service.processPayment(1L, 7L, false);
-        PaymentCompletedEvent second = service.processPayment(1L, 7L, false);
+    // ---------- processSePayWebhook ----------
 
-        assertThat(second.paymentId()).isEqualTo(first.paymentId());
-        verify(bookingClient, times(1)).getBooking(1L);
-        verify(rabbitTemplate, times(1)).convertAndSend(
-                RabbitMQConfig.EXCHANGE, Topics.PAYMENT_COMPLETED, first);
+    @Test
+    void webhookPublishesSuccessEventForIncomingTransfer() {
+        SePayWebhookDto dto = new SePayWebhookDto();
+        dto.setTransferType("in");
+        dto.setContent("DH1 nguoi chuyen khoan");
+        dto.setTransferAmount(new BigDecimal("100000"));
+
+        service.processSePayWebhook(dto);
+
+        ArgumentCaptor<PaymentCompletedEvent> captor = ArgumentCaptor.forClass(PaymentCompletedEvent.class);
+        verify(rabbitTemplate).convertAndSend(
+                eq(RabbitMQConfig.EXCHANGE), eq(Topics.PAYMENT_COMPLETED), captor.capture());
+        PaymentCompletedEvent event = captor.getValue();
+        assertThat(event.bookingId()).isEqualTo(1L);
+        assertThat(event.amount()).isEqualByComparingTo("100000");
+        assertThat(event.status()).isEqualTo(PaymentCompletedEvent.STATUS_SUCCESS);
     }
 
     @Test
-    void duplicateFromAnotherUserIsNotLeaked() {
-        when(bookingClient.getBooking(1L))
-                .thenReturn(new BookingPaymentView(1L, 7L, new BigDecimal("100000"), "PENDING"));
-        service.processPayment(1L, 7L, false);
+    void webhookIgnoresOutgoingTransfer() {
+        SePayWebhookDto dto = new SePayWebhookDto();
+        dto.setTransferType("out");
+        dto.setContent("DH1");
+        dto.setTransferAmount(new BigDecimal("100000"));
 
-        assertThrows(NotFoundException.class, () -> service.processPayment(1L, 8L, false));
-        verify(bookingClient, times(1)).getBooking(1L);
-        verify(rabbitTemplate, times(1)).convertAndSend(
-                org.mockito.ArgumentMatchers.eq(RabbitMQConfig.EXCHANGE),
-                org.mockito.ArgumentMatchers.eq(Topics.PAYMENT_COMPLETED),
-                org.mockito.ArgumentMatchers.any(PaymentCompletedEvent.class));
+        service.processSePayWebhook(dto);
+
+        verifyNoInteractions(rabbitTemplate);
+    }
+
+    @Test
+    void webhookIgnoresContentWithoutBookingReference() {
+        SePayWebhookDto dto = new SePayWebhookDto();
+        dto.setTransferType("in");
+        dto.setContent("khong co ma doi soat");
+        dto.setTransferAmount(new BigDecimal("100000"));
+
+        service.processSePayWebhook(dto);
+
+        verifyNoInteractions(rabbitTemplate);
     }
 }
