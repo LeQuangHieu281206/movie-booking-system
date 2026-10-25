@@ -1,0 +1,118 @@
+// Phim và rạp hư cấu, chỉ dành cho chế độ mẫu.
+export const genres = [
+  { genreId: 1, name: "Khoa học viễn tưởng" },
+  { genreId: 2, name: "Tình cảm" },
+  { genreId: 3, name: "Phiêu lưu" },
+  { genreId: 4, name: "Hoạt hình" },
+  { genreId: 5, name: "Giật gân" },
+];
+export const movies = [
+  {
+    movieId: 1,
+    title: "Lối Về Sao Hỏa",
+    description:
+      "Khi tín hiệu cuối cùng từ Trái Đất biến mất, một phi hành gia phải lựa chọn giữa hành trình trở về và bí mật nằm dưới những cồn cát đỏ. Một chuyến đi về khoảng cách, ký ức và điều khiến chúng ta gọi một nơi là nhà.",
+    durationMinutes: 128,
+    language: "Tiếng Việt",
+    releaseDate: "2026-10-16",
+    ageRestriction: "T13",
+    status: "SHOWING",
+    director: "Minh Trần",
+    actors: "An Nguyễn, Hải Lê",
+    genres: [genres[0], genres[2]],
+    posterUrl: "/assets/mars.svg",
+  },
+  {
+    movieId: 2,
+    title: "Sau Cơn Mưa",
+    description:
+      "Trong một hiệu sách nhỏ giữa thành phố, hai người xa lạ tìm thấy những lá thư chưa từng được gửi. Những ngày mưa đưa họ trở lại với ước mơ tưởng đã ngủ quên.",
+    durationMinutes: 105,
+    language: "Tiếng Việt",
+    ageRestriction: "T13",
+    status: "SHOWING",
+    director: "Linh Phạm",
+    actors: "Mai Anh, Quang Vũ",
+    genres: [genres[1]],
+    posterUrl: "/assets/rain.svg",
+  },
+  {
+    movieId: 3,
+    title: "Chuyến Tàu Đêm",
+    description:
+      "Một chuyến tàu không có trên bản đồ. Sáu hành khách và một bí mật phải được giải mã trước khi bình minh xuất hiện.",
+    durationMinutes: 116,
+    language: "Tiếng Việt",
+    ageRestriction: "T16",
+    status: "SHOWING",
+    director: "Đức Hoàng",
+    actors: "Tuấn Lê, Ngọc Hà",
+    genres: [genres[4]],
+    posterUrl: "/assets/train.svg",
+  },
+  {
+    movieId: 4,
+    title: "Đảo Mây",
+    description:
+      "Cô bé Mây cùng người bạn robot nhỏ lên đường tìm hòn đảo trôi giữa bầu trời. Cuộc phiêu lưu khiến cả hai hiểu rằng lòng can đảm có thể bắt đầu từ những điều rất bé.",
+    durationMinutes: 94,
+    language: "Lồng tiếng Việt",
+    ageRestriction: "P",
+    status: "SHOWING",
+    director: "Studio Mây",
+    actors: "Lồng tiếng: Thu An, Bảo Nam",
+    genres: [genres[3], genres[2]],
+    posterUrl: "/assets/cloud.svg",
+  },
+  {
+    movieId: 5,
+    title: "Phía Bên Kia Biển",
+    description:
+      "Một nhiếp ảnh gia trở về làng chài cũ và gặp lại người bạn thời thơ ấu. Giữa những con sóng, họ học cách nói lời tạm biệt với quá khứ.",
+    durationMinutes: 110,
+    language: "Tiếng Việt",
+    ageRestriction: "T13",
+    status: "UPCOMING",
+    director: "Hà Vũ",
+    actors: "Khánh An, Duy Trần",
+    genres: [genres[1]],
+    posterUrl: "/assets/sea.svg",
+  },
+  {
+    movieId: 6,
+    title: "Tín Hiệu 09",
+    description:
+      "Một trạm quan sát nhận được thông điệp từ chính tương lai của mình. Nhóm nghiên cứu chỉ có chín giờ để thay đổi một sự kiện chưa xảy ra.",
+    durationMinutes: 122,
+    language: "Tiếng Việt",
+    ageRestriction: "T16",
+    status: "UPCOMING",
+    director: "Nam Bùi",
+    actors: "Đan Linh, Hoàng Sơn",
+    genres: [genres[0], genres[4]],
+    posterUrl: "/assets/signal.svg",
+  },
+];
+export const cinemas = [
+  {
+    cinemaId: 1,
+    name: "CineRoom Cầu Giấy",
+    city: "Hà Nội",
+    address: "128 Xuân Thủy, Cầu Giấy, Hà Nội",
+    phoneNumber: "024 3768 2026",
+  },
+  {
+    cinemaId: 2,
+    name: "CineRoom Hà Đông",
+    city: "Hà Nội",
+    address: "48 Quang Trung, Hà Đông, Hà Nội",
+    phoneNumber: "024 3355 2026",
+  },
+  {
+    cinemaId: 3,
+    name: "CineRoom Quận 1",
+    city: "TP. Hồ Chí Minh",
+    address: "86 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
+    phoneNumber: "028 3822 2026",
+  },
+];
