@@ -10,4 +10,11 @@ spring:
     password: guest
 
 server:
+  address: 127.0.0.1
   port: 8086
+
+app:
+  services:
+    booking-url: http://127.0.0.1:8082
+  sepay:
+    webhook-api-key: ${SEPAY_WEBHOOK_API_KEY:}

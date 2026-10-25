@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -29,7 +30,7 @@ public class InternalVenueController {
     @GetMapping("/rooms/{roomId}")
     @Transactional(readOnly = true)
     public RoomDto getRoom(@PathVariable Long roomId) {
-        return roomRepository.findById(roomId)
+        return roomRepository.findWithCinemaById(roomId)
                 .map(this::toRoomDto)
                 .orElse(null); // null -> phía gọi tự quyết định NotFoundException
     }
@@ -44,6 +45,18 @@ public class InternalVenueController {
                         seat.getSeatRow(),
                         seat.getSeatNumber(),
                         seat.getSeatType() != null ? seat.getSeatType().name() : null))
+                .toList();
+    }
+
+    /** Lấy nhiều phòng trong 1 lần gọi + 1 câu JOIN FETCH rạp — tránh 1 Feign call / suất (list 1.000+ suất). */
+    @GetMapping("/rooms/by-ids")
+    @Transactional(readOnly = true)
+    public List<RoomDto> getRoomsByIds(@RequestParam("ids") List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return roomRepository.findAllWithCinemaByIds(ids).stream()
+                .map(this::toRoomDto)
                 .toList();
     }
 

@@ -5,6 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
  * Payment Service — Phân rã theo mô hình Microservices / SOA.
@@ -22,7 +23,10 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
  * @author Nhóm phát triển (Module Payment Service)
  */
 @Slf4j
-@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class })
+@SpringBootApplication(
+        scanBasePackages = "com.ttcsn",
+        exclude = { DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class })
+@EnableFeignClients(basePackages = "com.ttcsn.payment.client")
 public class PaymentServiceApplication {
 
     public static void main(String[] args) {
