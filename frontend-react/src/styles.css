@@ -2431,3 +2431,53 @@ footer {
     min-width: 0;
   }
 }
+
+/* --- Trang Tài khoản (đăng nhập / đăng ký) --- */
+.auth-card {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: var(--space-5, 24px);
+  border: 1px solid var(--border, #e3e3e8);
+  border-radius: 14px;
+  background: var(--surface, #fff);
+  display: grid;
+  gap: 16px;
+}
+.auth-card .segmented {
+  width: 100%;
+}
+.auth-card form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.auth-card form label + label {
+  margin-top: 12px;
+}
+.auth-card input {
+  padding: 10px 12px;
+  border: 1px solid var(--border, #d8d8de);
+  border-radius: 9px;
+  font: inherit;
+  background: var(--bg, #fafafa);
+}
+.auth-card input:focus-visible {
+  outline: 2px solid var(--accent, #e11d48);
+  outline-offset: 1px;
+}
+.auth-card fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.auth-hint {
+  font-size: 0.88rem;
+  color: var(--muted, #6b6b76);
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .auth-card {
+    padding: 18px 14px;
+  }
+}

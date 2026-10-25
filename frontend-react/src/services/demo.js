@@ -126,6 +126,13 @@ export function createDemoApi(storage = globalThis.localStorage) {
         "Không tìm thấy mã khách hàng trong dữ liệu mẫu.",
       );
     },
+    async userByEmail(email) {
+      const found = load().users.find(
+        (u) => u.email.toLowerCase() === String(email).trim().toLowerCase(),
+      );
+      if (!found) throw new Error("Không tìm thấy khách hàng theo email.");
+      return found;
+    },
     async createCustomer(fields) {
       const data = load();
       if (
@@ -228,4 +235,13 @@ export function createDemoApi(storage = globalThis.localStorage) {
       };
     },
   };
+}
+
+// Đảm bảo user đăng nhập qua trang Tài khoản tồn tại trong cùng kho dữ liệu
+// mẫu với đặt vé, để createBooking tìm thấy khách hàng. Trả về user trong kho.
+export function ensureDemoUser({ email, fullName, phoneNumber = "" }) {
+  const api = createDemoApi();
+  return api
+    .userByEmail(email)
+    .catch(() => api.createCustomer({ fullName, email, phoneNumber }));
 }

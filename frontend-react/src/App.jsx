@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { createApi } from "./services/api.js";
+import { createApi, createHttpClient } from "./services/api.js";
 import { useLoad } from "./lib/useLoad.js";
 import { Button, ErrorBox, Icon, Modal } from "./components/UI.jsx";
 import CustomerForm from "./components/CustomerForm.jsx";
@@ -7,6 +7,11 @@ import { Catalog, Home, MovieDetail } from "./pages/Catalog.jsx";
 import { Cinemas, Showtimes } from "./pages/Venues.jsx";
 import Booking from "./pages/Booking.jsx";
 import Tickets from "./pages/Tickets.jsx";
+import Auth from "./pages/Auth.jsx";
+import {
+  createAuthService,
+  createDemoAuthService,
+} from "./services/auth.js";
 
 const nav = [
   ["home", "Trang chủ"],
@@ -14,6 +19,7 @@ const nav = [
   ["showtimes", "Lịch chiếu"],
   ["cinemas", "Rạp chiếu"],
   ["tickets", "Vé của tôi"],
+  ["auth", "Tài khoản"],
 ];
 const readRoute = () =>
   nav.some(([key]) => key === location.hash.slice(1))
@@ -38,6 +44,13 @@ function save(key, value) {
 
 function Workspace({ mode, onMode }) {
   const api = useMemo(() => createApi(mode), [mode]);
+  const auth = useMemo(
+    () =>
+      mode === "demo"
+        ? createDemoAuthService()
+        : createAuthService(createHttpClient()),
+    [mode],
+  );
   const [route, setRoute] = useState(readRoute),
     [movie, setMovie] = useState(null),
     [showtime, setShowtime] = useState(null),
@@ -69,6 +82,13 @@ function Workspace({ mode, onMode }) {
     window.addEventListener("hashchange", change);
     return () => window.removeEventListener("hashchange", change);
   }, []);
+  useEffect(() => {
+    const session = auth.restore();
+    if (session?.user) {
+      setUser(session.user);
+      save(`cineroom-user:${mode}`, String(session.user.userId));
+    }
+  }, [auth, mode]);
   useEffect(() => {
     const storedId = safeGet(`cineroom-user:${mode}`);
     if (!storedId) return;
@@ -166,6 +186,30 @@ function Workspace({ mode, onMode }) {
               <Icon name="user" size={18} />
               <span>{user ? user.fullName.split(" ").at(-1) : "Hồ sơ"}</span>
             </button>
+            {user ? (
+              <button
+                className="profile-button"
+                aria-label="Đăng xuất"
+                onClick={() => {
+                  auth.logout();
+                  setUser(null);
+                  save(`cineroom-user:${mode}`, null);
+                  navigate("home");
+                }}
+              >
+                <Icon name="close" size={16} />
+                <span>Đăng xuất</span>
+              </button>
+            ) : (
+              <button
+                className="profile-button"
+                aria-label="Đăng nhập hoặc đăng ký"
+                onClick={() => navigate("auth")}
+              >
+                <Icon name="user" size={16} />
+                <span>Đăng nhập</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -210,6 +254,15 @@ function Workspace({ mode, onMode }) {
           />
         )}
         {route === "cinemas" && <Cinemas api={api} onSchedule={openSchedule} />}
+        {route === "auth" && (
+          <Auth
+            auth={auth}
+            mode={mode}
+            user={user}
+            onUser={remember}
+            onDone={() => navigate("home")}
+          />
+        )}
         {route === "tickets" && (
           <Tickets
             api={api}
