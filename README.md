@@ -126,7 +126,13 @@ Chạy thành công khi: trang hiển thị phim đang chiếu (có poster), b�
 - [x] Đặt vé Saga-lite: giữ/chốt ghế, Booking PENDING, chi tiết vé
 - [x] Thanh toán mô phỏng: publish event → Booking `PAID/CANCELLED` + trả ghế (bù trừ); đặt trùng ghế trả **409**
 - [x] Giao diện CineRoom: duyệt phim, lịch chiếu, chọn ghế, đặt vé, vé của tôi
-- [ ] Xác thực/phân quyền, cổng thanh toán thật, kiểm thử tự động + OpenAPI
+- [ ] Cổng thanh toán thật, kiểm thử tự động + OpenAPI
+
+## Xác thực & token (JWT)
+
+- **Access token**: HS256, TTL 2 giờ, gateway verify và gắn `X-User-Id`/`X-User-Role` xuống backend. Client không thể tự gắn 2 header này (gateway luôn xóa header client gửi trước khi verify).
+- **Refresh token**: HS256, TTL 7 ngày (cấu hình qua `JWT_REFRESH_EXPIRATION_MS`), cấp kèm lúc `login`/`register`. Dùng `POST /api/auth/refresh` với body `{"refreshToken": "..."}` để lấy access token mới — role được nạp lại từ DB lúc refresh. Refresh token dùng để gọi API thường hoặc access token đưa vào refresh đều bị **401**.
+- **Không có logout phía server**: token không lưu DB, không có danh sách revoke — access token hết hạn sau 2 giờ, refresh token chỉ mất hiệu lực khi **hết hạn (7 ngày)** hoặc user bị xóa khỏi DB. Muốn "đăng xuất" ở client chỉ cần xóa token đã lưu. Xoay vòng (rotation) refresh token chưa triển khai.
 
 ## Nhóm thực hiện
 
