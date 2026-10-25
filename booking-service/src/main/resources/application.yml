@@ -11,8 +11,8 @@ spring:
 
   # ---------- DataSource: Supabase (DB chính, cấu hình mặc định) ----------
   datasource:
-    url: jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0
-    username: postgres.eyiwxhziwivaodmjtsqc
+    url: jdbc:postgresql://aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0
+    username: postgres.tpofaymsrfgveiqjtocx
     password: daihoccongnghiephanoi
     driver-class-name: org.postgresql.Driver
   jpa:
@@ -21,11 +21,12 @@ spring:
     open-in-view: false
 
 server:
+  address: 127.0.0.1
   port: 8082
 
 # ---------- Feign targets ----------
 app:
   services:
-    user-url: http://localhost:8084
-    movie-url: http://localhost:8081
-    venue-url: http://localhost:8083
+    user-url: http://127.0.0.1:8084
+    movie-url: http://127.0.0.1:8081
+    venue-url: http://127.0.0.1:8083
