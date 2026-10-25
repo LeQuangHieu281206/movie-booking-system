@@ -1,15 +1,20 @@
 package com.ttcsn.movie.showtime.dto.response;
 
+import java.time.OffsetDateTime;
+
 /**
- * View ghế theo suất chiếu (bảng showtime_seats) — phục vụ sơ đồ ghế
- * và luồng test Postman: lấy showtimeSeatIds AVAILABLE để createBooking.
+ * View 1 ghế theo suất chiếu cho sơ đồ ghế + đặt vé.
  *
- * seatRow/seatNumber lấy tư vị venue-service? Không — lưu tôn trọng id ghế;
- * chi tiết hàng/cột nằm ở venue (seats). Ở đây trả seatId + status là đủ với booking.
+ * <p>Ghế chưa có bản ghi = AVAILABLE (showtimeSeatId null). seatRow/seatNumber/seatType
+ * lấy từ venue-service. status: AVAILABLE | HOLDING | BOOKED. Không trả holdBy ra public.
  */
 public record ShowtimeSeatView(
         Long showtimeSeatId,
         Long showtimeId,
         Long seatId,
-        String status   // AVAILABLE | HELD | BOOKED
+        String seatRow,
+        Short seatNumber,
+        String seatType,
+        String status,
+        OffsetDateTime holdUntil
 ) {}

@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 /**
  *
@@ -48,7 +49,8 @@ public class MovieServiceImpl implements MovieService {
     @Override
     @Transactional(readOnly = true)
     public List<MovieResponse> getAllMovies() {
-        return movieRepository.findAll().stream()
+        // JOIN FETCH tránh N+1: 50 phim × 1 query thể loại riêng = ~100 round-trip qua pooler Supabase
+        return movieRepository.findAllWithGenres().stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -79,13 +81,27 @@ public class MovieServiceImpl implements MovieService {
     @Override
     @Transactional(readOnly = true)
     public List<MovieResponse> searchMovies(MovieStatus status, List<Long> genreIds, String title) {
+        // Không có điều kiện lọc → 1 câu JOIN FETCH (tránh N+1: 50 phim × 1 query thể loại × ~0.4s/pooler ≈ 20s)
+        if (status == null && (genreIds == null || genreIds.isEmpty()) && (title == null || title.isBlank())) {
+            return movieRepository.findAllWithGenres().stream()
+                    .map(this::toResponse)
+                    .toList();
+        }
         Specification<Movie> spec = Specification.where(MovieSpecifications.hasStatus(status))
                 .and(MovieSpecifications.hasAnyGenre(genreIds))
                 .and(MovieSpecifications.titleContains(title));
 
-        return movieRepository.findAll(spec).stream()
-                .map(this::toResponse)
-                .toList();
+        List<Movie> matched = movieRepository.findAll(spec);
+        // Hydrate genres chỉ với 1 câu IN(...) rồi giữ đúng thứ tự đã match
+        if (!matched.isEmpty()) {
+            Set<Long> ids = matched.stream().map(Movie::getMovieId).collect(java.util.stream.Collectors.toSet());
+            Map<Long, Movie> hydrated = movieRepository.findWithGenresByIds(ids).stream()
+                    .collect(java.util.stream.Collectors.toMap(Movie::getMovieId, m -> m));
+            return matched.stream()
+                    .map(m -> toResponse(hydrated.getOrDefault(m.getMovieId(), m)))
+                    .toList();
+        }
+        return List.of();
     }
 
     @Override

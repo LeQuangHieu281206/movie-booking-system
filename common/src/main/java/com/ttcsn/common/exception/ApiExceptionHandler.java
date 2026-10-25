@@ -10,6 +10,9 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
@@ -22,15 +25,35 @@ import java.util.Map;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
     // ---- 404: mọi NotFoundException subclass ----
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException ex, HttpServletRequest request) {
         return ErrorResponseFactory.build(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
+    // ---- 401: mọi UnauthorizedException subclass (sai đăng nhập, token sai/hết hạn...) ----
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex, HttpServletRequest request) {
+        return ErrorResponseFactory.build(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
+
+    // ---- 403: đã xác thực nhưng không đủ quyền ----
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex, HttpServletRequest request) {
+        return ErrorResponseFactory.build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
     // ---- 409 ----
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex, HttpServletRequest request) {
+        return ErrorResponseFactory.build(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    /** Tranh chấp ghế (giữ chỗ bởi khách khác, ghế đã chốt, ghế đã bắt đầu chiếu...). */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleSeatConflict(IllegalStateException ex, HttpServletRequest request) {
         return ErrorResponseFactory.build(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
@@ -65,6 +88,12 @@ public class ApiExceptionHandler {
         return ErrorResponseFactory.build(HttpStatus.BAD_REQUEST, message, request);
     }
 
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingParam(MissingServletRequestParameterException ex, HttpServletRequest request) {
+        String message = String.format("Thiếu tham số bắt buộc: %s", ex.getParameterName());
+        return ErrorResponseFactory.build(HttpStatus.BAD_REQUEST, message, request);
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleNotReadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
         return ErrorResponseFactory.build(HttpStatus.BAD_REQUEST, "Request body thiếu hoặc không đúng định dạng JSON", request);
@@ -73,6 +102,7 @@ public class ApiExceptionHandler {
     // ---- 500 ----
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest request) {
+        log.error("Unhandled exception tại {}?{}", request.getRequestURI(), request.getQueryString(), ex);
         return ErrorResponseFactory.build(HttpStatus.INTERNAL_SERVER_ERROR, "Đã có lỗi xảy ra, vui lòng thử lại sau", request);
     }
 }
