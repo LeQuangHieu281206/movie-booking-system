@@ -1,9 +1,0 @@
-{
-  "name": "cineroom-frontend",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "description": "Frontend đặt vé xem phim tiếng Việt cho movie-booking-system",
-  "scripts": {"start":"node server.mjs", "dev":"node server.mjs"},
-  "engines": {"node": ">=18"}
-}

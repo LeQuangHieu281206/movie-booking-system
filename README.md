@@ -24,9 +24,9 @@ Hệ thống đặt vé xem phim trực tuyến của **Nhóm 8**, kiến trúc 
 - **Spring AMQP (RabbitMQ)** — giao tiếp bất đồng bộ (Saga choreography)
 - **Lombok**; thư viện DTO/event/exception dùng chung ở module `common`
 
-### Frontend (CineRoom — `frontend/cine-ticket-frontend`)
-- **HTML/CSS/JavaScript thuần** (module ES) — không React, không Vite, **không có package phụ thuộc**
-- `server.mjs` (Node ≥ 18): phục vụ file tĩnh + proxy `/api/**` về gateway
+### Frontend (CineRoom — `frontend-react`)
+- **React 19 + Vite** — giao diện đặt vé (phim, lịch chiếu, chọn ghế, thanh toán, vé của tôi)
+- Vite dev server port **5173**, proxy `/api/**` về gateway (cấu hình `BACKEND_URL`)
 
 ### Hạ tầng
 - **Supabase PostgreSQL** — một database dùng chung cho tất cả service
@@ -38,7 +38,7 @@ Hệ thống đặt vé xem phim trực tuyến của **Nhóm 8**, kiến trúc 
 Trình duyệt
     |
     v
-CineRoom frontend :5173  (Node server.mjs — file tĩnh + proxy /api/**)
+CineRoom frontend :5173  (React + Vite — proxy /api/** về gateway)
     |
     v
 API Gateway :8080  (routes /api/** theo service)
@@ -64,7 +64,7 @@ Quy ước API: các endpoint dạng **verb-path** dưới gateway `/api/**` (v�
 | venue-service | 8083 | Cinema, Room, Seat | CRUD rạp/phòng/ghế; expose `/internal/rooms/**` |
 | movie-service | 8081 | Movie, Genre, Showtime, ShowtimeSeat | CRUD phim/suất chiếu; **tồn kho ghế phát sinh theo tương tác** (giữ/nhả/chốt mới sinh bản ghi); giữ/trả/chốt ghế cho booking |
 | booking-service | 8082 | Booking, BookingDetail | Saga orchestrator-lite: kiểm user/suất/phòng, chốt ghế, tạo Booking PENDING; consume `payment.completed` |
-| user-service | 8084 | User | CRUD người dùng; expose `/internal/users/{id}/exists` |
+| user-service | 8084 | User, Auth | CRUD người dùng; đăng ký/đăng nhập JWT (`/api/auth/**`); expose `/internal/users/{id}/exists` |
 | payment-service | 8086 | Payment (mô phỏng) | Ghi nhận thanh toán, publish `payment.completed` lên RabbitMQ |
 | notification-service | 8087 | Notification | Consume `payment.completed`, gửi vé (hiện log) |
 
@@ -80,7 +80,7 @@ movie-booking-system/
 ├── payment-service/        # Payment mô phỏng :8086
 ├── notification-service/   # Notification :8087
 ├── common/                 # DTO/event/exception dùng chung
-├── frontend/cine-ticket-frontend/  # Giao diện CineRoom (vanilla JS + Node server :5173)
+├── frontend-react/         # Giao diện React + Vite (:5173, proxy /api/**)
 ├── docker-compose.yml      # RabbitMQ (Redis chỉ dự phòng, không dùng)
 ├── run-services.sh         # Chạy 7 service nền
 ├── stop-services.sh        # Dừng toàn bộ service
@@ -91,7 +91,7 @@ movie-booking-system/
 ## Yêu cầu môi trường
 
 - **JDK 21** và **Maven** (kiểm tra bằng `mvn -v`)
-- **Node.js ≥ 18** cho frontend — không cần `npm install`
+- **Node.js ≥ 20.19 (hoặc ≥ 22.12)** cho frontend
 - **Docker** — chỉ cần để bật RabbitMQ
 - Database: dùng lại **Supabase chung của nhóm** (đã cấu hình sẵn trong các service); muốn dùng DB riêng thì sửa `spring.datasource.url/username/password` trong 5 file cấu hình (`venue/movie/user`: `application.properties`; `booking/payment/notification/api-gateway`: `application.yml`)
 
@@ -112,10 +112,11 @@ mvn -DskipTests install     # build toàn bộ 8 module
 
 ### 3. Chạy frontend
 ```bash
-cd frontend/cine-ticket-frontend
-node server.mjs             # Windows: bấm đúp CHAY-FRONTEND.bat
+cd frontend-react
+npm install
+npm run dev
 ```
-Mở **http://localhost:5173** (phải chạy backend trước). Biến môi trường tùy chọn: `BACKEND_URL` (mặc định `http://localhost:8080`), `PORT` (mặc định 5173).
+Mở **http://localhost:5173** (phải chạy backend trước). Nếu gateway không chạy ở cổng 8080, tạo `frontend-react/.env.local` với `BACKEND_URL=http://localhost:<cổng>` (xem `.env.example`).
 
 Chạy thành công khi: trang hiển thị phim đang chiếu (có poster), bấm vào phim thấy lịch chiếu, chọn suất thấy sơ đồ ghế.
 
@@ -125,8 +126,9 @@ Chạy thành công khi: trang hiển thị phim đang chiếu (có poster), b�
 - [x] Tồn kho ghế-theo-suất phát sinh theo tương tác: chọn ghế → `HOLDING` (giữ 10 phút qua `hold_until`), chốt vé → `BOOKED`, quá hạn tự coi như trống
 - [x] Đặt vé Saga-lite: giữ/chốt ghế, Booking PENDING, chi tiết vé
 - [x] Thanh toán mô phỏng: publish event → Booking `PAID/CANCELLED` + trả ghế (bù trừ); đặt trùng ghế trả **409**
-- [x] Giao diện CineRoom: duyệt phim, lịch chiếu, chọn ghế, đặt vé, vé của tôi
-- [ ] Xác thực/phân quyền, cổng thanh toán thật, kiểm thử tự động + OpenAPI
+- [x] Giao diện React: duyệt phim, lịch chiếu, chọn ghế, đặt vé, vé của tôi
+- [x] Xác thực JWT (đăng ký/đăng nhập, refresh token ở user-service)
+- [ ] Cổng thanh toán thật, kiểm thử tự động + OpenAPI
 
 ## Nhóm thực hiện
 
