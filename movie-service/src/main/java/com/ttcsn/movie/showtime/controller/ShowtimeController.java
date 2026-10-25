@@ -53,20 +53,23 @@ public class ShowtimeController {
         return ResponseEntity.ok(showtimeService.getShowtimeSeats(showtimeId));
     }
 
-    /** Giữ chỗ tạm 10 phút khi khách bấm chọn ghế (mô hình showtime_seats phát sinh theo tương tác). */
+    /** Giữ chỗ tạm 10 phút; holdBy lấy từ X-User-Id do gateway gắn. */
     @PostMapping("/holdShowtimeSeat")
     public ResponseEntity<com.ttcsn.movie.showtime.dto.response.ShowtimeSeatView> holdShowtimeSeat(
-            @Valid @RequestBody com.ttcsn.movie.showtime.dto.request.ShowtimeSeatInteractionRequest request) {
+            @Valid @RequestBody com.ttcsn.movie.showtime.dto.request.ShowtimeSeatInteractionRequest request,
+            @RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(showtimeService.holdShowtimeSeat(
-                request.showtimeId(), request.seatId(), request.holdBy()));
+                request.showtimeId(), request.seatId(), userId));
     }
 
-    /** Bỏ giữ chỗ khi khách bỏ chọn ghế (chỉ người giữ hoặc giữ đã hết hạn). */
+    /** Bỏ giữ chỗ: chỉ người giữ hoặc ADMIN. */
     @PostMapping("/releaseShowtimeSeat")
     public ResponseEntity<com.ttcsn.movie.showtime.dto.response.ShowtimeSeatView> releaseShowtimeSeat(
-            @Valid @RequestBody com.ttcsn.movie.showtime.dto.request.ShowtimeSeatInteractionRequest request) {
+            @Valid @RequestBody com.ttcsn.movie.showtime.dto.request.ShowtimeSeatInteractionRequest request,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role) {
         return ResponseEntity.ok(showtimeService.releaseShowtimeSeat(
-                request.showtimeId(), request.seatId(), request.holdBy()));
+                request.showtimeId(), request.seatId(), userId, "ADMIN".equals(role)));
     }
 
     @PostMapping("/createShowtime")

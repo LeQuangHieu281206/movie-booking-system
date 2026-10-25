@@ -69,12 +69,13 @@ public class ShowtimeServiceImpl implements ShowtimeService {
             RETURNING showtime_seat_id
             """;
 
-    /** Nhả ghế đang giữ: 1 DELETE có điều kiện (chỉ người giữ hoặc giữ đã hết hạn). */
+    /** Nhả ghế đang giữ: 1 DELETE có điều kiện (người giữ, ADMIN, hoặc giữ đã hết hạn). */
     private static final String RELEASE_SEAT_SQL = """
             WITH deleted AS (
                 DELETE FROM showtime_seats
                 WHERE showtime_id = :showtimeId AND seat_id = :seatId
-                  AND status = 'HOLDING' AND (hold_by = :holdBy OR hold_until <= now())
+                  AND status = 'HOLDING'
+                  AND (:isAdmin = true OR hold_by = :holdBy OR hold_until <= now())
                 RETURNING showtime_seat_id
             )
             SELECT count(*) FROM deleted
@@ -184,8 +185,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                             physical.seatNumber(),
                             physical.seatType(),
                             status,
-                            hasRecord ? row.getHoldUntil() : null,
-                            hasRecord ? row.getHoldBy() : null);
+                            hasRecord ? row.getHoldUntil() : null);
                 })
                 .sorted(Comparator
                         .comparing((ShowtimeSeatView v) -> v.seatRow() == null ? "" : v.seatRow())
@@ -196,10 +196,11 @@ public class ShowtimeServiceImpl implements ShowtimeService {
     /** Người dùng bấm chọn ghế: 1 lượt truy vấn gồm kiểm tra suất + chèn/refresh bản ghi HOLDING (10 phút). */
     @Override
     @Transactional
-    public ShowtimeSeatView holdShowtimeSeat(Long showtimeId, Long seatId, String holdBy) {
-        if (holdBy == null || holdBy.isBlank()) {
-            throw new IllegalStateException("Thiếu định danh phiên giữ ghế (holdBy).");
+    public ShowtimeSeatView holdShowtimeSeat(Long showtimeId, Long seatId, Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("Thiếu X-User-Id");
         }
+        String holdBy = String.valueOf(userId);
         OffsetDateTime holdUntil = OffsetDateTime.now().plus(HOLD_DURATION);
         List<?> rows = em.createNativeQuery(HOLD_SEAT_SQL)
                 .setParameter("showtimeId", showtimeId)
@@ -210,7 +211,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
 
         if (!rows.isEmpty()) { // chèn mới hoặc refresh/phủ của chính phiên giữ luôn có bản ghi trả về
             return new ShowtimeSeatView(((Number) rows.get(0)).longValue(), showtimeId, seatId,
-                    null, null, null, SeatStatus.HOLDING.name(), holdUntil, holdBy);
+                    null, null, null, SeatStatus.HOLDING.name(), holdUntil);
         }
         // 0 dòng: hiếm gặp (xung đột/điều kiện suất) -> hỏi lại 1 lần để nêu đúng lý do
         throwHoldRejection(showtimeId, seatId, holdBy);
@@ -240,24 +241,41 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         }
     }
 
-    /** Bỏ giữ: 1 DELETE có điều kiện (chỉ người giữ hoặc giữ đã hết hạn). */
+    /** Bỏ giữ: chỉ người giữ, ADMIN, hoặc giữ đã hết hạn. */
     @Override
     @Transactional
-    public ShowtimeSeatView releaseShowtimeSeat(Long showtimeId, Long seatId, String holdBy) {
+    public ShowtimeSeatView releaseShowtimeSeat(Long showtimeId, Long seatId, Long userId, boolean admin) {
+        if (userId == null) {
+            throw new IllegalArgumentException("Thiếu X-User-Id");
+        }
+        String holdBy = String.valueOf(userId);
+        if (!admin) {
+            // Chặn sớm để trả đúng lỗi; câu DELETE bên dưới vẫn là nơi kiểm tra nguyên tử.
+            ShowtimeSeat current = showtimeSeatRepository
+                    .findByShowtime_ShowtimeIdAndSeatId(showtimeId, seatId).orElse(null);
+            if (current != null
+                    && current.getStatus() == SeatStatus.HOLDING
+                    && !isHoldExpired(current, OffsetDateTime.now())
+                    && !Objects.equals(holdBy, current.getHoldBy())) {
+                throw new IllegalStateException("Giữ chỗ này không thuộc về bạn.");
+            }
+        }
+
         Object deleted = em.createNativeQuery(RELEASE_SEAT_SQL)
                 .setParameter("showtimeId", showtimeId)
                 .setParameter("seatId", seatId)
                 .setParameter("holdBy", holdBy)
+                .setParameter("isAdmin", admin)
                 .getSingleResult();
         if (((Number) deleted).longValue() > 0) {
             return new ShowtimeSeatView(null, showtimeId, seatId,
-                    null, null, null, SeatStatus.AVAILABLE.name(), null, null);
+                    null, null, null, SeatStatus.AVAILABLE.name(), null);
         }
         // Không xóa được -> phân biệt ghế chưa có giữ chỗ (bình thường) với ghế đã đặt / của người khác
         ShowtimeSeat row = showtimeSeatRepository.findByShowtime_ShowtimeIdAndSeatId(showtimeId, seatId).orElse(null);
         if (row == null || row.getStatus() == SeatStatus.AVAILABLE) {
             return new ShowtimeSeatView(null, showtimeId, seatId,
-                    null, null, null, SeatStatus.AVAILABLE.name(), null, null);
+                    null, null, null, SeatStatus.AVAILABLE.name(), null);
         }
         if (row.getStatus() == SeatStatus.BOOKED) {
             throw new IllegalStateException("Ghế đã được đặt thành công, không thể bỏ giữ. Hủy vé để trả ghế.");
@@ -266,7 +284,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
             throw new IllegalStateException("Giữ chỗ này không thuộc về bạn.");
         }
         return new ShowtimeSeatView(null, showtimeId, seatId,
-                null, null, null, SeatStatus.AVAILABLE.name(), null, null);
+                null, null, null, SeatStatus.AVAILABLE.name(), null);
     }
 
     /** Internal API booking-service: chốt ghế BOOKED hàng loạt bằng 1 lượt chèn/cập nhật. */

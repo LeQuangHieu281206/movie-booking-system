@@ -21,11 +21,12 @@ spring:
     open-in-view: false
 
 server:
+  address: 127.0.0.1
   port: 8082
 
 # ---------- Feign targets ----------
 app:
   services:
-    user-url: http://localhost:8084
-    movie-url: http://localhost:8081
-    venue-url: http://localhost:8083
+    user-url: http://127.0.0.1:8084
+    movie-url: http://127.0.0.1:8081
+    venue-url: http://127.0.0.1:8083

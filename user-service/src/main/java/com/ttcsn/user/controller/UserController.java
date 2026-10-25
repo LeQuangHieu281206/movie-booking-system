@@ -1,27 +1,42 @@
 package com.ttcsn.user.controller;
 
-import org.springframework.web.bind.annotation.*;
 import com.ttcsn.user.dto.request.UserCreateRequest;
 import com.ttcsn.user.dto.request.UserUpdateRequest;
 import com.ttcsn.user.dto.response.UserResponse;
+import com.ttcsn.user.security.AuthenticatedUser;
 import com.ttcsn.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import com.ttcsn.user.entity.User;
-import com.ttcsn.user.controller.UserController;
-import com.ttcsn.user.dto.request.UserCreateRequest;
-import com.ttcsn.user.dto.response.UserResponse;
-import com.ttcsn.user.service.UserService;
-import com.ttcsn.user.dto.request.UserUpdateRequest;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Legacy CRUD /api/getUser* (khóa ADMIN) + GET /api/users/me (authenticated)
+ * — SecurityConfig điều tiết.
+ *
+ * @author quanghieu
+ */
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+
+    /** Thông tin người dùng đang đăng nhập: userId lấy từ JWT (không tin request), tìm DB theo id; không trả passwordHash. */
+    @GetMapping("/users/me")
+    public ResponseEntity<UserResponse> me(@AuthenticationPrincipal AuthenticatedUser currentUser) {
+        return ResponseEntity.ok(userService.getUserById(currentUser.id()));
+    }
 
     @GetMapping("/getUsers")
     public ResponseEntity<List<UserResponse>> getAllUsers() {

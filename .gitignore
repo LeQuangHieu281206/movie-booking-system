@@ -17,6 +17,11 @@ nbproject/
 .classpath
 .project
 
+# Secrets / env — KHÔNG commit giá trị thật
+.env
+.env.*
+!.env.example
+
 # OS
 .DS_Store
 Thumbs.db

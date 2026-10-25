@@ -1,19 +1,16 @@
 package com.ttcsn.movie.showtime.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /**
  * Yêu cầu giữ/bỏ giữ 1 ghế từ frontend (mô hình showtime_seats phát sinh theo tương tác).
- * holdBy là định danh phiên của client (userId hoặc mã phiên) để đối chiếu quyền giữ.
+ * holdBy do server lấy từ X-User-Id, không nhận từ client.
  */
 public record ShowtimeSeatInteractionRequest(
         @NotNull(message = "showtimeId không được để trống")
         Long showtimeId,
 
         @NotNull(message = "seatId không được để trống")
-        Long seatId,
-
-        @NotBlank(message = "holdBy (định danh người giữ) không được để trống")
-        String holdBy
-) {}
+        Long seatId
+) {
+}
