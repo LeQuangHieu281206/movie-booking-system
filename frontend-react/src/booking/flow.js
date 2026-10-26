@@ -1,11 +1,4 @@
-import {
-  bookingPayload,
-  isBookable,
-  date,
-  time,
-  money,
-  statusText,
-} from "../lib/domain.js";
+import { bookingPayload, isBookable } from "../lib/domain.js";
 
 export const sameId = (a, b) =>
   a != null && b != null && String(a) === String(b);
@@ -16,7 +9,7 @@ export function reconcileSeats(ids, seats, showtimeId) {
         (seat) =>
           seat.status === "AVAILABLE" && sameId(seat.showtimeId, showtimeId),
       )
-      .map((seat) => String(seat.showtimeSeatId)),
+      .map((seat) => String(seat.seatId)),
   );
   return [...new Set(ids)].filter((id) => available.has(String(id)));
 }
@@ -46,7 +39,7 @@ export async function readInventory(api, showtimeId, options) {
 // A changed inventory returns a review result, never sends createBooking.
 export async function prepareBooking(
   api,
-  { user, show, seats: previousSeats, ids, paymentMethod, reviewOnly = false },
+  { show, seats: previousSeats, ids, paymentMethod, reviewOnly = false },
 ) {
   const inventory = await readInventory(api, show.showtimeId);
   const validIds = reconcileSeats(
@@ -58,7 +51,7 @@ export async function prepareBooking(
     .filter((id) => !validIds.some((value) => sameId(value, id)))
     .map(
       (id) =>
-        previousSeats.find((seat) => sameId(seat.showtimeSeatId, id))?.label ||
+        previousSeats.find((seat) => sameId(seat.seatId, id))?.label ||
         `#${id}`,
     );
   if (!isBookable(inventory.show))
@@ -90,7 +83,6 @@ export async function prepareBooking(
     payload: reviewOnly
       ? null
       : bookingPayload(
-          user,
           inventory.show,
           inventory.seats,
           validIds,
@@ -141,13 +133,6 @@ export function assertUserBookings(items, userId) {
   for (const item of items) assertBooking(item, item);
   return items;
 }
-export function readableDate(value) {
-  try {
-    return `${time(value)} · ${date(value)}`;
-  } catch {
-    return "Chưa có thông tin thời gian";
-  }
-}
 export function filterTickets(
   bookings,
   { query = "", status = "", order = "newest", titleFor = () => "" } = {},
@@ -173,31 +158,4 @@ export function filterTickets(
         bTime = new Date(b.bookingTime).getTime() || 0;
       return order === "oldest" ? aTime - bTime : bTime - aTime;
     });
-}
-export function receiptText(booking, receipt, mode) {
-  return [
-    "CINEROOM — THÔNG TIN ĐẶT VÉ",
-    mode === "demo"
-      ? "DỮ LIỆU MẪU — KHÔNG CÓ GIÁ TRỊ VÀO RẠP"
-      : "Bản ghi tham khảo — không thay thế vé do rạp phát hành",
-    `Mã đặt vé: ${booking.bookingCode}`,
-    `Booking: #${booking.bookingId}`,
-    `Khách hàng: #${booking.userId}`,
-    `Trạng thái tại lúc tải: ${statusText(booking.status)}`,
-    `Tổng tiền: ${money(booking.totalAmount)}`,
-    `Thời gian đặt: ${readableDate(booking.bookingTime)}`,
-    ...(receipt
-      ? [
-          `Phim lúc đặt: ${receipt.title}`,
-          `Rạp lúc đặt: ${receipt.cinemaName}`,
-          `Phòng: ${receipt.roomName}`,
-          `Suất lúc đặt: ${readableDate(receipt.startTime)}`,
-          `Ghế theo bản ghi trên máy này: ${receipt.seats.map((seat) => seat.label).join(", ")}`,
-        ]
-      : [
-          "Không có bản ghi ghế trên máy này. API hiện tại chưa trả chi tiết ghế trong lịch sử booking.",
-        ]),
-    "Thanh toán của dự án là mô phỏng, không thu tiền thật.",
-    `Tạo bản ghi lúc: ${new Date().toISOString()}`,
-  ].join("\n");
 }

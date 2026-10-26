@@ -1,22 +1,22 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button, ErrorBox, Icon } from "./UI.jsx";
 import { statusText, money } from "../lib/domain.js";
 
-// Payment is a simulator in the supplied backend, not a bank integration.
+// SePay: tạo QR chuyển khoản, booking chỉ PAID sau khi webhook báo tiền về.
 export default function PaymentPanel({
   api,
-  mode,
   booking,
   onUpdate,
   onBusy = () => {},
 }) {
-  const key = `cineroom-payment-attempt:${mode}:${booking.bookingId}`;
-  const [sent, setSent] = useState(() => sessionStorage.getItem(key) === "1");
+  const [qr, setQr] = useState("");
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [confirmCancel, setConfirmCancel] = useState(false);
   const lock = useRef(false);
+  const update = useRef(onUpdate);
+  update.current = onUpdate;
   async function run(action) {
     if (lock.current) return;
     lock.current = true;
@@ -34,47 +34,63 @@ export default function PaymentPanel({
       onBusy(false);
     }
   }
+  function createQr() {
+    return run(async () => {
+      const latest = await api.booking(booking.bookingId);
+      update.current(latest);
+      if (latest.status !== "PENDING") return;
+      const payment = await api.createPayment(latest.bookingId);
+      setQr(payment.qrUrl);
+      setNotice(payment.message || "Quét mã QR để hoàn tất thanh toán.");
+    });
+  }
   function refresh() {
     return run(async () => {
       const latest = await api.booking(booking.bookingId);
-      onUpdate(latest);
+      update.current(latest);
       if (latest.status === "PENDING")
         setNotice(
-          "Booking vẫn đang chờ. Nếu vừa thanh toán, hãy kiểm tra RabbitMQ và dịch vụ booking rồi cập nhật lại.",
+          "Booking vẫn đang chờ. Nếu vừa chuyển khoản, chờ webhook SePay vài giây rồi cập nhật lại.",
         );
-    });
-  }
-  function pay(simulateFailure) {
-    return run(async () => {
-      const latest = await api.booking(booking.bookingId);
-      onUpdate(latest);
-      if (latest.status !== "PENDING") return;
-      sessionStorage.setItem(key, "1");
-      setSent(true);
-      await api.pay(latest, simulateFailure);
-      // Receiving a payment event is not proof the booking listener committed it.
-      for (let attempt = 0; attempt < 8; attempt++) {
-        const current = await api.booking(booking.bookingId);
-        onUpdate(current);
-        if (current.status !== "PENDING") return;
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-      setNotice(
-        "Đã gửi yêu cầu thanh toán nhưng booking chưa xác nhận. Hãy cập nhật trạng thái; không gửi thanh toán lặp lại.",
-      );
     });
   }
   function cancel() {
     return run(async () => {
       const latest = await api.booking(booking.bookingId);
       if (latest.status !== "PENDING") {
-        onUpdate(latest);
+        update.current(latest);
         return;
       }
-      onUpdate(await api.cancel(booking.bookingId));
+      update.current(await api.cancel(booking.bookingId));
       setConfirmCancel(false);
     });
   }
+  // Tự hỏi trạng thái tối đa 3 phút sau khi hiện QR, chờ webhook chuyển khoản.
+  useEffect(() => {
+    if (!qr || booking.status !== "PENDING") return;
+    let alive = true,
+      misses = 0;
+    const timer = setInterval(async () => {
+      if (++misses > 36) {
+        clearInterval(timer);
+        if (alive)
+          setNotice(
+            "Chưa nhận được xác nhận thanh toán. Hãy chuyển khoản đúng nội dung trong mã QR rồi bấm Cập nhật trạng thái.",
+          );
+        return;
+      }
+      try {
+        const latest = await api.booking(booking.bookingId);
+        if (alive) update.current(latest);
+      } catch {
+        /* Bỏ qua lần hỏi lỗi, lần sau thử lại. */
+      }
+    }, 5000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [qr, booking.status, api, booking.bookingId]);
   return (
     <section className="payment-panel">
       <div className="subheading">
@@ -91,22 +107,24 @@ export default function PaymentPanel({
       ) : booking.status === "PENDING" ? (
         <>
           <p>
-            Thanh toán mô phỏng · {money(booking.totalAmount)}. Không thu tiền
-            hoặc yêu cầu thông tin thẻ ngân hàng.
+            Số tiền cần chuyển: <strong>{money(booking.totalAmount)}</strong> ·
+            thanh toán qua SePay (chuyển khoản ngân hàng).
           </p>
-          <div className="button-row">
-            <Button primary disabled={busy || sent} onClick={() => pay(false)}>
-              {busy ? "Đang xử lý…" : "Mô phỏng thanh toán thành công"}
-            </Button>
-            <Button disabled={busy || sent} onClick={() => pay(true)}>
-              Thử thanh toán thất bại
-            </Button>
-          </div>
-          {sent && (
-            <p className="hint">
-              Đã thử gửi thanh toán cho vé này trong phiên hiện tại. Hãy cập
-              nhật trạng thái để tránh gửi trùng.
-            </p>
+          {qr ? (
+            <div className="qr-box">
+              <img src={qr} alt="Mã QR chuyển khoản SePay" />
+              <p className="hint">
+                Mở ứng dụng ngân hàng và quét mã. Số tiền và nội dung chuyển
+                khoản đã có trong mã; vé tự xác nhận sau khi webhook báo tiền
+                về.
+              </p>
+            </div>
+          ) : (
+            <div className="button-row">
+              <Button primary disabled={busy} onClick={createQr}>
+                {busy ? "Đang tạo mã…" : "Tạo mã QR thanh toán"}
+              </Button>
+            </div>
           )}
         </>
       ) : (
@@ -126,7 +144,7 @@ export default function PaymentPanel({
           <Icon name="refresh" size={15} />
           Cập nhật trạng thái
         </Button>
-        {booking.status === "PENDING" && !sent && !confirmCancel && (
+        {booking.status === "PENDING" && !confirmCancel && (
           <Button
             disabled={busy}
             className="small danger"

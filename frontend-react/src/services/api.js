@@ -1,26 +1,35 @@
 import { joinSeats } from "../lib/domain.js";
-import { createDemoApi } from "./demo.js";
-import { randomId } from "../lib/randomId.js";
+import { readSession, refreshSession } from "./session.js";
 
 export function createHttpClient(fetchImpl = globalThis.fetch) {
-  return async function request(path, { method = "GET", body, signal } = {}) {
+  async function send(path, { method = "GET", body, signal }, canRefresh) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 15000);
     const abort = () => controller.abort();
     signal?.addEventListener("abort", abort, { once: true });
     if (signal?.aborted) controller.abort();
     try {
+      const token = readSession()?.accessToken;
       const response = await fetchImpl(`/api${path}`, {
         method,
         signal: controller.signal,
-        ...(body === undefined
-          ? {}
-          : {
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(body),
-            }),
+        headers: {
+          ...(body === undefined
+            ? {}
+            : { "Content-Type": "application/json" }),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
       const text = await response.text();
+      // Access token hết hạn (2 giờ): đổi bằng refresh token rồi gửi lại đúng một lần.
+      if (
+        response.status === 401 &&
+        canRefresh &&
+        !path.startsWith("/auth/") &&
+        (await refreshSession(fetchImpl))?.accessToken
+      )
+        return send(path, { method, body, signal }, false);
       let data;
       try {
         data = text ? JSON.parse(text) : null;
@@ -63,7 +72,8 @@ export function createHttpClient(fetchImpl = globalThis.fetch) {
       clearTimeout(timer);
       signal?.removeEventListener("abort", abort);
     }
-  };
+  }
+  return (path, options = {}) => send(path, options, true);
 }
 
 export function createLiveApi(request = createHttpClient()) {
@@ -89,23 +99,13 @@ export function createLiveApi(request = createHttpClient()) {
       ]);
       return joinSeats(states, physical);
     },
-    user: (userId, options) =>
-      request(`/getUserById?id=${id(userId)}`, options),
-    createCustomer: (fields) =>
-      request("/createUser", {
-        method: "POST",
-        body: {
-          fullName: fields.fullName.trim(),
-          email: fields.email.trim(),
-          phoneNumber: fields.phoneNumber.trim(),
-          password: randomId(),
-          role: "CUSTOMER",
-        },
-      }),
+    // Hồ sơ của chính mình (JWT). /getUserById chỉ dành cho ADMIN.
+    me: (options) => request("/users/me", options),
     bookings: (userId, options) =>
       list(`/getBookingsByUserId?userId=${id(userId)}`, options),
     booking: (bookingId, options) =>
       request(`/getBookingById?id=${id(bookingId)}`, options),
+    // userId và tổng tiền do booking-service tự tính từ JWT và giá suất chiếu.
     createBooking: (body) =>
       request("/createBooking", { method: "POST", body }),
     cancel: (bookingId) =>
@@ -113,19 +113,12 @@ export function createLiveApi(request = createHttpClient()) {
         method: "PUT",
         body: { status: "CANCELLED" },
       }),
-    pay: (booking, simulateFailure = false) =>
-      request("/createPayment", {
-        method: "POST",
-        body: {
-          bookingId: booking.bookingId,
-          userId: booking.userId,
-          amount: booking.totalAmount,
-          simulateFailure,
-        },
-      }),
+    // Trả { qrUrl, message } của SePay; booking chỉ PAID sau khi webhook chuyển khoản về.
+    createPayment: (bookingId) =>
+      request("/createPayment", { method: "POST", body: { bookingId } }),
   };
 }
 
-export function createApi(mode) {
-  return mode === "demo" ? createDemoApi() : createLiveApi();
+export function createApi() {
+  return createLiveApi();
 }

@@ -110,6 +110,8 @@ mvn -DskipTests install     # build toàn bộ 8 module
 ```
 Đợi ~45 giây, script tự kiểm tra các port 8080–8087 đã UP.
 
+Script tự tạo `.env` từ `.env.example` và sinh `JWT_SECRET` / `INTERNAL_TOKEN` cho lần chạy đầu (file `.env` đã gitignore). Muốn dùng giá trị riêng thì sửa `.env` trước khi chạy — gateway và user-service phải dùng **cùng** `JWT_SECRET`.
+
 ### 3. Chạy frontend
 ```bash
 cd frontend-react
