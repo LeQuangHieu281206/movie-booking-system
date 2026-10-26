@@ -7,8 +7,8 @@
 - [Kiến trúc tổng quan](#kiến-trúc-tổng-quan)
 - [Các service](#các-service)
 - [Cấu trúc repository](#cấu-trúc-repository)
-- [Yêu cầu môi trường](#yêu-cầu-môi-trường)
-- [Các bước chạy dự án](#các-bước-chạy-dự-án)
+- [Cài đặt & chạy bằng Docker (khuyến nghị)](#cài-đặt--chạy-bằng-docker-khuyến-nghị)
+- [Chạy không qua Docker (tuỳ chọn)](#chạy-không-qua-docker-tuỳ-chọn)
 - [Phạm vi chức năng](#phạm-vi-chức-năng)
 - [Nhóm thực hiện](#nhóm-thực-hiện)
 
@@ -90,54 +90,33 @@ movie-booking-system/
 └── pom.xml                 # Parent pom
 ```
 
-## Yêu cầu môi trường
+## Cài đặt & chạy bằng Docker (khuyến nghị)
 
-- **JDK 21** và **Maven** (kiểm tra bằng `mvn -v`)
-- **Node.js ≥ 20.19 (hoặc ≥ 22.12)** cho frontend
-- **Docker + Docker Compose** — cách nhanh nhất để chạy toàn bộ hệ thống (không cần JDK/Node trên máy)
-- Database: dùng lại **Supabase chung của nhóm** (đã cấu hình sẵn trong các service); muốn dùng DB riêng thì sửa `spring.datasource.url/username/password` trong 5 file cấu hình (`venue/movie/user`: `application.properties`; `booking/payment/notification/api-gateway`: `application.yml`)
-
-## Chạy nhanh bằng Docker (khuyến nghị)
-
-Máy chỉ cần **Docker + Docker Compose** và internet (database là Supabase chung của nhóm). Không cần cài JDK, Maven hay Node:
+Chỉ cần cài **Docker Desktop** (Windows/macOS) hoặc **Docker Engine + Compose plugin** (Linux), kèm internet. Không cần JDK, Maven hay Node — database là Supabase chung của nhóm đã cấu hình sẵn.
 
 ```bash
+git clone <repo> && cd movie-booking-system
 docker compose up -d --build
 ```
 
-- Lần đầu build Maven + npm trong Docker: khoảng **3–6 phút** (các lần sau dùng cache).
-- Mở **http://localhost:5173** — frontend đã build sẵn, Nginx tự proxy `/api/**` sang gateway.
+- Lần đầu build khoảng **3–6 phút** (Maven + npm trong Docker), các lần sau dùng cache.
+- Mở **http://localhost:5173** để dùng hệ thống.
 - Gateway: **http://localhost:8080** · RabbitMQ UI: **http://localhost:15672** (guest/guest).
-- JWT/INTERNAL_TOKEN mặc định là giá trị **chỉ dùng cho dev**. Muốn đổi, thêm vào `.env` (Compose tự đọc) rồi `docker compose up -d` lại; gateway và user-service phải dùng cùng `JWT_SECRET`.
-- Xem log: `docker compose logs -f api-gateway` · Dừng: `docker compose down` (thêm `-v` nếu muốn xoá dữ liệu RabbitMQ/Redis).
-- Trước khi chạy Docker, tắt service local để không trùng cổng: `./stop-services.sh` và `Ctrl+C` ở `npm run dev`. Cần khoảng **4 GB RAM trống** cho lúc build + 7 JVM.
+- Lệnh hữu ích: `docker compose logs -f api-gateway` (xem log) · `docker compose down` (dừng, thêm `-v` để xoá dữ liệu RabbitMQ/Redis).
+- Trước khi chạy, tắt service local để không trùng cổng (`./stop-services.sh`, `Ctrl+C` ở `npm run dev`). Cần ~4 GB RAM trống.
+- Muốn đổi `JWT_SECRET`/`INTERNAL_TOKEN` (production): tạo file `.env` cạnh `docker-compose.yml` rồi `docker compose up -d` lại — gateway và user-service phải dùng cùng `JWT_SECRET`. Muốn dùng DB khác Supabase, thêm `SPRING_DATASOURCE_URL/USERNAME/PASSWORD` vào `.env`.
 
-Muốn dùng database khác Supabase thì sửa `spring.datasource.*` trong cấu hình service (hoặc thêm biến `SPRING_DATASOURCE_URL/USERNAME/PASSWORD` vào `.env` — Spring Boot tự đọc biến môi trường).
+## Chạy không qua Docker (tuỳ chọn)
 
-## Các bước chạy dự án
+Yêu cầu: **JDK 21 + Maven**, **Node.js ≥ 20.19 (hoặc ≥ 22.12)**, RabbitMQ chạy sẵn (`docker compose up -d rabbitmq`).
 
-### 1. Bật RabbitMQ
 ```bash
-docker compose up -d rabbitmq   # AMQP :5672, UI :15672 (guest/guest)
+mvn -DskipTests install     # build 8 module backend
+./run-services.sh           # chạy nền 7 service, log tại logs/<service>.log; dừng: ./stop-services.sh
+cd frontend-react && npm install && npm run dev
 ```
 
-### 2. Build và chạy backend
-```bash
-mvn -DskipTests install     # build toàn bộ 8 module
-./run-services.sh           # chạy nền 7 service, log tại logs/<service>.log
-./stop-services.sh          # dừng toàn bộ khi cần
-```
-Đợi ~45 giây, script tự kiểm tra các port 8080–8087 đã UP.
-
-Script tự tạo `.env` từ `.env.example` và sinh `JWT_SECRET` / `INTERNAL_TOKEN` cho lần chạy đầu (file `.env` đã gitignore). Muốn dùng giá trị riêng thì sửa `.env` trước khi chạy — gateway và user-service phải dùng **cùng** `JWT_SECRET`.
-
-### 3. Chạy frontend
-```bash
-cd frontend-react
-npm install
-npm run dev
-```
-Mở **http://localhost:5173** (phải chạy backend trước). Nếu gateway không chạy ở cổng 8080, tạo `frontend-react/.env.local` với `BACKEND_URL=http://localhost:<cổng>` (xem `.env.example`).
+Đợi ~45 giây rồi mở **http://localhost:5173**. Nếu gateway không ở cổng 8080, tạo `frontend-react/.env.local` với `BACKEND_URL=http://localhost:<cổng>`.
 
 Chạy thành công khi: trang hiển thị phim đang chiếu (có poster), bấm vào phim thấy lịch chiếu, chọn suất thấy sơ đồ ghế.
 
