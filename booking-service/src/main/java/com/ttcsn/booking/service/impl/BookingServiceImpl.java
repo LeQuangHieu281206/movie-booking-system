@@ -24,6 +24,7 @@ import com.ttcsn.common.exception.ForbiddenException;
 import com.ttcsn.common.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -227,6 +228,39 @@ public class BookingServiceImpl implements BookingService {
             log.error("[booking-service] KHÔNG trả được ghế về AVAILABLE cho booking {}: {}",
                     bookingId, ex.getMessage());
         }
+    }
+
+    /**
+     * Hết hạn booking PENDING quá hạn chờ thanh toán (scheduler định kỳ gọi).
+     * Giữ ghế BOOKED mãi nếu user đóng trang không thanh toán — nhả ghế để khách khác đặt.
+     * Phải lớn hơn thời gian giữ chỗ tạm (HOLD 10 phút ở movie-service).
+     */
+    @Value("${app.booking.pending-expiry-minutes:15}")
+    private long pendingExpiryMinutes;
+
+    @Override
+    @Transactional
+    public int expireStalePendingBookings() {
+        OffsetDateTime cutoff = OffsetDateTime.now().minusMinutes(pendingExpiryMinutes);
+        List<Booking> stale = bookingRepository
+                .findByStatusAndBookingTimeBefore(BookingStatus.PENDING, cutoff);
+
+        int expired = 0;
+        for (Booking booking : stale) {
+            // Guarded update: chỉ nhả ghế khi chính mình đưa được booking ra khỏi PENDING.
+            // Nếu event thanh toán (SUCCESS/FAILED) xử lý trước đó thì trạng thái đã đổi,
+            // update ảnh hưởng 0 dòng -> bỏ qua, tuyệt đối không nhả ghế của đơn đã PAID.
+            if (bookingRepository.expireIfPending(booking.getBookingId()) == 0) {
+                log.info("[booking-service] Booking #{} đã đổi trạng thái trước khi hết hạn — bỏ qua",
+                        booking.getBookingId());
+                continue;
+            }
+            releaseBookingSeats(booking.getBookingId(), booking.getShowtimeId());
+            expired++;
+            log.info("[booking-service] Booking #{} quá hạn {} phút chưa thanh toán -> EXPIRED (đã nhả ghế)",
+                    booking.getBookingId(), pendingExpiryMinutes);
+        }
+        return expired;
     }
 
     @Override
