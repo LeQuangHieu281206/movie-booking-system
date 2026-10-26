@@ -81,7 +81,9 @@ movie-booking-system/
 ├── notification-service/   # Notification :8087
 ├── common/                 # DTO/event/exception dùng chung
 ├── frontend-react/         # Giao diện React + Vite (:5173, proxy /api/**)
-├── docker-compose.yml      # RabbitMQ (Redis chỉ dự phòng, không dùng)
+├── docker-compose.yml      # Cách chạy nhanh: RabbitMQ + 7 service Java + frontend
+├── Dockerfile              # Build chung 1 image chứa 7 jar backend
+├── frontend-react/Dockerfile  # Build React + Nginx (proxy /api → gateway)
 ├── run-services.sh         # Chạy 7 service nền
 ├── stop-services.sh        # Dừng toàn bộ service
 ├── postman_collection_v3.json  # Bộ kiểm thử E2E qua gateway :8080
@@ -92,8 +94,25 @@ movie-booking-system/
 
 - **JDK 21** và **Maven** (kiểm tra bằng `mvn -v`)
 - **Node.js ≥ 20.19 (hoặc ≥ 22.12)** cho frontend
-- **Docker** — chỉ cần để bật RabbitMQ
+- **Docker + Docker Compose** — cách nhanh nhất để chạy toàn bộ hệ thống (không cần JDK/Node trên máy)
 - Database: dùng lại **Supabase chung của nhóm** (đã cấu hình sẵn trong các service); muốn dùng DB riêng thì sửa `spring.datasource.url/username/password` trong 5 file cấu hình (`venue/movie/user`: `application.properties`; `booking/payment/notification/api-gateway`: `application.yml`)
+
+## Chạy nhanh bằng Docker (khuyến nghị)
+
+Máy chỉ cần **Docker + Docker Compose** và internet (database là Supabase chung của nhóm). Không cần cài JDK, Maven hay Node:
+
+```bash
+docker compose up -d --build
+```
+
+- Lần đầu build Maven + npm trong Docker: khoảng **3–6 phút** (các lần sau dùng cache).
+- Mở **http://localhost:5173** — frontend đã build sẵn, Nginx tự proxy `/api/**` sang gateway.
+- Gateway: **http://localhost:8080** · RabbitMQ UI: **http://localhost:15672** (guest/guest).
+- JWT/INTERNAL_TOKEN mặc định là giá trị **chỉ dùng cho dev**. Muốn đổi, thêm vào `.env` (Compose tự đọc) rồi `docker compose up -d` lại; gateway và user-service phải dùng cùng `JWT_SECRET`.
+- Xem log: `docker compose logs -f api-gateway` · Dừng: `docker compose down` (thêm `-v` nếu muốn xoá dữ liệu RabbitMQ/Redis).
+- Trước khi chạy Docker, tắt service local để không trùng cổng: `./stop-services.sh` và `Ctrl+C` ở `npm run dev`. Cần khoảng **4 GB RAM trống** cho lúc build + 7 JVM.
+
+Muốn dùng database khác Supabase thì sửa `spring.datasource.*` trong cấu hình service (hoặc thêm biến `SPRING_DATASOURCE_URL/USERNAME/PASSWORD` vào `.env` — Spring Boot tự đọc biến môi trường).
 
 ## Các bước chạy dự án
 
