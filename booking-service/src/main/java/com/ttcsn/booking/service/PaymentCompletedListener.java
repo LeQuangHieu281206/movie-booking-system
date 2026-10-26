@@ -76,10 +76,10 @@ public class PaymentCompletedListener {
         }
         try {
             showtimeClient.releaseSeats(new SeatIdsRequest(booking.getShowtimeId(), seatIds, null));
-            log.info("[booking-service] Đã xóa bản ghi giữ/chốt ghế cho booking {} (bù trừ sau FAILED, ghế trống trở lại)",
+            log.info("[booking-service] Đã trả ghế về AVAILABLE cho booking {} (bù trừ sau FAILED, giữ dòng vì FK booking_details)",
                     booking.getBookingId());
         } catch (RuntimeException ex) {
-            log.error("[booking-service] KHÔNG trả được ghế về trạng thái trống cho booking {}: {}",
+            log.error("[booking-service] KHÔNG trả được ghế về AVAILABLE cho booking {}: {}",
                     booking.getBookingId(), ex.getMessage());
         }
     }
