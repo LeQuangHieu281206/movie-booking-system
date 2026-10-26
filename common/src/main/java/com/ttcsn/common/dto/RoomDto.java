@@ -1,8 +1,11 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.common.dto;
-
 /**
- * DTO trao đổi qua Feign: dữ liệu Room (venue-service -> movie-service).
- * Chứa đủ context Cinema để render/response ghép.
+ *
+ * @author quanghieu
  */
 public record RoomDto(
         Long roomId,

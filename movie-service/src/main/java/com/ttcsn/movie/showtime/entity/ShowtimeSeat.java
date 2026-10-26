@@ -36,20 +36,16 @@ public class ShowtimeSeat {
     @JoinColumn(name = "showtime_id", nullable = false)
     private Showtime showtime;
 
-    // SOA: Seat thuộc venue-service -> chỉ giữ FK id (bỏ @ManyToOne)
     @Column(name = "seat_id", nullable = false)
     private Long seatId;
 
-    /** Trạng thái ghế lưu varchar (enum Postgres dễ bị drop-recreate phá cột theo cascade). */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "varchar(32)")
     private SeatStatus status;
 
-    /** Thời điểm hết hiệu lực giữ chỗ tạm (HOLDING) — quá hạn thì xem như ghế trống. */
     @Column(name = "hold_until")
     private OffsetDateTime holdUntil;
 
-    /** Định danh người giữ/chốt ghế: userId hoặc mã phiên client. */
     @Column(name = "hold_by", length = 64)
     private String holdBy;
 

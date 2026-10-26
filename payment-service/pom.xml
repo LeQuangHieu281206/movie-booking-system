@@ -3,10 +3,6 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- ================= payment-service :8086 =================
-	     Xử lý thanh toán (mô phỏng) -> phát PaymentCompletedEvent lên RabbitMQ.
-	     Không cần DB riêng ở giai đoạn này (payment stateless-stub).
-	     -->
 	<parent>
 		<groupId>com.ttcsn</groupId>
 		<artifactId>movie-booking-parent</artifactId>
@@ -22,12 +18,10 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-		<!-- RabbitMQ: publish PaymentCompletedEvent -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-amqp</artifactId>
 		</dependency>
-		<!-- Xác thực booking qua booking-service (internal) -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>

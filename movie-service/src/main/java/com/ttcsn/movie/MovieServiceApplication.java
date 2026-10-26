@@ -1,12 +1,15 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.movie;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-
 /**
- * Movie & Genre & Showtime (Seat Inventory).
- * Port 8081. Gọi sang venue-service (Room/Seat) qua OpenFeign.
+ *
+ * @author quanghieu
  */
 @SpringBootApplication(scanBasePackages = "com.ttcsn")
 @EnableFeignClients(basePackages = "com.ttcsn.movie.client")
