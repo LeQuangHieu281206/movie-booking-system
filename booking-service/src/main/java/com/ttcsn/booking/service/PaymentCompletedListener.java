@@ -68,8 +68,8 @@ public class PaymentCompletedListener {
     }
 
     private void releaseSeatsOnFailure(Booking booking) {
-        List<Long> seatIds = bookingDetailRepository.findByBookingId(booking.getBookingId()).stream()
-                .map(BookingDetail::getSeatId)
+        List<Long> seatIds = bookingDetailRepository.findByBooking_BookingId(booking.getBookingId()).stream()
+                .map(BookingDetail::getShowtimeSeatId)
                 .toList();
         if (seatIds.isEmpty()) {
             return;

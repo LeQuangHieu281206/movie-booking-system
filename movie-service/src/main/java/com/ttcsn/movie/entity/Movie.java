@@ -9,10 +9,6 @@ import jakarta.persistence.*;
 import com.ttcsn.movie.entity.enums.AgeRestriction;
 import com.ttcsn.movie.entity.enums.MovieStatus;
 
-import com.ttcsn.movie.entity.enums.AgeRestriction;
-import com.ttcsn.movie.entity.Genre;
-import com.ttcsn.movie.entity.Movie;
-import com.ttcsn.movie.entity.enums.MovieStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

@@ -6,7 +6,6 @@ package com.ttcsn.venue.entity;
 
 import jakarta.persistence.*;
 
-import com.ttcsn.venue.entity.Cinema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

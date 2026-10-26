@@ -21,13 +21,17 @@ public class BookingDetail {
     @Column(name = "booking_detail_id")
     private Long bookingDetailId;
 
-    // SOA: Booking cùng module; Seat vật lý thuộc venue-service -> FK id thuần (mô hình showtime_seats theo tương tác)
-    @Column(name = "booking_id", nullable = false)
-    private Long bookingId;
+    // Booking cùng module booking-service -> quan hệ entity thật
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id", nullable = false)
+    private Booking booking;
 
-    /** Id ghế vật lý (bảng seats của venue-service) — ghế chưa có bản ghi mặc định AVAILABLE. */
-    @Column(name = "seat_id", nullable = false)
-    private Long seatId;
+    /**
+     * Ghế tham chiếu theo mô hình tương tác: id của bản ghi showtime_seats (movie-service),
+     * khớp FK booking_details_showtime_seat_id_fkey trong DB.
+     */
+    @Column(name = "showtime_seat_id", nullable = false)
+    private Long showtimeSeatId;
 
     @Column(nullable = false, columnDefinition = "numeric")
     private BigDecimal price;
