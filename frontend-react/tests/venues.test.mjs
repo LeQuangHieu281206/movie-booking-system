@@ -9,7 +9,6 @@ import {
   showtimeDays,
   telHref,
 } from "../src/lib/venues.js";
-import { createDemoApi } from "../src/services/demo.js";
 
 const hours = (n) => new Date(Date.now() + n * 3600000).toISOString();
 const show = (id, extra = {}) => ({
@@ -126,20 +125,4 @@ test("Số điện thoại chỉ thành liên kết gọi khi đủ chữ số",
   assert.equal(telHref("028 3822 1234"), "tel:02838221234");
   assert.equal(telHref("12"), "");
   assert.equal(telHref(null), "");
-});
-
-test("Dữ liệu mẫu: suất lấy từ lịch chiếu đều đặt được và thuộc đúng phim/rạp", async () => {
-  const store = new Map();
-  const api = createDemoApi({
-    getItem: (k) => store.get(k),
-    setItem: (k, v) => store.set(k, v),
-  });
-  const all = await api.showtimes();
-  const forMovie = await api.showtimes(1);
-  assert.ok(forMovie.length && forMovie.length < all.length);
-  assert.ok(forMovie.every((s) => sameId(s.movieId, 1)));
-  const usable = bookableShowtimes(all);
-  assert.equal(usable.length, all.length);
-  const first = usable[0];
-  assert.equal((await api.showtime(first.showtimeId)).cinemaId, first.cinemaId);
 });

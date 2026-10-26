@@ -10,16 +10,14 @@ import {
   Modal,
   Poster,
 } from "../components/UI.jsx";
-import CustomerForm from "../components/CustomerForm.jsx";
 import PaymentPanel from "../components/PaymentPanel.jsx";
 
 export default function Booking({
   api,
-  mode,
   showtimeId,
   movie,
   user,
-  onUser,
+  onLogin,
   onClose,
   onTickets,
 }) {
@@ -44,15 +42,29 @@ export default function Booking({
   const show = result.data?.show,
     seats = freshSeats || result.data?.seats || [];
   const chosen = selected
-    .map((id) => seats.find((seat) => seat.showtimeSeatId === id))
+    .map((id) => seats.find((seat) => seat.seatId === id))
     .filter(Boolean);
+  if (!user)
+    return (
+      <Modal title="Đăng nhập để đặt vé" onClose={onClose}>
+        <Empty title="Bạn chưa đăng nhập">
+          Đăng nhập hoặc tạo tài khoản để đặt vé và xem lại vé của mình.
+        </Empty>
+        <div className="booking-actions">
+          <Button primary onClick={onLogin}>
+            Đăng nhập / Đăng ký
+            <Icon name="arrow" size={16} />
+          </Button>
+        </div>
+      </Modal>
+    );
   function toggle(seat) {
     setError("");
-    if (selected.includes(seat.showtimeSeatId))
-      setSelected(selected.filter((id) => id !== seat.showtimeSeatId));
+    if (selected.includes(seat.seatId))
+      setSelected(selected.filter((id) => id !== seat.seatId));
     else if (selected.length >= 8)
       setError("Bạn có thể chọn tối đa 8 ghế cho mỗi lần đặt.");
-    else setSelected([...selected, seat.showtimeSeatId]);
+    else setSelected([...selected, seat.seatId]);
   }
   function reloadSeats() {
     setSelected([]);
@@ -70,13 +82,7 @@ export default function Booking({
       const latestShow = await api.showtime(showtimeId);
       const latestSeats = await api.seats(latestShow);
       setFreshSeats(latestSeats);
-      const payload = bookingPayload(
-        user,
-        latestShow,
-        latestSeats,
-        selected,
-        method,
-      );
+      const payload = bookingPayload(latestShow, latestSeats, selected, method);
       if (Number(latestShow.basePrice) !== Number(show.basePrice))
         throw new Error(
           "Giá vé đã thay đổi. Hãy đóng cửa sổ và chọn lại suất chiếu để xác nhận giá mới.",
@@ -167,12 +173,12 @@ export default function Booking({
                                   .filter((seat) => seat.seatRow === row)
                                   .map((seat) => (
                                     <button
-                                      key={seat.showtimeSeatId}
+                                      key={seat.seatId}
                                       disabled={seat.status !== "AVAILABLE"}
-                                      className={`seat ${seat.seatType === "VIP" ? "vip" : ""} ${selected.includes(seat.showtimeSeatId) ? "selected" : ""}`}
+                                      className={`seat ${seat.seatType === "VIP" ? "vip" : ""} ${selected.includes(seat.seatId) ? "selected" : ""}`}
                                       aria-label={`Ghế ${seat.label}${seat.status !== "AVAILABLE" ? ", không còn trống" : ""}`}
                                       aria-pressed={selected.includes(
-                                        seat.showtimeSeatId,
+                                        seat.seatId,
                                       )}
                                       title={`${seat.label} · ${seat.status} · ${seat.seatType || "NORMAL"}`}
                                       onClick={() => toggle(seat)}
@@ -216,12 +222,18 @@ export default function Booking({
             {step === 2 && (
               <>
                 <h3>Thông tin khách hàng</h3>
-                <CustomerForm
-                  api={api}
-                  user={user}
-                  onUser={onUser}
-                  disabled={busy}
-                />
+                <div className="customer-card">
+                  <span className="round-icon">
+                    <Icon name="user" />
+                  </span>
+                  <div>
+                    <strong>{user.fullName}</strong>
+                    <p>{user.email}</p>
+                    <small>
+                      Mã khách hàng: <b>#{user.userId}</b>
+                    </small>
+                  </div>
+                </div>
                 <label className="payment-method">
                   Phương thức ghi nhận
                   <select
@@ -261,15 +273,9 @@ export default function Booking({
                   <p>
                     Khách hàng #{booking.userId} · Booking #{booking.bookingId}
                   </p>
-                  <p>
-                    {mode === "demo"
-                      ? "Vé mẫu, chỉ lưu trong trình duyệt này."
-                      : "Booking đã được trả về từ backend."}
-                  </p>
                 </div>
                 <PaymentPanel
                   api={api}
-                  mode={mode}
                   booking={booking}
                   onUpdate={setBooking}
                   onBusy={setBusy}
@@ -355,10 +361,7 @@ export default function Booking({
                 )}
               </strong>
             </div>
-            <p className="hint">
-              {selected.length} vé ·{" "}
-              {mode === "demo" ? "Dữ liệu mẫu" : "Dữ liệu backend"}
-            </p>
+            <p className="hint">{selected.length} vé</p>
           </aside>
         </div>
       )}

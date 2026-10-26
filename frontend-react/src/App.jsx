@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { createApi } from "./services/api.js";
+import { createApi, createHttpClient } from "./services/api.js";
+import { createAuthService } from "./services/auth.js";
 import { useLoad } from "./lib/useLoad.js";
-import { Button, ErrorBox, Icon, Modal } from "./components/UI.jsx";
-import CustomerForm from "./components/CustomerForm.jsx";
+import { ErrorBox, Icon } from "./components/UI.jsx";
 import { Catalog, Home, MovieDetail } from "./pages/Catalog.jsx";
 import { Cinemas, Showtimes } from "./pages/Venues.jsx";
 import Booking from "./pages/Booking.jsx";
 import Tickets from "./pages/Tickets.jsx";
+import Auth from "./pages/Auth.jsx";
 
 const nav = [
   ["home", "Trang chủ"],
@@ -14,35 +15,20 @@ const nav = [
   ["showtimes", "Lịch chiếu"],
   ["cinemas", "Rạp chiếu"],
   ["tickets", "Vé của tôi"],
+  ["auth", "Tài khoản"],
 ];
 const readRoute = () =>
   nav.some(([key]) => key === location.hash.slice(1))
     ? location.hash.slice(1)
     : "home";
-function safeGet(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-function save(key, value) {
-  try {
-    value === null
-      ? localStorage.removeItem(key)
-      : localStorage.setItem(key, value);
-  } catch {
-    /* App remains usable without persistence. */
-  }
-}
 
-function Workspace({ mode, onMode }) {
-  const api = useMemo(() => createApi(mode), [mode]);
+function Workspace() {
+  const api = useMemo(() => createApi(), []);
+  const auth = useMemo(() => createAuthService(createHttpClient()), []);
   const [route, setRoute] = useState(readRoute),
     [movie, setMovie] = useState(null),
-    [showtime, setShowtime] = useState(null),
-    [profileOpen, setProfileOpen] = useState(false);
-  const [user, setUser] = useState(null),
+    [showtime, setShowtime] = useState(null);
+  const [user, setUser] = useState(() => auth.restore()?.user || null),
     [userError, setUserError] = useState(""),
     [revision, setRevision] = useState(0);
   const [schedule, setSchedule] = useState({
@@ -69,31 +55,36 @@ function Workspace({ mode, onMode }) {
     window.addEventListener("hashchange", change);
     return () => window.removeEventListener("hashchange", change);
   }, []);
+  // Xác thực lại phiên đã lưu bằng JWT; token hết hạn được tự đổi bằng refresh token.
   useEffect(() => {
-    const storedId = safeGet(`cineroom-user:${mode}`);
-    if (!storedId) return;
+    if (!auth.restore()) return;
     let active = true;
     const controller = new AbortController();
     api
-      .user(storedId, { signal: controller.signal })
-      .then((user) => {
-        if (active) setUser(user);
-      })
+      .me({ signal: controller.signal })
+      .then((profile) => active && setUser(profile))
       .catch((error) => {
-        if (active && error.name !== "AbortError")
-          setUserError(
-            "Chưa tải lại được hồ sơ khách hàng. Bạn có thể mở Hồ sơ và nhập lại mã khách hàng.",
-          );
+        if (!active || error.name === "AbortError") return;
+        if (error.status === 401) {
+          auth.logout();
+          setUser(null);
+          setUserError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        } else setUserError(`Chưa tải lại được hồ sơ: ${error.message}`);
       });
     return () => {
       active = false;
       controller.abort();
     };
-  }, [api, mode]);
-  function remember(customer) {
+  }, [api, auth]);
+  function setProfile(customer) {
     setUser(customer);
     setUserError("");
-    save(`cineroom-user:${mode}`, customer ? String(customer.userId) : null);
+  }
+  function logout() {
+    auth.logout();
+    setUser(null);
+    setUserError("");
+    navigate("home");
   }
   function navigate(next) {
     setRoute(next);
@@ -111,6 +102,10 @@ function Workspace({ mode, onMode }) {
   function closeBooking() {
     setShowtime(null);
     setRevision((value) => value + 1);
+  }
+  function goLogin() {
+    setShowtime(null);
+    navigate("auth");
   }
   return (
     <>
@@ -151,35 +146,38 @@ function Workspace({ mode, onMode }) {
             ))}
           </nav>
           <div className="header-actions">
-            <button
-              className={`mode-pill ${mode}`}
-              onClick={() => onMode(mode === "demo" ? "live" : "demo")}
-            >
-              <span />
-              {mode === "demo" ? "Dữ liệu mẫu" : "Backend thật"}
-            </button>
-            <button
-              className="profile-button"
-              aria-label={user ? `Hồ sơ ${user.fullName}` : "Hồ sơ khách hàng"}
-              onClick={() => setProfileOpen(true)}
-            >
-              <Icon name="user" size={18} />
-              <span>{user ? user.fullName.split(" ").at(-1) : "Hồ sơ"}</span>
-            </button>
+            {user ? (
+              <>
+                <button
+                  className="profile-button"
+                  aria-label={`Vé của ${user.fullName}`}
+                  onClick={() => navigate("tickets")}
+                >
+                  <Icon name="user" size={18} />
+                  <span>{user.fullName.split(" ").at(-1)}</span>
+                </button>
+                <button
+                  className="profile-button"
+                  aria-label="Đăng xuất"
+                  onClick={logout}
+                >
+                  <Icon name="close" size={16} />
+                  <span>Đăng xuất</span>
+                </button>
+              </>
+            ) : (
+              <button
+                className="profile-button"
+                aria-label="Đăng nhập hoặc đăng ký"
+                onClick={() => navigate("auth")}
+              >
+                <Icon name="user" size={16} />
+                <span>Đăng nhập</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
-      <div className={`mode-banner ${mode}`}>
-        <span>
-          {mode === "demo"
-            ? "Bạn đang trải nghiệm dữ liệu mẫu. Vé chỉ được lưu trong trình duyệt, không gửi đến backend."
-            : "Đang sử dụng API backend. Thanh toán của dự án là mô phỏng, không thu tiền thật."}
-        </span>
-        <button onClick={() => onMode(mode === "demo" ? "live" : "demo")}>
-          {mode === "demo" ? "Chuyển sang backend" : "Thử dữ liệu mẫu"}
-          <Icon name="arrow" size={13} />
-        </button>
-      </div>
       {userError && (
         <div className="container">
           <ErrorBox message={userError} />
@@ -210,12 +208,19 @@ function Workspace({ mode, onMode }) {
           />
         )}
         {route === "cinemas" && <Cinemas api={api} onSchedule={openSchedule} />}
+        {route === "auth" && (
+          <Auth
+            auth={auth}
+            user={user}
+            onUser={setProfile}
+            onDone={() => navigate("home")}
+          />
+        )}
         {route === "tickets" && (
           <Tickets
             api={api}
-            mode={mode}
             user={user}
-            onUser={remember}
+            onLogin={goLogin}
             movies={movies}
             revision={revision}
           />
@@ -255,13 +260,12 @@ function Workspace({ mode, onMode }) {
       )}
       {showtime && (
         <Booking
-          key={`${mode}-${showtime.showtimeId}`}
+          key={showtime.showtimeId}
           api={api}
-          mode={mode}
           showtimeId={showtime.showtimeId}
           movie={movies.find((movie) => movie.movieId === showtime.movieId)}
           user={user}
-          onUser={remember}
+          onLogin={goLogin}
           onClose={closeBooking}
           onTickets={() => {
             closeBooking();
@@ -269,41 +273,10 @@ function Workspace({ mode, onMode }) {
           }}
         />
       )}
-      {profileOpen && (
-        <Modal title="Hồ sơ khách hàng" onClose={() => setProfileOpen(false)}>
-          <CustomerForm api={api} user={user} onUser={remember} />
-          {user && (
-            <Button
-              className="full"
-              onClick={() => {
-                setProfileOpen(false);
-                navigate("tickets");
-              }}
-            >
-              Xem vé đã đặt
-              <Icon name="arrow" size={16} />
-            </Button>
-          )}
-        </Modal>
-      )}
     </>
   );
 }
 
 export default function App() {
-  const [mode, setMode] = useState(() =>
-    new URLSearchParams(location.search).get("mode") === "demo"
-      ? "demo"
-      : safeGet("cineroom-react-mode") === "demo"
-        ? "demo"
-        : "live",
-  );
-  function changeMode(next) {
-    save("cineroom-react-mode", next);
-    const url = new URL(location.href);
-    url.searchParams.delete("mode");
-    history.replaceState(null, "", url);
-    setMode(next);
-  }
-  return <Workspace key={mode} mode={mode} onMode={changeMode} />;
+  return <Workspace />;
 }
