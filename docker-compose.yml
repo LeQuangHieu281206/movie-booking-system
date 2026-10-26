@@ -1,8 +1,30 @@
 name: movie-booking
 
+# Chạy toàn bộ hệ thống: RabbitMQ + 7 service Java + frontend Nginx.
+#   docker compose up -d --build
+# Đọc thêm README mục "Chạy nhanh bằng Docker".
+
+x-common-env: &common-env
+  SERVER_ADDRESS: 0.0.0.0
+  TZ: Asia/Ho_Chi_Minh
+  # Chỉ dành cho dev local. Production: đặt JWT_SECRET/INTERNAL_TOKEN thật trong .env
+  # (docker compose tự đọc .env) — gateway và user-service phải dùng cùng JWT_SECRET.
+  JWT_SECRET: ${JWT_SECRET:-dev-only-jwt-secret-0123456789abcdef0123456789}
+  INTERNAL_TOKEN: ${INTERNAL_TOKEN:-dev-only-internal-token-0123456789abcdef0123456789}
+  SEPAY_WEBHOOK_API_KEY: ${SEPAY_WEBHOOK_API_KEY:-}
+
+x-backend: &backend
+  image: movie-booking-backend:latest
+  build:
+    context: .
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  environment: *common-env
+
 services:
   rabbitmq:
     image: rabbitmq:3.13-management
+    restart: unless-stopped
     ports:
       - "5672:5672"    # AMQP
       - "15672:15672"  # Management UI (guest/guest)
@@ -10,9 +32,102 @@ services:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     ports:
-      - "16379:6379"   # đường giữ ghế 
+      - "16379:6379"   # dự phòng cho giữ ghế, hiện code chưa dùng
+
+  venue-service:
+    <<: *backend
+    command: ["/app/venue-service.jar"]
+
+  user-service:
+    <<: *backend
+    command: ["/app/user-service.jar"]
+
+  movie-service:
+    <<: *backend
+    command: ["/app/movie-service.jar"]
+    environment:
+      <<: *common-env
+      APP_SERVICES_VENUE_URL: http://venue-service:8083
+
+  booking-service:
+    <<: *backend
+    command: ["/app/booking-service.jar"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      movie-service:
+        condition: service_started
+      venue-service:
+        condition: service_started
+    environment:
+      <<: *common-env
+      SPRING_RABBITMQ_HOST: rabbitmq
+      APP_SERVICES_USER_URL: http://user-service:8084
+      APP_SERVICES_MOVIE_URL: http://movie-service:8081
+      APP_SERVICES_VENUE_URL: http://venue-service:8083
+
+  payment-service:
+    <<: *backend
+    command: ["/app/payment-service.jar"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      booking-service:
+        condition: service_started
+    environment:
+      <<: *common-env
+      SPRING_RABBITMQ_HOST: rabbitmq
+      APP_SERVICES_BOOKING_URL: http://booking-service:8082
+
+  notification-service:
+    <<: *backend
+    command: ["/app/notification-service.jar"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: *common-env
+      SPRING_RABBITMQ_HOST: rabbitmq
+
+  api-gateway:
+    <<: *backend
+    command: ["/app/api-gateway.jar"]
+    ports:
+      - "8080:8080"
+    depends_on:
+      user-service:
+        condition: service_started
+      movie-service:
+        condition: service_started
+      venue-service:
+        condition: service_started
+      booking-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+    environment:
+      <<: *common-env
+      USER_SERVICE_URL: http://user-service:8084
+      MOVIE_SERVICE_URL: http://movie-service:8081
+      VENUE_SERVICE_URL: http://venue-service:8083
+      BOOKING_SERVICE_URL: http://booking-service:8082
+      PAYMENT_SERVICE_URL: http://payment-service:8086
+
+  frontend:
+    image: movie-booking-frontend:latest
+    build:
+      context: ./frontend-react
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      api-gateway:
+        condition: service_started
