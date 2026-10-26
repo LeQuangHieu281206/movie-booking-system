@@ -95,14 +95,16 @@ movie-booking-system/
 Chỉ cần cài **Docker Desktop** (Windows/macOS) hoặc **Docker Engine + Compose plugin** (Linux), kèm internet. Không cần JDK, Maven hay Node — database là Supabase chung của nhóm đã cấu hình sẵn.
 
 ```bash
-git clone <repo> && cd movie-booking-system
+git clone https://github.com/LeQuangHieu281206/movie-booking-system.git
+cd movie-booking-system
 docker compose up -d --build
 ```
 
 - Lần đầu build khoảng **3–6 phút** (Maven + npm trong Docker), các lần sau dùng cache.
 - Mở **http://localhost:5173** để dùng hệ thống.
 - Gateway: **http://localhost:8080** · RabbitMQ UI: **http://localhost:15672** (guest/guest).
-- Lệnh hữu ích: `docker compose logs -f api-gateway` (xem log) · `docker compose down` (dừng, thêm `-v` để xoá dữ liệu RabbitMQ/Redis).
+- Lệnh hữu ích: `docker compose logs -f api-gateway` (xem log) · `docker compose stop` (dừng giữ container) · `docker compose down` (dừng + xoá container, thêm `-v` để xoá dữ liệu RabbitMQ/Redis).
+- Lưu ý: khi chạy bằng Docker thì **không dùng** `./stop-services.sh` hay thoát `npm run dev` — những lệnh đó chỉ dành cho cách chạy thủ công. Docker chạy ngầm (`-d`), muốn dừng phải dùng `docker compose down`.
 - Trước khi chạy, tắt service local để không trùng cổng (`./stop-services.sh`, `Ctrl+C` ở `npm run dev`). Cần ~4 GB RAM trống.
 - Muốn đổi `JWT_SECRET`/`INTERNAL_TOKEN` (production): tạo file `.env` cạnh `docker-compose.yml` rồi `docker compose up -d` lại — gateway và user-service phải dùng cùng `JWT_SECRET`. Muốn dùng DB khác Supabase, thêm `SPRING_DATASOURCE_URL/USERNAME/PASSWORD` vào `.env`.
 
