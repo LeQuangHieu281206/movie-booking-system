@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -241,6 +242,62 @@ class BookingServiceImplTest {
                 .paymentMethod(PaymentMethod.CASH)
                 .bookingTime(OffsetDateTime.now())
                 .build();
+    }
+
+    // ---------- expireStalePendingBookings (scheduler hết hạn) ----------
+
+    private void expireTestSetup() {
+        org.springframework.test.util.ReflectionTestUtils
+                .setField(service, "pendingExpiryMinutes", 15L);
+    }
+
+    @Test
+    void expiresStalePendingBookingAndReleasesSeats() {
+        expireTestSetup();
+        Booking stale = booking(1L, 2L, BookingStatus.PENDING);
+        when(bookingRepository.findByStatusAndBookingTimeBefore(
+                org.mockito.ArgumentMatchers.eq(BookingStatus.PENDING), any(OffsetDateTime.class)))
+                .thenReturn(List.of(stale));
+        when(bookingRepository.expireIfPending(1L)).thenReturn(1);
+        BookingDetail detail = BookingDetail.builder()
+                .booking(stale)
+                .showtimeSeatId(77L)
+                .price(new BigDecimal("50000"))
+                .build();
+        when(bookingDetailRepository.findByBooking_BookingId(1L)).thenReturn(List.of(detail));
+
+        int expired = service.expireStalePendingBookings();
+
+        assertEquals(1, expired);
+        verify(showtimeClient).releaseSeats(new SeatIdsRequest(10L, List.of(77L), null));
+    }
+
+    @Test
+    void skipsBookingWhoseStatusChangedConcurrently() {
+        expireTestSetup();
+        Booking stale = booking(1L, 2L, BookingStatus.PENDING);
+        when(bookingRepository.findByStatusAndBookingTimeBefore(
+                org.mockito.ArgumentMatchers.eq(BookingStatus.PENDING), any(OffsetDateTime.class)))
+                .thenReturn(List.of(stale));
+        // Event thanh toán đã xử lý trước (PAID/CANCELLED) -> guarded update không ảnh hưởng dòng nào
+        when(bookingRepository.expireIfPending(1L)).thenReturn(0);
+
+        int expired = service.expireStalePendingBookings();
+
+        assertEquals(0, expired);
+        verify(bookingDetailRepository, never()).findByBooking_BookingId(1L);
+        verifyNoInteractions(showtimeClient);
+    }
+
+    @Test
+    void returnsZeroWhenNoStaleBooking() {
+        expireTestSetup();
+        when(bookingRepository.findByStatusAndBookingTimeBefore(
+                org.mockito.ArgumentMatchers.eq(BookingStatus.PENDING), any(OffsetDateTime.class)))
+                .thenReturn(List.of());
+
+        assertEquals(0, service.expireStalePendingBookings());
+        verifyNoInteractions(showtimeClient);
     }
 
     private static ShowtimeView showtime() {
