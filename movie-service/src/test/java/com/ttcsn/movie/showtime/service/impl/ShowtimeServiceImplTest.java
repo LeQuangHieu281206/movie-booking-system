@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.movie.showtime.service.impl;
 
 import com.ttcsn.movie.client.VenueClient;
@@ -29,7 +33,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-
+/**
+ *
+ * @author quanghieu
+ */
 @ExtendWith(MockitoExtension.class)
 class ShowtimeServiceImplTest {
 

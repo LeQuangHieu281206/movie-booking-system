@@ -1,10 +1,13 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.movie.showtime.dto.request;
 
 import jakarta.validation.constraints.NotNull;
-
 /**
- * Yêu cầu giữ/bỏ giữ 1 ghế từ frontend (mô hình showtime_seats phát sinh theo tương tác).
- * holdBy do server lấy từ X-User-Id, không nhận từ client.
+ *
+ * @author quanghieu
  */
 public record ShowtimeSeatInteractionRequest(
         @NotNull(message = "showtimeId không được để trống")

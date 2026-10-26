@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.movie.showtime.service.impl;
 
 import com.ttcsn.common.dto.RoomDto;
@@ -5,7 +9,6 @@ import com.ttcsn.common.dto.SeatDto;
 import com.ttcsn.common.dto.SeatHoldResult;
 import com.ttcsn.common.exception.NotFoundException;
 import com.ttcsn.movie.client.VenueClient;
-import com.ttcsn.movie.dto.response.MovieResponse;
 import com.ttcsn.movie.entity.Movie;
 import com.ttcsn.movie.exception.MovieNotFoundException;
 import com.ttcsn.movie.repository.MovieRepository;
@@ -40,7 +43,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 /**
  *
  * @author quanghieu
@@ -52,7 +54,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
     private static final Duration HOLD_DURATION = Duration.ofMinutes(10);
     private static final long SEATS_CACHE_TTL_MS = 60_000;
 
-    /** Giữ ghế: 1 lượt truy vấn duy nhất (kiểm tra suất + chèn/cập nhật có điều kiện + trả id). */
     private static final String HOLD_SEAT_SQL = """
             WITH allowed_showtime AS (
                 SELECT showtime_id FROM showtimes
@@ -69,7 +70,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
             RETURNING showtime_seat_id
             """;
 
-    /** Nhả ghế đang giữ: 1 DELETE có điều kiện (người giữ, ADMIN, hoặc giữ đã hết hạn). */
     private static final String RELEASE_SEAT_SQL = """
             WITH deleted AS (
                 DELETE FROM showtime_seats
@@ -81,7 +81,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
             SELECT count(*) FROM deleted
             """;
 
-    /** Chốt vé BOOKED hàng loạt: 1 lượt chèn/cập nhật cho cả danh sách ghế. */
     private static final String BOOK_SEATS_SQL = """
             WITH allowed_showtime AS (
                 SELECT showtime_id FROM showtimes WHERE showtime_id = :showtimeId
@@ -97,7 +96,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
             RETURNING seat_id
             """;
 
-    /** Bù trừ: trả một nhóm ghế về AVAILABLE trong 1 lượt. */
     private static final String RELEASE_SEATS_INTERNAL_SQL = """
             UPDATE showtime_seats
             SET status = 'AVAILABLE', hold_until = NULL, hold_by = NULL, updated_at = now()
@@ -157,12 +155,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         return toResponse(findShowtimeOrThrow(showtimeId));
     }
 
-    /**
-     * Mô hình showtime_seats "phát sinh theo tương tác": bảng không chèn sẵn ghế khi tạo suất.
-     * Ghế vật lý của phòng đọc từ venue-service; bản ghi showtime_seats chỉ tồn tại
-     * khi ghế đang HOLDING (giữ chỗ có hạn) hoặc đã BOOKED (chốt vé).
-     * Ghế không có bản ghi, hoặc HOLDING đã quá holdUntil, coi như AVAILABLE (lọc khi truy vấn).
-     */
     @Override
     @Transactional(readOnly = true)
     public List<ShowtimeSeatView> getShowtimeSeats(Long showtimeId) {
@@ -193,7 +185,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                 .toList();
     }
 
-    /** Người dùng bấm chọn ghế: 1 lượt truy vấn gồm kiểm tra suất + chèn/refresh bản ghi HOLDING (10 phút). */
     @Override
     @Transactional
     public ShowtimeSeatView holdShowtimeSeat(Long showtimeId, Long seatId, Long userId) {
@@ -209,11 +200,10 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                 .setParameter("holdBy", holdBy)
                 .getResultList();
 
-        if (!rows.isEmpty()) { // chèn mới hoặc refresh/phủ của chính phiên giữ luôn có bản ghi trả về
+        if (!rows.isEmpty()) { 
             return new ShowtimeSeatView(((Number) rows.get(0)).longValue(), showtimeId, seatId,
                     null, null, null, SeatStatus.HOLDING.name(), holdUntil);
         }
-        // 0 dòng: hiếm gặp (xung đột/điều kiện suất) -> hỏi lại 1 lần để nêu đúng lý do
         throwHoldRejection(showtimeId, seatId, holdBy);
         throw new IllegalStateException("Ghế vừa được giữ bởi phiên khác. Chọn ghế khác.");
     }
@@ -241,7 +231,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         }
     }
 
-    /** Bỏ giữ: chỉ người giữ, ADMIN, hoặc giữ đã hết hạn. */
     @Override
     @Transactional
     public ShowtimeSeatView releaseShowtimeSeat(Long showtimeId, Long seatId, Long userId, boolean admin) {
@@ -250,7 +239,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         }
         String holdBy = String.valueOf(userId);
         if (!admin) {
-            // Chặn sớm để trả đúng lỗi; câu DELETE bên dưới vẫn là nơi kiểm tra nguyên tử.
             ShowtimeSeat current = showtimeSeatRepository
                     .findByShowtime_ShowtimeIdAndSeatId(showtimeId, seatId).orElse(null);
             if (current != null
@@ -271,7 +259,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
             return new ShowtimeSeatView(null, showtimeId, seatId,
                     null, null, null, SeatStatus.AVAILABLE.name(), null);
         }
-        // Không xóa được -> phân biệt ghế chưa có giữ chỗ (bình thường) với ghế đã đặt / của người khác
         ShowtimeSeat row = showtimeSeatRepository.findByShowtime_ShowtimeIdAndSeatId(showtimeId, seatId).orElse(null);
         if (row == null || row.getStatus() == SeatStatus.AVAILABLE) {
             return new ShowtimeSeatView(null, showtimeId, seatId,
@@ -287,7 +274,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                 null, null, null, SeatStatus.AVAILABLE.name(), null);
     }
 
-    /** Internal API booking-service: chốt ghế BOOKED hàng loạt bằng 1 lượt chèn/cập nhật. */
     @Override
     @Transactional
     public SeatHoldResult bookSeats(Long showtimeId, List<Long> seatIds, String holdBy) {
@@ -310,7 +296,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         return new SeatHoldResult(false, unavailable, "Một hoặc nhiều ghế đã được đặt / đang giữ");
     }
 
-    /** Internal API booking-service: trả nhóm ghế về AVAILABLE trong 1 lượt cập nhật (bù trừ / hủy vé). */
     @Override
     @Transactional
     public void releaseSeatsInternal(Long showtimeId, List<Long> seatIds) {
@@ -331,8 +316,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
     public ShowtimeResponse createShowtime(ShowtimeRequest request) {
         Showtime showtime = new Showtime();
         applyRequest(showtime, request, null);
-        // Mô hình showtime_seats phát sinh theo tương tác: KHÔNG chèn sẵn ghế khi tạo suất.
-        // Ghế để trống mặc định AVAILABLE; HOLDING/BOOKED chỉ xuất hiện khi có đặt vé.
         Showtime savedShowtime = showtimeRepository.save(showtime);
         return toResponse(savedShowtime);
     }
@@ -374,7 +357,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                 && (row.getHoldUntil() == null || !row.getHoldUntil().isAfter(now));
     }
 
-    /** 1 lệnh gọi venue cho mọi phòng của danh sách suất (tránh 1 Feign call / suất khi list lớn). */
     private Map<Long, RoomDto> loadRooms(List<Showtime> showtimes) {
         Set<Long> roomIds = showtimes.stream()
                 .map(Showtime::getRoomId)
@@ -392,7 +374,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
             throw new IllegalArgumentException("endTime phải sau startTime");
         }
 
-        // Kiểm tra trùng lịch chiếu trong phòng
         boolean isOverlapped = showtimeRepository.existsOverlappingShowtime(
                 request.roomId(),
                 request.startTime(),
@@ -406,7 +387,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         Movie movie = movieRepository.findById(request.movieId())
                 .orElseThrow(() -> new MovieNotFoundException(request.movieId()));
 
-        // SOA: kiểm tra phòng tồn tại qua venue-service
         RoomDto room = venueClient.getRoom(request.roomId());
         if (room == null) {
             throw new NotFoundException("Không tìm thấy phòng chiếu với roomId = " + request.roomId());

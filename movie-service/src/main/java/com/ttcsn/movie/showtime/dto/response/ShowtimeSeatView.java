@@ -1,12 +1,13 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.movie.showtime.dto.response;
 
 import java.time.OffsetDateTime;
-
 /**
- * View 1 ghế theo suất chiếu cho sơ đồ ghế + đặt vé.
  *
- * <p>Ghế chưa có bản ghi = AVAILABLE (showtimeSeatId null). seatRow/seatNumber/seatType
- * lấy từ venue-service. status: AVAILABLE | HOLDING | BOOKED. Không trả holdBy ra public.
+ * @author quanghieu
  */
 public record ShowtimeSeatView(
         Long showtimeSeatId,

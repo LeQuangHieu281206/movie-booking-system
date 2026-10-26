@@ -5,21 +5,16 @@
 package com.ttcsn.venue.controller;
 
 import org.springframework.web.bind.annotation.*;
-import com.ttcsn.venue.dto.request.RoomRequest;
-import com.ttcsn.venue.dto.response.RoomResponse;
-import com.ttcsn.venue.service.RoomService;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import com.ttcsn.venue.controller.RoomController;
+
 import com.ttcsn.venue.dto.request.RoomRequest;
 import com.ttcsn.venue.dto.response.RoomResponse;
 import com.ttcsn.venue.service.RoomService;
 
 import java.util.List;
-
 /**
  *
  * @author quanghieu

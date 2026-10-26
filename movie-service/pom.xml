@@ -3,9 +3,6 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- ================= movie-service :8081 =================
-	     Phim + Thể loại + Suất chiếu (Seat Inventory)
-	     -->
 	<parent>
 		<groupId>com.ttcsn</groupId>
 		<artifactId>movie-booking-parent</artifactId>
@@ -30,7 +27,6 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 
-		<!-- Gọi venue-service lấy Room/Seat -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>

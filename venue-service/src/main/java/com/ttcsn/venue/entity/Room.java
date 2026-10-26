@@ -15,7 +15,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.time.OffsetDateTime;
-
 /**
  *
  * @author quanghieu

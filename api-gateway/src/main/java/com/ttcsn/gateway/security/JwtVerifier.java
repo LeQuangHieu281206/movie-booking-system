@@ -1,6 +1,11 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.gateway.security;
 
 import com.ttcsn.gateway.config.GatewaySecurityProperties;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -10,15 +15,9 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
-
 /**
- * Verify access token phát hành bởi user-service.
  *
- * <p>Cùng thuật toán HS256, cùng issuer và cùng claim layout:
- * sub = userId, role = CUSTOMER|ADMIN, type = access|refresh.
- * Refresh token bị từ chối vì filter chỉ chấp nhận type = "access".
- *
- * <p>Không log token. Mọi lỗi verify đều ném ra ngoài để filter trả 401 chung.
+ * @author quanghieu
  */
 @Component
 public class JwtVerifier {
@@ -43,7 +42,6 @@ public class JwtVerifier {
                 .build()
                 .parseSignedClaims(token);
 
-        // Chỉ chấp nhận đúng thuật toán user-service dùng, không để token HS512/HS384 lọt qua.
         if (!Jwts.SIG.HS256.getId().equals(jws.getHeader().getAlgorithm())) {
             throw new IllegalArgumentException("Unsupported JWT algorithm");
         }

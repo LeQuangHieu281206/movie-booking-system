@@ -1,10 +1,13 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.common.dto;
 
 import java.math.BigDecimal;
-
 /**
- * Internal view booking-service → payment-service.
- * Chỉ chứa dữ liệu payment cần để xác thực; không expose qua gateway.
+ *
+ * @author quanghieu
  */
 public record BookingPaymentView(
         Long bookingId,

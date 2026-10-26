@@ -1,9 +1,11 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.common.dto;
-
 /**
- * View cho Feign: booking-service đọc phản hồi /api/getShowtimeById của movie-service.
- * Chỉ giữ field cần dùng — anti-corruption. Giải quyết cross-module type mà không cần
- * movie-service expose đúng class của nó.
+ *
+ * @author quanghieu
  */
 public record ShowtimeView(
         Long showtimeId,

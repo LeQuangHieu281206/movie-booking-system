@@ -5,21 +5,16 @@
 package com.ttcsn.movie.controller;
 
 import org.springframework.web.bind.annotation.*;
-import com.ttcsn.movie.dto.request.GenreRequest;
-import com.ttcsn.movie.dto.response.GenreResponse;
-import com.ttcsn.movie.service.GenreService;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import com.ttcsn.movie.controller.GenreController;
+
 import com.ttcsn.movie.dto.request.GenreRequest;
 import com.ttcsn.movie.dto.response.GenreResponse;
 import com.ttcsn.movie.service.GenreService;
 
 import java.util.List;
-
 /**
  *
  * @author quanghieu

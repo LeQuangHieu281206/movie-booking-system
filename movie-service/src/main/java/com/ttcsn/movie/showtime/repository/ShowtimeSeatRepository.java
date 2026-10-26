@@ -6,6 +6,7 @@ package com.ttcsn.movie.showtime.repository;
 
 import com.ttcsn.movie.showtime.entity.ShowtimeSeat;
 import com.ttcsn.movie.showtime.entity.enums.SeatStatus;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

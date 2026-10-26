@@ -1,8 +1,14 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.common.dto;
 
 import java.util.List;
-
-/** Kết quả giữ/trả ghế: movie-service -> booking-service (internal). */
+/**
+ *
+ * @author quanghieu
+ */
 public record SeatHoldResult(
         boolean success,
         List<Long> unavailableSeatIds,

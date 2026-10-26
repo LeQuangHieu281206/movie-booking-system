@@ -2,7 +2,6 @@ spring:
   application:
     name: payment-service
 
-  # ---------- RabbitMQ (SOA Step 3) ----------
   rabbitmq:
     host: localhost
     port: 5672

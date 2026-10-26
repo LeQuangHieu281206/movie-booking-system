@@ -1,6 +1,11 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.common.exception;
 
 import com.ttcsn.common.dto.ErrorResponse;
+
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +22,9 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 /**
- * Advice chung — mỗi service tự load bean này nhờ component-scan "com.ttcsn".
- * Thay cho 4 file handler cũ rải rác trong monolith (BadRequest/NotFound/Conflict/Global).
+ *
+ * @author quanghieu
  */
 @RestControllerAdvice
 public class ApiExceptionHandler {
