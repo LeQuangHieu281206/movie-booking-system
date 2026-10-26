@@ -76,8 +76,8 @@ class PaymentCompletedListenerTest {
     void failedPendingBookingIsCancelledAndSeatsReleased() {
         Booking booking = booking(BookingStatus.PENDING);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(bookingDetailRepository.findByBookingId(1L))
-                .thenReturn(List.of(BookingDetail.builder().bookingId(1L).seatId(100L).build()));
+        when(bookingDetailRepository.findByBooking_BookingId(1L))
+                .thenReturn(List.of(BookingDetail.builder().booking(Booking.builder().bookingId(1L).build()).showtimeSeatId(100L).build()));
 
         listener.onPaymentCompleted(event(PaymentCompletedEvent.STATUS_FAILED));
 
