@@ -96,9 +96,10 @@ public class ShowtimeServiceImpl implements ShowtimeService {
             RETURNING seat_id
             """;
 
+    /** Bù trừ: xóa một nhóm bản ghi ghế trong 1 lượt — bảng ngoại lệ chỉ giữ HOLDING/BOOKED,
+     *  "không có dòng" đã nghĩa là ghế trống (AVAILABLE). */
     private static final String RELEASE_SEATS_INTERNAL_SQL = """
-            UPDATE showtime_seats
-            SET status = 'AVAILABLE', hold_until = NULL, hold_by = NULL, updated_at = now()
+            DELETE FROM showtime_seats
             WHERE showtime_id = :showtimeId AND seat_id = ANY(array[LITERAL_SEAT_IDS])
             """;
 
