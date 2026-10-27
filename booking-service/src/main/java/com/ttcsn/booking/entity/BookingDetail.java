@@ -27,8 +27,9 @@ public class BookingDetail {
     private Booking booking;
 
     /**
-     * Ghế tham chiếu theo mô hình tương tác: id của bản ghi showtime_seats (movie-service),
-     * khớp FK booking_details_showtime_seat_id_fkey trong DB.
+     * Ghế tham chiếu theo mô hình tương tác: seatId (ghế vật lý do venue-service sở hữu),
+     * đúng như API hold/release của movie-service dùng. Không đặt FK sang showtime_seats
+     * vì ghế trống chưa có bản ghi showtime_seats.
      */
     @Column(name = "showtime_seat_id", nullable = false)
     private Long showtimeSeatId;
