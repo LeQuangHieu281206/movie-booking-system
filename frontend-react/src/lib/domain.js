@@ -36,8 +36,7 @@ export const isBookable = (show) =>
   new Date(show.startTime).getTime() > Date.now();
 
 // Movie-service owns status; venue-service owns the physical seat coordinates.
-// booking-service nhận seatId (ghế vật lý), không phải showtimeSeatId: ghế trống
-// chưa có bản ghi showtime_seats nên showtimeSeatId = null.
+// Never confuse a physical seat id with the showtimeSeatId sent to booking-service.
 export function joinSeats(showtimeSeats, physicalSeats) {
   const physical = new Map(
     physicalSeats.map((seat) => [String(seat.id), seat]),
@@ -59,26 +58,26 @@ export function joinSeats(showtimeSeats, physicalSeats) {
     );
 }
 
-// booking-service lấy userId từ JWT và tự tính tổng tiền; client chỉ gửi
-// suất chiếu, danh sách seatId (ghế vật lý) và phương thức thanh toán.
 export function bookingPayload(
+  user,
   show,
   seats,
   ids,
   paymentMethod = "BANK_TRANSFER",
 ) {
+  if (!Number.isSafeInteger(Number(user?.userId)) || Number(user.userId) <= 0)
+    throw new Error("Vui lòng tạo hoặc chọn hồ sơ khách hàng.");
   if (!show || !isBookable(show))
     throw new Error("Suất chiếu đã bắt đầu hoặc không còn nhận đặt vé.");
   if (!ids.length || ids.length > 8 || new Set(ids).size !== ids.length)
     throw new Error("Vui lòng chọn từ 1 đến 8 ghế khác nhau.");
   const selected = ids.map((id) =>
-    seats.find((seat) => seat.seatId === id),
+    seats.find((seat) => seat.showtimeSeatId === id),
   );
   if (
     selected.some(
       (seat) =>
         !seat ||
-        !Number.isFinite(Number(seat.seatId)) ||
         seat.status !== "AVAILABLE" ||
         String(seat.showtimeId) !== String(show.showtimeId),
     )
@@ -91,18 +90,12 @@ export function bookingPayload(
   if (!["CASH", "BANK_TRANSFER", "CARD", "E_WALLET"].includes(paymentMethod))
     throw new Error("Phương thức thanh toán không hợp lệ.");
   return {
+    userId: Number(user.userId),
     showtimeId: show.showtimeId,
-    seatIds: ids,
+    showtimeSeatIds: ids,
+    totalAmount: Math.round(price * ids.length),
     paymentMethod,
   };
-}
-
-// Nhận link watch/youtu.be/shorts/embed và trả URL nhúng cho iframe.
-export function youtubeEmbed(url) {
-  const match = String(url || "").match(
-    /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/i,
-  );
-  return match ? `https://www.youtube.com/embed/${match[1]}` : "";
 }
 
 export function filterMovies(

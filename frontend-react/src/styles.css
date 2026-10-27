@@ -146,6 +146,27 @@ nav a.active:after {
   align-items: center;
   margin-left: auto;
 }
+.mode-pill {
+  font-size: 10px;
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid #574a35;
+  border-radius: 30px;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+.mode-pill.live {
+  color: var(--green);
+  border-color: #355448;
+}
+.mode-pill > span {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  border-radius: 50%;
+  margin-right: 6px;
+}
 .profile-button {
   border: 0;
   background: none;
@@ -159,6 +180,32 @@ nav a.active:after {
 .profile-button span {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mode-banner {
+  padding: 8px 32px;
+  background: #27231b;
+  color: #c6b28e;
+  font-size: 11px;
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  align-items: center;
+}
+.mode-banner.live {
+  background: #192620;
+  color: #a1c6af;
+}
+.mode-banner button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 11px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 0;
+  text-decoration: underline;
   white-space: nowrap;
 }
 .button {
@@ -903,8 +950,6 @@ label > select {
 .date-tabs button {
   flex-shrink: 0;
   min-width: 65px;
-  min-height: 48px;
-  cursor: pointer;
   border: 1px solid #3a4453;
   background: #19212e;
   border-radius: 6px;
@@ -913,7 +958,7 @@ label > select {
 }
 .date-tabs button span {
   display: block;
-  font-size: 11px;
+  font-size: 10px;
 }
 .date-tabs button strong {
   display: block;
@@ -959,7 +1004,7 @@ label > select {
   margin: 0 0 6px;
 }
 .cinema-label p {
-  font-size: 12px;
+  font-size: 11px;
   margin: 0;
 }
 .showtime-list {
@@ -969,8 +1014,6 @@ label > select {
   padding: 20px 0 0 53px;
 }
 .showtime-button {
-  min-height: 56px;
-  cursor: pointer;
   min-width: 105px;
   max-width: 230px;
   border: 1px solid #465160;
@@ -987,11 +1030,11 @@ label > select {
 .showtime-button span {
   display: block;
   color: #c2c8ce;
-  font-size: 11px;
+  font-size: 10px;
 }
 .showtime-button small {
   display: block;
-  font-size: 10px;
+  font-size: 9px;
   color: #8995a5;
   margin-top: 5px;
 }
@@ -1055,7 +1098,7 @@ label > select {
   font-size: 20px;
 }
 .cinema-info p {
-  font-size: 12px;
+  font-size: 11px;
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -1080,7 +1123,6 @@ label > select {
 }
 .customer-form .hint {
   margin-top: -3px;
-  font-size: 11px;
 }
 .form-grid {
   display: grid;
@@ -1649,6 +1691,14 @@ footer {
   nav a.active:after {
     bottom: -13px;
   }
+  .mode-banner {
+    font-size: 10px;
+    padding: 9px 20px;
+    gap: 12px;
+  }
+  .mode-banner button {
+    font-size: 10px;
+  }
   .hero-art {
     width: 70%;
     right: -12%;
@@ -1818,11 +1868,25 @@ footer {
   .header-actions {
     gap: 13px;
   }
+  .mode-pill {
+    font-size: 9px;
+    padding: 5px 8px;
+  }
   nav {
     gap: 0;
     justify-content: space-between;
     font-size: 11px;
     margin-top: 12px;
+  }
+  .mode-banner {
+    padding: 9px 16px;
+    display: block;
+    text-align: center;
+    line-height: 1.7;
+  }
+  .mode-banner button {
+    display: inline-flex;
+    margin-left: 7px;
   }
   .hero {
     min-height: 495px;
@@ -2071,7 +2135,7 @@ footer {
     font-size: 12px;
   }
   .date-tabs button span {
-    font-size: 10px;
+    font-size: 9px;
   }
   .schedule-filter {
     gap: 14px;
@@ -2087,7 +2151,7 @@ footer {
     font-size: 14px;
   }
   .cinema-label p {
-    font-size: 11px;
+    font-size: 10px;
   }
   .round-icon {
     width: 33px;
@@ -2106,10 +2170,7 @@ footer {
     font-size: 16px;
   }
   .showtime-button small {
-    font-size: 10px;
-  }
-  .showtime-button span {
-    font-size: 11px;
+    font-size: 8px;
   }
   .cinema-grid {
     grid-template-columns: 1fr;
@@ -2127,7 +2188,6 @@ footer {
   }
   .cinema-info p {
     min-height: 0;
-    font-size: 12px;
   }
   .booking-steps {
     gap: 12px;
@@ -2226,8 +2286,8 @@ footer {
   }
   .customer-form .segmented button {
     flex: 1;
-    font-size: 11px;
-    padding: 10px;
+    font-size: 10px;
+    padding: 8px 10px;
   }
   .customer-card {
     padding: 13px;
@@ -2240,13 +2300,13 @@ footer {
   }
   .customer-card p {
     overflow-wrap: anywhere;
-    font-size: 11px;
+    font-size: 10px;
   }
   .customer-card small {
-    font-size: 10px;
+    font-size: 9px;
   }
   .customer-card > .button {
-    font-size: 10px;
+    font-size: 9px;
   }
   .booking-actions .button {
     font-size: 11px;
@@ -2317,129 +2377,4 @@ footer {
     transition: none !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* Frontend 3: Lịch chiếu / Rạp / Hồ sơ khách */
-.link-button {
-  background: none;
-  border: 0;
-  padding: 0;
-  font: inherit;
-  color: var(--gold-light);
-  text-decoration: underline;
-  cursor: pointer;
-}
-.cinema-filter {
-  font-size: 12px;
-  margin: 0 0 14px;
-}
-.schedule-empty-action {
-  display: flex;
-  justify-content: center;
-  margin-top: 16px;
-}
-.cinema-info a {
-  color: var(--gold-light);
-}
-.cinema-schedule h3,
-.cinema-label p {
-  overflow-wrap: anywhere;
-}
-@media (max-width: 560px) {
-  .date-tabs {
-    scroll-snap-type: x proximity;
-  }
-  .date-tabs button {
-    scroll-snap-align: start;
-    min-height: 46px;
-  }
-  .showtime-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-  }
-  .showtime-button {
-    max-width: none;
-    min-width: 0;
-  }
-}
-
-/* --- Trang Tài khoản (đăng nhập / đăng ký) --- */
-.auth-card {
-  max-width: 420px;
-  margin: 0 auto;
-  padding: var(--space-5, 24px);
-  border: 1px solid var(--border, #e3e3e8);
-  border-radius: 14px;
-  background: var(--surface, #fff);
-  display: grid;
-  gap: 16px;
-}
-.auth-card .segmented {
-  width: 100%;
-}
-.auth-card form label {
-  display: grid;
-  gap: 6px;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-.auth-card form label + label {
-  margin-top: 12px;
-}
-.auth-card input {
-  padding: 10px 12px;
-  border: 1px solid var(--border, #d8d8de);
-  border-radius: 9px;
-  font: inherit;
-  background: var(--bg, #fafafa);
-}
-.auth-card input:focus-visible {
-  outline: 2px solid var(--accent, #e11d48);
-  outline-offset: 1px;
-}
-.auth-card fieldset {
-  border: 0;
-  padding: 0;
-  margin: 0;
-}
-.auth-hint {
-  font-size: 0.88rem;
-  color: var(--muted, #6b6b76);
-  margin: 0;
-}
-
-/* --- QR thanh toán SePay --- */
-.qr-box {
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-  text-align: center;
-}
-.qr-box img {
-  width: 220px;
-  max-width: 100%;
-  border-radius: 10px;
-  background: #fff;
-  padding: 10px;
-}
-@media (max-width: 640px) {
-  .auth-card {
-    padding: 18px 14px;
-  }
-}
-
-/* --- Trailer nhúng trong popup --- */
-.trailer-frame {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #000;
-  border-radius: 10px;
-  overflow: hidden;
-}
-.trailer-frame iframe {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border: 0;
 }

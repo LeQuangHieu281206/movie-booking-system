@@ -22,7 +22,7 @@ npm.cmd ci
 npm.cmd run dev
 ```
 
-Mở <http://localhost:5173>. Mặc định proxy đến Gateway `http://localhost:8080`; nếu Gateway của máy bạn là cổng khác, cấu hình `BACKEND_URL` trong `.env.local`, rồi khởi động lại Vite. Các service domain vẫn dùng cổng cấu hình trong backend. Docker Compose chỉ khởi động hạ tầng, không tự chạy các Java service.
+Mở <http://localhost:5173>. Mặc định proxy đến Gateway `http://localhost:8088`; nếu Gateway của máy bạn là cổng khác, cấu hình `BACKEND_URL` trong `.env.local`, rồi khởi động lại Vite. Các service domain vẫn dùng cổng cấu hình trong backend. Docker Compose chỉ khởi động hạ tầng, không tự chạy các Java service.
 
 - [Hướng dẫn chạy và cấu hình frontend](frontend-react/README.md)
 - [Phân công ba thành viên frontend](frontend-react/docs/PHAN-CONG-3-NGUOI.md)

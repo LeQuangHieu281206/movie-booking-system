@@ -6,7 +6,7 @@ Bản nền đã build và chạy thử frontend. Bảng dưới là việc nhó
 
 - [ ] Cả nhóm thống nhất dùng `frontend-react`, nhánh tích hợp và phân công.
 - [ ] Node đúng phiên bản; `npm.cmd ci` thành công.
-- [ ] Gateway đang chạy ở cổng 8080 hoặc BACKEND_URL đã đổi đúng.
+- [ ] Gateway đang chạy ở cổng 8088 hoặc BACKEND_URL đã đổi đúng.
 - [ ] movie, venue, user, booking, payment và notification không có lỗi khởi động; RabbitMQ sẵn sàng.
 - [ ] Có phim SHOWING, rạp, phòng, ghế vật lý, suất SCHEDULED trong tương lai và showtime_seats cho suất đó.
 - [ ] Dùng hồ sơ thử nghiệm, không dùng mật khẩu/thông tin ngân hàng thật.
@@ -49,7 +49,7 @@ Không kết luận đã chống trùng ghế đồng thời chỉ vì B02 đạ
 | Ghế vẫn BOOKED sau hủy | Log release của booking và movie; không tự sửa UI để che lỗi backend |
 | npm báo cổng 5173 bận | Dừng frontend cũ bằng Ctrl+C trong đúng terminal hoặc thống nhất cổng khác |
 
-Cổng 8080 bận: tìm chương trình đang dùng (`netstat -ano | findstr :8080`), hoặc chạy Gateway ở cổng khác và đặt `BACKEND_URL` trong `.env.local`.
+Không tắt AgentService.exe chỉ để giành lại cổng 8080. Máy bạn đang dùng Gateway 8088.
 
 ## Trước khi nộp
 

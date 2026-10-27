@@ -12,7 +12,7 @@ CINEROOM REACT - BAT DAU O DAY
 
 3. Mo http://localhost:5173
    Neu chi xem giao dien: bam Thu du lieu mau.
-   Backend that: giu Docker + Java services chay, Gateway 8080.
+   Backend that: giu Docker + Java services chay, Gateway 8088.
 
 4. Doc README.md de xem huong dan chi tiet.
    Doc docs/PHAN-CONG-3-NGUOI.md de giao viec.
