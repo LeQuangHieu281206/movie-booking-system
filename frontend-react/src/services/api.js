@@ -101,6 +101,8 @@ export function createLiveApi(request = createHttpClient()) {
     },
     // Hồ sơ của chính mình (JWT). /getUserById chỉ dành cho ADMIN.
     me: (options) => request("/users/me", options),
+    updateProfile: (body) =>
+      request("/users/me", { method: "PUT", body }),
     bookings: (userId, options) =>
       list(`/getBookingsByUserId?userId=${id(userId)}`, options),
     booking: (bookingId, options) =>

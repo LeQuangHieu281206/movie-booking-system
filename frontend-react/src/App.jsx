@@ -244,6 +244,7 @@ function Workspace() {
         {route === "auth" && (
           <Auth
             auth={auth}
+            api={api}
             user={user}
             onUser={setProfile}
             onDone={() => navigate("home")}

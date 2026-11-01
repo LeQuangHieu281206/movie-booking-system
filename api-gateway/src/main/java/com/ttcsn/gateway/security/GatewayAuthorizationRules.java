@@ -85,7 +85,7 @@ final class GatewayAuthorizationRules {
             rule(HttpMethod.DELETE, "/api/deleteUser", Access.ADMIN),
 
             // ho so nguoi dung
-            rule(HttpMethod.GET, "/api/users/**", Access.CUSTOMER_OR_ADMIN),
+            rule(null, "/api/users/**", Access.CUSTOMER_OR_ADMIN),
 
             rule(HttpMethod.POST, "/api/holdShowtimeSeat", Access.CUSTOMER_OR_ADMIN),
             rule(HttpMethod.POST, "/api/releaseShowtimeSeat", Access.CUSTOMER_OR_ADMIN),

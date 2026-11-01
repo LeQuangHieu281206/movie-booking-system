@@ -5,6 +5,7 @@
 package com.ttcsn.user.service;
 
 import com.ttcsn.user.dto.request.UserCreateRequest;
+import com.ttcsn.user.dto.request.ProfileUpdateRequest;
 import com.ttcsn.user.dto.request.UserUpdateRequest;
 import com.ttcsn.user.dto.response.UserResponse;
 
@@ -18,5 +19,6 @@ public interface UserService {
     UserResponse getUserById(Long id);
     UserResponse createUser(UserCreateRequest request);
     UserResponse updateUser(Long id, UserUpdateRequest request);
+    UserResponse updateProfile(Long id, ProfileUpdateRequest request);
     void deleteUser(Long id);
 }

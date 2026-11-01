@@ -5,6 +5,7 @@
 package com.ttcsn.user.service.impl;
 
 import com.ttcsn.user.dto.request.UserCreateRequest;
+import com.ttcsn.user.dto.request.ProfileUpdateRequest;
 import com.ttcsn.user.dto.request.UserUpdateRequest;
 import com.ttcsn.user.dto.response.UserResponse;
 import com.ttcsn.user.entity.User;
@@ -83,6 +84,17 @@ public class UserServiceImpl implements UserService {
 
         User updatedUser = userRepository.save(user);
         return convertToResponse(updatedUser);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateProfile(Long id, ProfileUpdateRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+        user.setFullName(request.fullName().trim());
+        String phone = request.phoneNumber();
+        user.setPhoneNumber(phone == null || phone.isBlank() ? null : phone.trim());
+        return convertToResponse(userRepository.save(user));
     }
 
     @Override
