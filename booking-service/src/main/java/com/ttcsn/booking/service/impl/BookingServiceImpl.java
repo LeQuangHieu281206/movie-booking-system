@@ -167,12 +167,20 @@ public class BookingServiceImpl implements BookingService {
             Booking savedBooking = bookingRepository.save(booking);
 
             List<BookingDetail> details = seatIds.stream()
-                    .map(seatId -> BookingDetail.builder()
-                            .booking(savedBooking)
-                            .seatId(seatId)
-                            .price(basePrice)
-                            .createdAt(OffsetDateTime.now())
-                            .build())
+                    .map(seatId -> {
+                        Long showtimeSeatId = hold.seatToShowtimeSeatId().get(seatId);
+                        if (showtimeSeatId == null) {
+                            throw new IllegalStateException(
+                                    "Không lấy được showtimeSeatId cho ghế " + seatId);
+                        }
+                        return BookingDetail.builder()
+                                .booking(savedBooking)
+                                .seatId(seatId)
+                                .showtimeSeatId(showtimeSeatId)
+                                .price(basePrice)
+                                .createdAt(OffsetDateTime.now())
+                                .build();
+                    })
                     .collect(Collectors.toList());
             bookingDetailRepository.saveAll(details);
 
