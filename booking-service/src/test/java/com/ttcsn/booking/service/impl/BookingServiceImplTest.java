@@ -30,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,7 +66,8 @@ class BookingServiceImplTest {
         when(userClient.userExists(7L)).thenReturn(true);
         when(movieClient.getShowtimeById(10L)).thenReturn(showtime());
         when(venueClient.getRoom(2L)).thenReturn(new RoomDto(2L, "R1", "2D", 100, 3L, "C", "A", "H"));
-        when(showtimeClient.holdSeats(any(SeatIdsRequest.class))).thenReturn(SeatHoldResult.ok());
+        when(showtimeClient.holdSeats(any(SeatIdsRequest.class)))
+                .thenReturn(SeatHoldResult.ok(Map.of(100L, 1000L, 101L, 1001L)));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
             Booking booking = invocation.getArgument(0);
             booking.setBookingId(99L);
@@ -91,6 +93,9 @@ class BookingServiceImplTest {
         verify(bookingDetailRepository).saveAll(detailsCaptor.capture());
         assertThat(detailsCaptor.getValue()).hasSize(2)
                 .allMatch(detail -> new BigDecimal("50000").compareTo(detail.getPrice()) == 0);
+        assertThat(detailsCaptor.getValue())
+                .extracting(BookingDetail::getShowtimeSeatId)
+                .containsExactly(1000L, 1001L);
     }
 
     @Test

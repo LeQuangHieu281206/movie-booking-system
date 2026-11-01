@@ -291,11 +291,15 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                 .setParameter("holdBy", holdBy)
                 .getResultList();
         if (booked.size() >= requested.size()) {
-            return SeatHoldResult.ok();
+            Map<Long, Long> seatToShowtimeSeatId = showtimeSeatRepository
+                    .findByShowtime_ShowtimeIdAndSeatIdIn(showtimeId, requested)
+                    .stream()
+                    .collect(Collectors.toMap(ShowtimeSeat::getSeatId, ShowtimeSeat::getShowtimeSeatId));
+            return SeatHoldResult.ok(seatToShowtimeSeatId);
         }
         Set<Long> bookedIds = booked.stream().map(id -> ((Number) id).longValue()).collect(Collectors.toSet());
         List<Long> unavailable = requested.stream().filter(id -> !bookedIds.contains(id)).toList();
-        return new SeatHoldResult(false, unavailable, "Một hoặc nhiều ghế đã được đặt / đang giữ");
+        return new SeatHoldResult(false, unavailable, "Một hoặc nhiều ghế đã được đặt / đang giữ", Map.of());
     }
 
     @Override

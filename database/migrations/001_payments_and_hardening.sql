@@ -56,36 +56,104 @@ WHERE p.status = 'PENDING'
 CREATE UNIQUE INDEX IF NOT EXISTS uk_payments_one_pending_per_booking
     ON public.payments (booking_id) WHERE status = 'PENDING';
 
--- ============================================================
--- 2. booking_details: showtime_seat_id -> seat_id
---    Dữ liệu cũ có 2 kiểu: showtime_seat_id (trước refactor) và seat_id vật lý
---    (sau refactor). Chỉ chuyển các dòng còn map được qua showtime_seats.
--- ============================================================
+-- payments.booking_id -> bookings.booking_id
+-- Dự án đang dùng chung một Supabase DB nên vẫn giữ FK để bảo đảm toàn vẹn.
+-- Khi tách DB theo service, FK này sẽ được thay bằng kiểm tra qua BookingClient.
 DO $$
 BEGIN
-    IF EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'booking_details'
-          AND column_name = 'showtime_seat_id'
-    ) AND NOT EXISTS (
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payments_booking_id_fkey') THEN
+        ALTER TABLE public.payments
+            ADD CONSTRAINT payments_booking_id_fkey
+            FOREIGN KEY (booking_id) REFERENCES public.bookings (booking_id);
+    END IF;
+END $$;
+
+-- ============================================================
+-- 2. booking_details: giữ seat_id và thêm showtime_seat_id
+--    - seat_id          : ghế vật lý, dùng cho release/audit nhanh
+--    - showtime_seat_id : dòng tồn kho ghế-theo-suất, join ra cả seats và showtimes
+--    Hỗ trợ cả schema gốc (chỉ có showtime_seat_id) và schema sau refactor (chỉ có seat_id).
+-- ============================================================
+
+-- 2.1 Bổ sung seat_id nếu schema gốc chỉ có showtime_seat_id
+DO $$
+BEGIN
+    IF NOT EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_schema = 'public' AND table_name = 'booking_details'
           AND column_name = 'seat_id'
     ) THEN
+        ALTER TABLE public.booking_details ADD COLUMN seat_id bigint;
         UPDATE public.booking_details bd
-        SET showtime_seat_id = ss.seat_id
-        FROM public.bookings b, public.showtime_seats ss
-        WHERE bd.booking_id = b.booking_id
-          AND ss.showtime_seat_id = bd.showtime_seat_id
-          AND ss.showtime_id = b.showtime_id;
-
-        ALTER TABLE public.booking_details
-            RENAME COLUMN showtime_seat_id TO seat_id;
+        SET seat_id = ss.seat_id
+        FROM public.showtime_seats ss
+        WHERE ss.showtime_seat_id = bd.showtime_seat_id;
     END IF;
 END $$;
 
+-- 2.2 Bổ sung showtime_seat_id nếu schema sau refactor chỉ có seat_id
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'booking_details'
+          AND column_name = 'showtime_seat_id'
+    ) THEN
+        ALTER TABLE public.booking_details ADD COLUMN showtime_seat_id bigint;
+    END IF;
+END $$;
+
+-- 2.3 Backfill showtime_seat_id từ bookings.showtime_id + booking_details.seat_id
+UPDATE public.booking_details bd
+SET showtime_seat_id = ss.showtime_seat_id
+FROM public.bookings b, public.showtime_seats ss
+WHERE bd.booking_id = b.booking_id
+  AND ss.showtime_id = b.showtime_id
+  AND ss.seat_id = bd.seat_id
+  AND bd.showtime_seat_id IS NULL;
+
+-- 2.4 Backfill seat_id từ showtime_seat_id cho dữ liệu cũ
+UPDATE public.booking_details bd
+SET seat_id = ss.seat_id
+FROM public.showtime_seats ss
+WHERE ss.showtime_seat_id = bd.showtime_seat_id
+  AND bd.seat_id IS NULL;
+
+-- 2.5 Không thể tiếp tục nếu còn dòng không map được
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM public.booking_details
+        WHERE seat_id IS NULL OR showtime_seat_id IS NULL
+    ) THEN
+        RAISE EXCEPTION 'booking_details có dòng không map được sang seats/showtime_seats';
+    END IF;
+END $$;
+
+ALTER TABLE public.booking_details ALTER COLUMN seat_id SET NOT NULL;
+ALTER TABLE public.booking_details ALTER COLUMN showtime_seat_id SET NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_booking_details_booking ON public.booking_details (booking_id);
 CREATE INDEX IF NOT EXISTS idx_booking_details_seat ON public.booking_details (seat_id);
+CREATE INDEX IF NOT EXISTS idx_booking_details_showtime_seat ON public.booking_details (showtime_seat_id);
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'booking_details_seat_id_fkey') THEN
+        ALTER TABLE public.booking_details
+            ADD CONSTRAINT booking_details_seat_id_fkey
+            FOREIGN KEY (seat_id) REFERENCES public.seats (seat_id);
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'booking_details_showtime_seat_id_fkey') THEN
+        ALTER TABLE public.booking_details
+            ADD CONSTRAINT booking_details_showtime_seat_id_fkey
+            FOREIGN KEY (showtime_seat_id) REFERENCES public.showtime_seats (showtime_seat_id);
+    END IF;
+END $$;
 
 -- ============================================================
 -- 3. Index còn thiếu cho các truy vấn nóng

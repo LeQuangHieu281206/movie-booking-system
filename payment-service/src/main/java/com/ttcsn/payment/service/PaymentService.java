@@ -121,7 +121,9 @@ public class PaymentService {
         try {
             booking = bookingClient.getBooking(bookingId);
         } catch (FeignException.NotFound ex) {
-            recordFailed(bookingId, request, providerTxnId, "Booking không tồn tại");
+            // payments.booking_id có FK -> bookings, nên không ghi payment cho booking không tồn tại.
+            log.warn("[payment-service] Bỏ qua webhook vì booking {} không tồn tại, providerTxnId={}",
+                    bookingId, providerTxnId);
             return;
         } catch (FeignException ex) {
             throw new IllegalStateException(
@@ -129,7 +131,8 @@ public class PaymentService {
         }
 
         if (booking == null) {
-            recordFailed(bookingId, request, providerTxnId, "Booking không tồn tại");
+            log.warn("[payment-service] Bỏ qua webhook vì booking {} không tồn tại, providerTxnId={}",
+                    bookingId, providerTxnId);
             return;
         }
 

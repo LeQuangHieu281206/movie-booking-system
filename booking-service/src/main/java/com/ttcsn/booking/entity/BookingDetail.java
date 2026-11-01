@@ -33,6 +33,13 @@ public class BookingDetail {
     @Column(name = "seat_id", nullable = false)
     private Long seatId;
 
+    /**
+     * Dòng tồn kho ghế-theo-suất chiếu. Qua FK này lấy được cả seats và showtimes
+     * mà không cần join thêm bookings.
+     */
+    @Column(name = "showtime_seat_id", nullable = false)
+    private Long showtimeSeatId;
+
     @Column(nullable = false, columnDefinition = "numeric")
     private BigDecimal price;
 

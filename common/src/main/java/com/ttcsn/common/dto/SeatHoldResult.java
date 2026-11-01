@@ -5,6 +5,7 @@
 package com.ttcsn.common.dto;
 
 import java.util.List;
+import java.util.Map;
 /**
  *
  * @author quanghieu
@@ -12,9 +13,14 @@ import java.util.List;
 public record SeatHoldResult(
         boolean success,
         List<Long> unavailableSeatIds,
-        String message
+        String message,
+        Map<Long, Long> seatToShowtimeSeatId
 ) {
+    public static SeatHoldResult ok(Map<Long, Long> seatToShowtimeSeatId) {
+        return new SeatHoldResult(true, List.of(), "OK", seatToShowtimeSeatId);
+    }
+
     public static SeatHoldResult ok() {
-        return new SeatHoldResult(true, List.of(), "OK");
+        return ok(Map.of());
     }
 }
