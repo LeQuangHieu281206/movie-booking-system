@@ -17,6 +17,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 
 import java.time.OffsetDateTime;
@@ -95,6 +96,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponse> handleMissingParam(MissingServletRequestParameterException ex, HttpServletRequest request) {
         String message = String.format("Thiếu tham số bắt buộc: %s", ex.getParameterName());
+        return ErrorResponseFactory.build(HttpStatus.BAD_REQUEST, message, request);
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorResponse> handleMissingHeader(MissingRequestHeaderException ex, HttpServletRequest request) {
+        String message = String.format("Thiếu header bắt buộc: %s", ex.getHeaderName());
         return ErrorResponseFactory.build(HttpStatus.BAD_REQUEST, message, request);
     }
 
