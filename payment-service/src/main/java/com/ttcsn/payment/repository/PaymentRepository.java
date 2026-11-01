@@ -26,6 +26,30 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByBookingIdOrderByPaymentIdDesc(Long bookingId);
 
     /**
+     * Tạo hoặc cập nhật payment PENDING của booking trong một câu lệnh.
+     * Unique index một phần uk_payments_one_pending_per_booking bảo đảm hai request
+     * tạo QR đồng thời không sinh hai dòng PENDING.
+     */
+    @Modifying
+    @Query(value = """
+            INSERT INTO payments
+                (booking_id, amount, currency, status, provider, reference_code, qr_url, created_at, updated_at)
+            VALUES
+                (:bookingId, :amount, 'VND', 'PENDING', 'SEPAY', :referenceCode, :qrUrl, now(), now())
+            ON CONFLICT (booking_id) WHERE status = 'PENDING'
+            DO UPDATE SET
+                amount = EXCLUDED.amount,
+                currency = EXCLUDED.currency,
+                reference_code = EXCLUDED.reference_code,
+                qr_url = EXCLUDED.qr_url,
+                updated_at = now()
+            """, nativeQuery = true)
+    int upsertPendingPayment(@Param("bookingId") Long bookingId,
+                             @Param("amount") BigDecimal amount,
+                             @Param("referenceCode") String referenceCode,
+                             @Param("qrUrl") String qrUrl);
+
+    /**
      * Ghi nhận giao dịch SUCCESS theo kiểu atomic. Nếu webhook trùng provider_txn_id
      * đang được xử lý đồng thời, chỉ một transaction insert được và được phép publish event.
      */

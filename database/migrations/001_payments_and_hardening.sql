@@ -39,6 +39,23 @@ CREATE INDEX IF NOT EXISTS idx_payments_booking ON public.payments (booking_id);
 CREATE INDEX IF NOT EXISTS idx_payments_status ON public.payments (status);
 CREATE INDEX IF NOT EXISTS idx_payments_reference ON public.payments (reference_code);
 
+-- Mỗi booking chỉ có tối đa một payment PENDING. Nếu có dữ liệu trùng từ trước,
+-- giữ bản mới nhất và đánh dấu các bản cũ là FAILED để tạo được unique index.
+UPDATE public.payments p
+SET status = 'FAILED',
+    failure_reason = 'Payment PENDING trùng, đã thay bằng bản mới nhất',
+    updated_at = now()
+WHERE p.status = 'PENDING'
+  AND EXISTS (
+      SELECT 1 FROM public.payments p2
+      WHERE p2.booking_id = p.booking_id
+        AND p2.status = 'PENDING'
+        AND p2.payment_id > p.payment_id
+  );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_payments_one_pending_per_booking
+    ON public.payments (booking_id) WHERE status = 'PENDING';
+
 -- ============================================================
 -- 2. booking_details: showtime_seat_id -> seat_id
 --    Dữ liệu cũ có 2 kiểu: showtime_seat_id (trước refactor) và seat_id vật lý
