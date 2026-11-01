@@ -1,6 +1,7 @@
 package com.ttcsn.user.controller;
 
 import com.ttcsn.user.dto.request.UserCreateRequest;
+import com.ttcsn.user.dto.request.ProfileUpdateRequest;
 import com.ttcsn.user.dto.request.UserUpdateRequest;
 import com.ttcsn.user.dto.response.UserResponse;
 import com.ttcsn.user.security.AuthenticatedUser;
@@ -36,6 +37,14 @@ public class UserController {
     @GetMapping("/users/me")
     public ResponseEntity<UserResponse> me(@AuthenticationPrincipal AuthenticatedUser currentUser) {
         return ResponseEntity.ok(userService.getUserById(currentUser.id()));
+    }
+
+    /** Cập nhật hồ sơ của chính mình; userId lấy từ JWT, không nhận từ client. */
+    @PutMapping("/users/me")
+    public ResponseEntity<UserResponse> updateMe(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @Valid @RequestBody ProfileUpdateRequest request) {
+        return ResponseEntity.ok(userService.updateProfile(currentUser.id(), request));
     }
 
     @GetMapping("/getUsers")

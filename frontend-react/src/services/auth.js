@@ -13,6 +13,10 @@ export function createAuthService(request) {
       return { ...session, user: toProfile(session.user) };
     },
     logout: () => writeSession(null),
+    updateUser: (user) => {
+      const session = readSession();
+      if (session) writeSession({ ...session, user: toProfile(user) });
+    },
     async login(email, password) {
       const session = sessionFromAuthResponse(
         await request("/auth/login", {
