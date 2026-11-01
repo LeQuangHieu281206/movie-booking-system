@@ -21,6 +21,10 @@ const readRoute = () =>
   nav.some(([key]) => key === location.hash.slice(1))
     ? location.hash.slice(1)
     : "home";
+const scrollBehavior = () =>
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ? "auto"
+    : "smooth";
 
 function Workspace() {
   const api = useMemo(() => createApi(), []);
@@ -89,7 +93,7 @@ function Workspace() {
   function navigate(next) {
     setRoute(next);
     location.hash = next;
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
   }
   function openSchedule(movieId = "", cinemaId = "") {
     setSchedule((value) => ({ movieId, cinemaId, key: value.key + 1 }));
@@ -183,7 +187,7 @@ function Workspace() {
           <ErrorBox message={userError} />
         </div>
       )}
-      <main id="main-content" tabIndex={-1}>
+      <main id="main-content" key={route} className="page-enter" tabIndex={-1}>
         {route === "home" && (
           <Home
             catalog={catalog}

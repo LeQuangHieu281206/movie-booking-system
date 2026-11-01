@@ -1,18 +1,67 @@
 :root {
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-  color: #f4f0e7;
-  background: #10151e;
+  font-family:
+    "SF Pro Text", "SF Pro Display", system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  color: #1d1d1f;
+  background: #fbfaf7;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --bg: #10151e;
-  --panel: #181f2a;
-  --gold: #e7b86b;
-  --gold-light: #f1cf98;
-  --muted: #a5adbc;
-  --line: #2b3442;
-  --green: #9ac6b0;
-  color-scheme: dark;
+
+  /* Surface + text */
+  --bg: #fbfaf7;
+  --panel: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f5f3ee;
+  --ink: #1d1d1f;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --line: #e6e2d8;
+  --border: #e6e2d8;
+  --hairline: #ece9e1;
+
+  /* Yellow brand */
+  --primary: #f5c518;
+  --primary-hover: #ffd84d;
+  --primary-soft: #fff4c2;
+  --primary-strong: #d9a900;
+  --gold: #f5c518;
+  --gold-light: #ffe066;
+  --gold-deep: #7a5a00;
+  --accent: #f5c518;
+
+  /* Status */
+  --green: #2e7d4f;
+  --danger: #b42318;
+  --space-5: 24px;
+
+  /* Motion scale */
+  --duration-stagger: 40ms;
+  --duration-micro: 80ms;
+  --duration-quick: 150ms;
+  --duration-fast: 250ms;
+  --duration-medium: 350ms;
+  --duration-slow: 400ms;
+  --duration-very-slow: 500ms;
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: ease-in-out;
+  --ease-out: ease-out;
+  --ease-linear: linear;
+  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --ease-bounce-strong: cubic-bezier(0.34, 3.85, 0.64, 1);
+  --distance-micro: 4px;
+  --distance-small: 6px;
+  --distance-base: 8px;
+  --distance-medium: 12px;
+  --distance-large: 30px;
+  --scale-large: 0.96;
+  --scale-medium: 0.97;
+  --scale-small: 0.98;
+  --scale-tiny: 0.99;
+  --blur-small: 2px;
+  --blur-medium: 3px;
+  --blur-large: 8px;
+  color-scheme: light;
 }
 * {
   box-sizing: border-box;
@@ -20,6 +69,8 @@
 body {
   margin: 0;
   line-height: 1.6;
+  background: var(--bg);
+  color: var(--ink);
 }
 button,
 input,
@@ -54,15 +105,15 @@ h1,
 h2,
 h3 {
   line-height: 1.2;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.03em;
 }
 h1 {
   font-size: clamp(32px, 4vw, 46px);
-  font-weight: 650;
+  font-weight: 600;
 }
 h2 {
   font-size: clamp(25px, 3vw, 33px);
-  font-weight: 620;
+  font-weight: 600;
 }
 h3 {
   font-size: 19px;
@@ -75,7 +126,7 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--gold-deep);
   outline-offset: 4px;
 }
 main:focus {
@@ -91,6 +142,12 @@ svg {
 .site-header {
   border-bottom: 1px solid var(--line);
   background: var(--bg);
+}
+.site-header a:focus-visible,
+.site-header button:focus-visible,
+.experience a:focus-visible,
+.experience button:focus-visible {
+  outline-color: var(--primary);
 }
 .header-inner {
   max-width: 1400px;
@@ -577,7 +634,7 @@ label > select {
   overflow: hidden;
 }
 .poster-link .poster {
-  transition: filter 0.2s;
+  transition: filter var(--duration-quick) var(--ease-smooth-out);
 }
 .poster-action {
   position: absolute;
@@ -814,7 +871,7 @@ label > select {
   border: 2px solid #5c513f;
   border-top-color: var(--gold);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.8s var(--ease-linear) infinite;
 }
 @keyframes spin {
   to {
@@ -2442,4 +2499,961 @@ footer {
   width: 100%;
   height: 100%;
   border: 0;
+}
+
+/* ============================================================
+   CineRoom yellow cinema theme
+   Apple-inspired light canvas, one yellow accent, quiet chrome.
+   ============================================================ */
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* ---------- Header ---------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: rgba(29, 29, 31, 0.94);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+.header-inner {
+  min-height: 64px;
+  padding: 0 36px;
+  gap: 44px;
+}
+.brand {
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+.brand > span {
+  color: #d2d2d7;
+  font-weight: 300;
+}
+.brand svg {
+  color: var(--primary);
+}
+nav {
+  gap: 26px;
+  font-size: 13px;
+}
+nav a {
+  color: #a1a1a6;
+  padding: 22px 0;
+  transition: color var(--duration-quick) var(--ease-smooth-out);
+}
+nav a:hover,
+nav a.active {
+  color: #fff;
+}
+nav a.active:after {
+  bottom: 0;
+  height: 2px;
+  background: var(--primary);
+}
+.header-actions .profile-button {
+  color: #d2d2d7;
+  padding: 8px 10px;
+  border-radius: 999px;
+  transition:
+    color var(--duration-quick) var(--ease-smooth-out),
+    background var(--duration-quick) var(--ease-smooth-out);
+}
+.profile-button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- Buttons ---------- */
+.button {
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  padding: 11px 22px;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background var(--duration-quick) var(--ease-smooth-out),
+    border-color var(--duration-quick) var(--ease-smooth-out),
+    color var(--duration-quick) var(--ease-smooth-out),
+    transform var(--duration-fast) var(--ease-smooth-out);
+}
+.button:hover {
+  background: #fff;
+  border-color: var(--primary-strong);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+.button:active {
+  transform: scale(0.95);
+  transition-duration: var(--duration-micro);
+}
+.button.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--ink);
+}
+.button.primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-strong);
+  color: var(--ink);
+}
+.button.small {
+  padding: 8px 14px;
+  font-size: 12px;
+}
+.button.danger {
+  background: #fff5f5;
+  border-color: #f3c6c3;
+  color: var(--danger);
+}
+.icon-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border-color: var(--line);
+  background: var(--panel);
+  transition:
+    background var(--duration-quick) var(--ease-smooth-out),
+    transform var(--duration-fast) var(--ease-smooth-out);
+}
+.icon-button:hover {
+  background: var(--primary-soft);
+  transform: scale(1.04);
+}
+.icon-button:active {
+  transform: scale(0.95);
+}
+
+/* ---------- Type + rhythm ---------- */
+.eyebrow {
+  color: var(--gold-deep);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+.section {
+  padding: 24px 0 56px;
+}
+.section-heading p {
+  color: var(--muted);
+}
+.page-section > p {
+  color: var(--muted);
+}
+.hint {
+  color: var(--muted);
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  min-height: 540px;
+}
+.hero-orbit,
+.hero-shade {
+  display: none;
+}
+.hero-art {
+  right: 6%;
+  top: 50%;
+  width: min(34vw, 380px);
+  height: 440px;
+  transform: translateY(-50%);
+  opacity: 1;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+.hero-art .poster {
+  height: 100%;
+  transform: none;
+  border-radius: 18px;
+}
+.hero-art .poster img {
+  object-position: center;
+  filter: none;
+}
+.hero-content {
+  position: relative;
+  z-index: 1;
+  padding: 76px 0 68px;
+}
+.hero-content > .eyebrow {
+  font-size: 10px;
+}
+.gold-line {
+  background: var(--primary);
+}
+.hero-kicker {
+  color: var(--muted);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.hero h1 {
+  color: var(--ink);
+  letter-spacing: -0.035em;
+}
+.hero-meta {
+  color: var(--muted);
+}
+.outline-tag {
+  border-color: var(--line);
+  background: var(--panel);
+  color: var(--ink);
+}
+.hero-description {
+  color: #4a4a4f;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.hero-footnote {
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  margin-top: 30px;
+}
+.hero-number {
+  color: var(--gold-deep);
+}
+.hero-number span {
+  color: var(--muted);
+}
+
+/* ---------- Quick booking ---------- */
+.quick-book {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: none;
+  padding: 20px 24px;
+  margin-bottom: 48px;
+}
+.quick-label > svg,
+.quick-label strong {
+  color: var(--ink);
+}
+.quick-label > svg {
+  color: var(--gold-deep);
+}
+.quick-label span,
+.quick-book > label > span {
+  color: var(--muted);
+}
+.quick-book > label {
+  border-left-color: var(--line);
+}
+.quick-book select {
+  color: var(--ink);
+  background: transparent;
+}
+
+/* ---------- Tabs, inputs, filters ---------- */
+.segmented {
+  background: var(--surface-2);
+  border-color: var(--line);
+  border-radius: 999px;
+}
+.segmented button {
+  border-radius: 999px;
+  color: var(--muted);
+  transition:
+    background var(--duration-quick) var(--ease-smooth-out),
+    color var(--duration-quick) var(--ease-smooth-out);
+}
+.segmented button.active {
+  background: var(--primary-soft);
+  color: var(--ink);
+}
+input,
+select {
+  border-color: var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 11px;
+}
+input::placeholder {
+  color: #9a9a9f;
+}
+label {
+  color: var(--muted);
+}
+.search-field {
+  background: var(--panel);
+  border-color: var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+}
+.search-field input {
+  background: transparent;
+  color: var(--ink);
+}
+.result-count {
+  color: var(--muted);
+}
+
+/* ---------- Catalog ---------- */
+.movie-grid {
+  gap: 32px 24px;
+}
+.poster {
+  background: #f1ede3;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.14);
+}
+.poster img {
+  transition: transform var(--duration-fast) var(--ease-smooth-out);
+}
+.poster-link {
+  border-radius: 18px;
+}
+.poster-link:hover .poster img {
+  transform: scale(1.03);
+}
+.poster-fallback {
+  background: #f5f1e6;
+  color: var(--gold-deep);
+}
+.age {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: var(--line);
+  color: var(--ink);
+}
+.poster-action {
+  background: rgba(29, 29, 31, 0.9);
+  color: #fff;
+  opacity: 0;
+  transform: translateY(var(--distance-base));
+  transition:
+    opacity var(--duration-quick) var(--ease-smooth-out),
+    transform var(--duration-quick) var(--ease-smooth-out);
+}
+.poster-link:hover .poster-action,
+.poster-link:focus-visible .poster-action {
+  opacity: 1;
+  transform: translateY(0);
+}
+.movie-meta {
+  color: var(--muted);
+}
+.title-button {
+  color: var(--ink);
+  font-weight: 600;
+  transition: color var(--duration-quick) var(--ease-smooth-out);
+}
+.title-button:hover {
+  color: var(--gold-deep);
+}
+.movie-bottom {
+  border-top-color: var(--line);
+}
+.status-dot {
+  color: var(--green);
+}
+.status-dot:before {
+  background: var(--green);
+}
+.status-dot.upcoming {
+  color: var(--gold-deep);
+}
+.status-dot.upcoming:before {
+  background: var(--primary);
+}
+.text-button,
+.link-button,
+.cinema-info a {
+  color: var(--gold-deep);
+}
+
+/* ---------- Dark editorial tile ---------- */
+.experience {
+  background: #1d1d1f;
+  border: 0;
+  border-radius: 24px;
+  color: #fff;
+}
+.experience h2 {
+  color: #fff;
+}
+.experience p {
+  color: #a1a1a6;
+}
+.experience .eyebrow {
+  color: var(--primary);
+}
+.experience-art {
+  background: #2a2a2c;
+  color: var(--primary);
+}
+.experience-art p {
+  color: #d2d2d7;
+}
+.decorative-ticket {
+  background: transparent;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ---------- Empty, error, loading, modal ---------- */
+.empty {
+  background: var(--panel);
+  border-color: var(--line);
+  border-radius: 18px;
+}
+.empty > svg {
+  color: var(--gold-deep);
+}
+.error-box {
+  background: #fff5f5;
+  border-color: #f3c6c3;
+  border-radius: 14px;
+}
+.error-box p {
+  color: var(--danger);
+}
+.loading {
+  color: var(--muted);
+}
+.spinner {
+  border-color: var(--line);
+  border-top-color: var(--primary);
+}
+.modal {
+  background: var(--panel);
+  color: var(--ink);
+  border-color: var(--line);
+  border-radius: 18px;
+  box-shadow: none;
+}
+.modal::backdrop {
+  background: rgba(29, 29, 31, 0.45);
+  backdrop-filter: blur(var(--blur-large));
+}
+.modal[open] {
+  animation: modal-in var(--duration-fast) var(--ease-smooth-out);
+}
+.modal[open]::backdrop {
+  animation: backdrop-in var(--duration-quick) var(--ease-out);
+}
+.modal.is-closing {
+  animation: modal-out var(--duration-quick) var(--ease-smooth-out) forwards;
+  pointer-events: none;
+}
+.modal.is-closing::backdrop {
+  animation: backdrop-out var(--duration-quick) var(--ease-out) forwards;
+}
+.modal-heading h2 {
+  color: var(--ink);
+}
+.movie-detail {
+  border-bottom-color: var(--line);
+}
+.movie-detail p,
+.detail-tags,
+.movie-detail dt {
+  color: var(--muted);
+}
+
+/* ---------- Showtimes + cinemas ---------- */
+.date-tabs button {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--muted);
+  border-radius: 11px;
+  transition:
+    background var(--duration-quick) var(--ease-smooth-out),
+    border-color var(--duration-quick) var(--ease-smooth-out),
+    color var(--duration-quick) var(--ease-smooth-out),
+    transform var(--duration-fast) var(--ease-smooth-out);
+}
+.date-tabs button:hover {
+  transform: translateY(-1px);
+  border-color: var(--primary-strong);
+}
+.date-tabs button.active {
+  border-color: var(--primary-strong);
+  background: var(--primary-soft);
+  color: var(--ink);
+}
+.cinema-schedule {
+  background: var(--panel);
+  border-color: var(--line);
+  border-radius: 18px;
+}
+.round-icon {
+  background: var(--primary-soft);
+  border-color: #efdf9b;
+  color: var(--gold-deep);
+  border-radius: 999px;
+}
+.cinema-label p {
+  color: var(--muted);
+}
+.showtime-button {
+  background: var(--panel);
+  border-color: var(--line);
+  border-radius: 14px;
+  transition:
+    background var(--duration-quick) var(--ease-smooth-out),
+    border-color var(--duration-quick) var(--ease-smooth-out),
+    transform var(--duration-fast) var(--ease-smooth-out);
+}
+.showtime-button strong {
+  color: var(--gold-deep);
+}
+.showtime-button span {
+  color: var(--ink);
+}
+.showtime-button small {
+  color: var(--muted);
+}
+.showtime-button:hover {
+  border-color: var(--primary-strong);
+  background: #fffdf3;
+  transform: translateY(-2px);
+}
+.cinema-card {
+  background: var(--panel);
+  border-color: var(--line);
+  border-radius: 18px;
+  transition:
+    border-color var(--duration-quick) var(--ease-smooth-out),
+    transform var(--duration-fast) var(--ease-smooth-out);
+}
+.cinema-card:hover {
+  border-color: var(--primary-strong);
+  transform: translateY(-2px);
+}
+.cinema-art {
+  background: var(--surface-2);
+}
+.cinema-art.tone-1 {
+  background: #f1ead8;
+}
+.cinema-art.tone-2 {
+  background: #eef0ea;
+}
+.cinema-art > span {
+  color: var(--ink);
+}
+.cinema-art svg,
+.cinema-info p svg {
+  color: var(--gold-deep);
+}
+.cinema-art b {
+  color: var(--muted);
+}
+
+/* ---------- Forms + booking ---------- */
+.customer-card,
+.customer-form {
+  background: var(--panel);
+  border-color: var(--line);
+  border-radius: 18px;
+}
+.customer-card small {
+  color: var(--muted);
+}
+.booking-steps {
+  border-bottom-color: var(--line);
+}
+.booking-steps li {
+  color: var(--muted);
+}
+.booking-steps li > span {
+  background: var(--panel);
+  border-color: var(--line);
+}
+.booking-steps li.active {
+  color: var(--gold-deep);
+}
+.booking-steps li.active > span {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+.booking-summary {
+  background: var(--panel);
+  border-color: var(--line);
+  border-radius: 18px;
+}
+.summary-movie {
+  border-bottom-color: var(--line);
+}
+.booking-summary dt {
+  color: var(--muted);
+}
+.summary-total {
+  border-top-color: var(--line);
+}
+.summary-total strong,
+.ticket-confirmation h2,
+.ticket-card-side strong,
+.ticket-cut {
+  color: var(--gold-deep);
+}
+.screen {
+  border-top-color: var(--ink);
+  box-shadow: none;
+}
+.screen span,
+.row-label {
+  color: var(--muted);
+}
+.seat {
+  background: var(--panel);
+  border-color: #d8d2c4;
+  border-bottom-color: #c9c2b2;
+  color: var(--ink);
+  border-radius: 8px 8px 5px 5px;
+  transition:
+    background var(--duration-quick) var(--ease-smooth-out),
+    border-color var(--duration-quick) var(--ease-smooth-out),
+    color var(--duration-quick) var(--ease-smooth-out),
+    transform var(--duration-fast) var(--ease-smooth-out);
+}
+.seat:hover {
+  border-color: var(--primary-strong);
+  transform: translateY(-1px) scale(1.04);
+}
+.seat.vip {
+  background: var(--primary-soft);
+  border-color: #e8cf73;
+  color: #5f4a00;
+}
+.seat.selected {
+  background: var(--primary);
+  border-color: var(--primary-strong);
+  color: var(--ink);
+}
+.seat:disabled {
+  background: #f1efe9;
+  border-color: var(--line);
+  color: #b8b4aa;
+}
+.seat-legend i {
+  background: var(--panel);
+  border-color: #d8d2c4;
+}
+.seat-legend i.vip {
+  background: var(--primary-soft);
+  border-color: #e8cf73;
+}
+.seat-legend i.selected {
+  background: var(--primary);
+  border-color: var(--primary-strong);
+}
+.seat-legend i.booked {
+  background: #f1efe9;
+  border-color: var(--line);
+}
+.booking-actions {
+  border-top-color: var(--line);
+}
+.notice {
+  background: var(--primary-soft);
+  border-color: #efdf9b;
+  color: #6b5200;
+}
+.notice p {
+  color: inherit;
+}
+.ticket-confirmation {
+  border-bottom-color: var(--line);
+}
+.badge {
+  border-color: #e8cf73;
+  background: var(--primary-soft);
+  color: #6b5200 !important;
+}
+.badge.paid {
+  border-color: #b7d9c4;
+  background: #eef8f1;
+  color: var(--green) !important;
+}
+.badge.cancelled,
+.badge.expired {
+  border-color: #f3c6c3;
+  background: #fff5f5;
+  color: var(--danger) !important;
+}
+.payment-panel > p {
+  color: var(--muted);
+}
+.success-note {
+  border-color: #b7d9c4;
+  background: #eef8f1;
+  color: var(--green);
+}
+.tickets-list {
+  gap: 20px;
+}
+.ticket-card {
+  background: var(--panel);
+  border-color: var(--line);
+  border-radius: 18px;
+}
+.ticket-card-main small {
+  color: var(--muted);
+}
+.ticket-card > .payment-panel {
+  border-top-color: var(--line);
+}
+.ticket-cut {
+  background: var(--primary-soft);
+  border-color: #e8cf73;
+}
+
+/* ---------- Footer ---------- */
+footer {
+  background: var(--surface-2);
+  border-top-color: var(--line);
+}
+footer .brand {
+  color: var(--ink);
+}
+footer .brand > span {
+  color: var(--muted);
+}
+footer .brand svg {
+  color: var(--gold-deep);
+}
+.footer-links,
+.footer-note > span,
+.footer-bottom {
+  color: var(--muted);
+}
+.footer-bottom {
+  border-top-color: var(--line);
+}
+
+/* ---------- Auth + QR ---------- */
+.auth-card {
+  background: var(--panel);
+  border-color: var(--line);
+  border-radius: 18px;
+}
+.auth-card input {
+  background: var(--bg);
+  border-color: var(--line);
+  border-radius: 11px;
+  color: var(--ink);
+}
+.auth-card input:focus-visible {
+  outline-color: var(--primary-strong);
+}
+.auth-hint {
+  color: var(--muted);
+}
+.qr-box img {
+  border-radius: 14px;
+}
+
+/* ---------- Motion ---------- */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--distance-base));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--distance-medium));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--distance-base)) scale(var(--scale-large));
+    filter: blur(var(--blur-small));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes modal-out {
+  to {
+    opacity: 0;
+    transform: translateY(var(--distance-micro)) scale(var(--scale-tiny));
+  }
+}
+@keyframes backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes badge-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.page-enter {
+  animation: page-in var(--duration-fast) var(--ease-smooth-out) both;
+}
+.movie-grid > *,
+.cinema-grid > *,
+.tickets-list > * {
+  animation: card-in var(--duration-slow) var(--ease-smooth-out) both;
+}
+.movie-grid > :nth-child(1),
+.cinema-grid > :nth-child(1),
+.tickets-list > :nth-child(1) {
+  animation-delay: 0ms;
+}
+.movie-grid > :nth-child(2),
+.cinema-grid > :nth-child(2),
+.tickets-list > :nth-child(2) {
+  animation-delay: var(--duration-stagger);
+}
+.movie-grid > :nth-child(3),
+.cinema-grid > :nth-child(3),
+.tickets-list > :nth-child(3) {
+  animation-delay: calc(var(--duration-stagger) * 2);
+}
+.movie-grid > :nth-child(4),
+.cinema-grid > :nth-child(4),
+.tickets-list > :nth-child(4) {
+  animation-delay: calc(var(--duration-stagger) * 3);
+}
+.movie-grid > :nth-child(5),
+.cinema-grid > :nth-child(5),
+.tickets-list > :nth-child(5) {
+  animation-delay: calc(var(--duration-stagger) * 4);
+}
+.movie-grid > :nth-child(6),
+.cinema-grid > :nth-child(6),
+.tickets-list > :nth-child(6) {
+  animation-delay: calc(var(--duration-stagger) * 5);
+}
+.movie-grid > :nth-child(n + 7),
+.cinema-grid > :nth-child(n + 7),
+.tickets-list > :nth-child(n + 7) {
+  animation-delay: calc(var(--duration-stagger) * 6);
+}
+.badge.paid {
+  animation: badge-pop var(--duration-very-slow) var(--ease-bounce) both;
+}
+
+/* ---------- Responsive overrides ---------- */
+@media (max-width: 1100px) {
+  .header-inner {
+    padding: 0 26px;
+    gap: 28px;
+  }
+  .hero-art {
+    width: 35%;
+    right: 4%;
+  }
+}
+
+@media (max-width: 850px) {
+  .header-inner {
+    flex-wrap: wrap;
+    min-height: 58px;
+    padding: 0 20px;
+    gap: 0;
+  }
+  nav {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 18px;
+    margin-top: 0;
+    padding: 10px 0 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar {
+    display: none;
+  }
+  nav a {
+    padding: 8px 0;
+    white-space: nowrap;
+  }
+  nav a.active:after {
+    bottom: 0;
+  }
+  .hero-art {
+    display: none;
+  }
+  .hero-content {
+    max-width: none;
+    padding: 48px 0 44px;
+  }
+  .hero h1 {
+    font-size: clamp(34px, 7vw, 46px);
+  }
+}
+
+@media (max-width: 560px) {
+  .header-inner {
+    padding: 0 16px;
+  }
+  nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 16px;
+    padding: 8px 0 12px;
+  }
+  nav a {
+    padding: 3px 0;
+  }
+  .hero h1 {
+    font-size: 34px;
+  }
+  .hero-content {
+    padding-top: 36px;
+  }
+  .quick-book {
+    padding: 16px;
+  }
+  .button {
+    padding: 10px 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

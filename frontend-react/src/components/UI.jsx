@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useId } from "react";
+import React, { useEffect, useRef, useId, useState } from "react";
 
 export function Icon({ name, size = 20, ...props }) {
   const paths = {
@@ -144,19 +144,34 @@ export function Modal({
 }) {
   const ref = useRef(null),
     previous = useRef(null),
-    titleId = useId();
+    titleId = useId(),
+    timer = useRef(null);
+  const [closing, setClosing] = useState(false);
   useEffect(() => {
     if (!previous.current) previous.current = document.activeElement;
-    ref.current?.showModal();
+    if (ref.current && !ref.current.open) ref.current.showModal();
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
+      clearTimeout(timer.current);
       document.body.style.overflow = overflow;
       queueMicrotask(() => {
         if (!ref.current?.open) previous.current?.focus();
       });
     };
   }, []);
+  function requestClose() {
+    if (busy || closing) return;
+    setClosing(true);
+    const delay = window.matchMedia?.("(prefers-reduced-motion: reduce)")
+      .matches
+      ? 0
+      : 150;
+    timer.current = setTimeout(() => {
+      ref.current?.close();
+      onClose();
+    }, delay);
+  }
   function trap(event) {
     if (event.key !== "Tab") return;
     const focusable = [
@@ -178,12 +193,22 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      className={`modal ${wide ? "wide" : ""}`}
+      className={`modal ${wide ? "wide" : ""} ${closing ? "is-closing" : ""}`}
       aria-labelledby={titleId}
       onKeyDown={trap}
+      onClick={(event) => {
+        if (event.target !== ref.current) return;
+        const rect = ref.current.getBoundingClientRect();
+        const outside =
+          event.clientX < rect.left ||
+          event.clientX > rect.right ||
+          event.clientY < rect.top ||
+          event.clientY > rect.bottom;
+        if (outside) requestClose();
+      }}
       onCancel={(event) => {
         event.preventDefault();
-        if (!busy) onClose();
+        requestClose();
       }}
     >
       <div className="modal-heading">
@@ -195,7 +220,7 @@ export function Modal({
           disabled={busy}
           className="icon-button"
           aria-label="Đóng"
-          onClick={onClose}
+          onClick={requestClose}
         >
           <Icon name="close" />
         </button>
