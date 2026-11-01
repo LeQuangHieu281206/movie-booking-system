@@ -76,21 +76,19 @@ class PaymentServiceTest {
     void generatesQrForOwnPendingBookingUsingServerAmount() {
         when(bookingClient.getBooking(1L))
                 .thenReturn(booking(1L, 7L, "100000", "PENDING"));
+        Payment pending = Payment.builder().paymentId(9L).bookingId(1L).status(PaymentStatus.PENDING).build();
         when(paymentRepository.findFirstByBookingIdAndStatusOrderByPaymentIdDesc(1L, PaymentStatus.PENDING))
-                .thenReturn(Optional.empty());
+                .thenReturn(Optional.of(pending));
 
         String qrUrl = service.createSePayPayment(1L, 7L);
 
         assertThat(qrUrl).contains("amount=100000").contains("des=DH1");
-        ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
-        verify(paymentRepository).save(captor.capture());
-        assertThat(captor.getValue().getStatus()).isEqualTo(PaymentStatus.PENDING);
-        assertThat(captor.getValue().getAmount()).isEqualByComparingTo("100000");
+        verify(paymentRepository).upsertPendingPayment(eq(1L), any(), eq("DH1"), anyString());
         verifyNoInteractions(rabbitTemplate);
     }
 
     @Test
-    void reusesExistingPendingPaymentWhenCreatingQrAgain() {
+    void creatingQrAgainUpsertsSinglePendingPayment() {
         when(bookingClient.getBooking(1L))
                 .thenReturn(booking(1L, 7L, "100000", "PENDING"));
         Payment pending = Payment.builder().paymentId(9L).bookingId(1L).status(PaymentStatus.PENDING).build();
@@ -99,8 +97,7 @@ class PaymentServiceTest {
 
         service.createSePayPayment(1L, 7L);
 
-        verify(paymentRepository).save(pending);
-        assertThat(pending.getQrUrl()).contains("des=DH1");
+        verify(paymentRepository).upsertPendingPayment(eq(1L), any(), eq("DH1"), anyString());
     }
 
     @Test

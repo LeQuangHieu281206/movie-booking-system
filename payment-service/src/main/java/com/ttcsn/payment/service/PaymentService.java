@@ -73,21 +73,14 @@ public class PaymentService {
         String qrUrl = String.format("https://qr.sepay.vn/img?acc=%s&bank=%s&amount=%s&des=%s",
                 ACCOUNT_NUMBER, BANK_NAME, amount.toPlainString(), referenceCode);
 
-        Payment payment = paymentRepository
+        paymentRepository.upsertPendingPayment(bookingId, amount, referenceCode, qrUrl);
+        Long paymentId = paymentRepository
                 .findFirstByBookingIdAndStatusOrderByPaymentIdDesc(bookingId, PaymentStatus.PENDING)
-                .orElseGet(() -> Payment.builder()
-                        .bookingId(bookingId)
-                        .provider(PROVIDER_SEPAY)
-                        .status(PaymentStatus.PENDING)
-                        .currency(CURRENCY_VND)
-                        .build());
-        payment.setAmount(amount);
-        payment.setReferenceCode(referenceCode);
-        payment.setQrUrl(qrUrl);
-        paymentRepository.save(payment);
+                .map(Payment::getPaymentId)
+                .orElse(null);
 
         log.info("[payment-service] Đã tạo QR cho bookingId={}, paymentId={}, amount={}",
-                bookingId, payment.getPaymentId(), amount);
+                bookingId, paymentId, amount);
         return qrUrl;
     }
 
