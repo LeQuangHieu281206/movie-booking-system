@@ -3,8 +3,6 @@ package com.ttcsn.payment;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
@@ -15,17 +13,13 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * <p><b>Cấu hình kỹ thuật cốt lõi:</b>
  * <ul>
  *   <li>Chạy trên cổng cố định: {@code 8086}.</li>
- *   <li>Loại trừ tự động cấu hình Database ({@code DataSourceAutoConfiguration}, 
- *       {@code HibernateJpaAutoConfiguration}) do module dùng chung {@code common} 
- *       có tích hợp sẵn JPA trên classpath, giúp tối ưu hóa tài nguyên vì service này hoàn toàn stateless.</li>
+ *   <li>Dùng chung Supabase PostgreSQL để lưu lịch sử giao dịch trong bảng {@code payments}.</li>
  * </ul>
  * 
  * @author Nhóm phát triển (Module Payment Service)
  */
 @Slf4j
-@SpringBootApplication(
-        scanBasePackages = "com.ttcsn",
-        exclude = { DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class })
+@SpringBootApplication(scanBasePackages = "com.ttcsn")
 @EnableFeignClients(basePackages = "com.ttcsn.payment.client")
 public class PaymentServiceApplication {
 
