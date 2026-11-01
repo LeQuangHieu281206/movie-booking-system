@@ -21,6 +21,12 @@ const readRoute = () =>
   nav.some(([key]) => key === location.hash.slice(1))
     ? location.hash.slice(1)
     : "home";
+const scrollBehavior = () =>
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ? "auto"
+    : "smooth";
+const readTheme = () =>
+  document.documentElement.dataset.theme === "dark" ? "dark" : "light";
 
 function Workspace() {
   const api = useMemo(() => createApi(), []);
@@ -31,6 +37,7 @@ function Workspace() {
   const [user, setUser] = useState(() => auth.restore()?.user || null),
     [userError, setUserError] = useState(""),
     [revision, setRevision] = useState(0);
+  const [theme, setTheme] = useState(readTheme);
   const [schedule, setSchedule] = useState({
     movieId: "",
     cinemaId: "",
@@ -55,6 +62,17 @@ function Workspace() {
     window.addEventListener("hashchange", change);
     return () => window.removeEventListener("hashchange", change);
   }, []);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      localStorage.setItem("cineroom-theme", theme);
+    } catch {
+      // localStorage có thể bị chặn ở chế độ riêng tư.
+    }
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", theme === "dark" ? "#0f1012" : "#1d1d1f");
+  }, [theme]);
   // Xác thực lại phiên đã lưu bằng JWT; token hết hạn được tự đổi bằng refresh token.
   useEffect(() => {
     if (!auth.restore()) return;
@@ -65,7 +83,7 @@ function Workspace() {
       .then((profile) => active && setUser(profile))
       .catch((error) => {
         if (!active || error.name === "AbortError") return;
-        if (error.status === 401) {
+        if (error.status === 401 || error.status === 404) {
           auth.logout();
           setUser(null);
           setUserError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
@@ -89,7 +107,7 @@ function Workspace() {
   function navigate(next) {
     setRoute(next);
     location.hash = next;
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
   }
   function openSchedule(movieId = "", cinemaId = "") {
     setSchedule((value) => ({ movieId, cinemaId, key: value.key + 1 }));
@@ -146,6 +164,21 @@ function Workspace() {
             ))}
           </nav>
           <div className="header-actions">
+            <button
+              className="theme-toggle"
+              type="button"
+              aria-label={
+                theme === "dark"
+                  ? "Chuyển sang giao diện sáng"
+                  : "Chuyển sang giao diện tối"
+              }
+              aria-pressed={theme === "dark"}
+              onClick={() =>
+                setTheme((current) => (current === "dark" ? "light" : "dark"))
+              }
+            >
+              <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
+            </button>
             {user ? (
               <>
                 <button
@@ -183,7 +216,7 @@ function Workspace() {
           <ErrorBox message={userError} />
         </div>
       )}
-      <main id="main-content" tabIndex={-1}>
+      <main id="main-content" key={route} className="page-enter" tabIndex={-1}>
         {route === "home" && (
           <Home
             catalog={catalog}
@@ -211,6 +244,7 @@ function Workspace() {
         {route === "auth" && (
           <Auth
             auth={auth}
+            api={api}
             user={user}
             onUser={setProfile}
             onDone={() => navigate("home")}
@@ -240,13 +274,9 @@ function Workspace() {
             <a href="#cinemas">Hệ thống rạp</a>
             <a href="#tickets">Vé của tôi</a>
           </div>
-          <div className="footer-note">
-            <span>ĐỒ ÁN WEBSITE ĐẶT VÉ XEM PHIM</span>
-            <p>React · Java Spring Boot · SOA</p>
-          </div>
         </div>
         <div className="container footer-bottom">
-          <span>© 2026 CineRoom · Dự án học tập</span>
+          <span>© 2026 CineRoom</span>
           <span>Để mỗi bộ phim là một trải nghiệm.</span>
         </div>
       </footer>

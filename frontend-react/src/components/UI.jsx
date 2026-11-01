@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useId } from "react";
+import React, { useEffect, useRef, useId, useState } from "react";
 
 export function Icon({ name, size = 20, ...props }) {
   const paths = {
@@ -32,6 +32,13 @@ export function Icon({ name, size = 20, ...props }) {
       </>
     ),
     play: <path d="m9 5 11 7-11 7V5Z" />,
+    sun: (
+      <>
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+      </>
+    ),
+    moon: <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" />,
     user: (
       <>
         <circle cx="12" cy="8" r="4" />
@@ -144,19 +151,34 @@ export function Modal({
 }) {
   const ref = useRef(null),
     previous = useRef(null),
-    titleId = useId();
+    titleId = useId(),
+    timer = useRef(null);
+  const [closing, setClosing] = useState(false);
   useEffect(() => {
     if (!previous.current) previous.current = document.activeElement;
-    ref.current?.showModal();
+    if (ref.current && !ref.current.open) ref.current.showModal();
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
+      clearTimeout(timer.current);
       document.body.style.overflow = overflow;
       queueMicrotask(() => {
         if (!ref.current?.open) previous.current?.focus();
       });
     };
   }, []);
+  function requestClose() {
+    if (busy || closing) return;
+    setClosing(true);
+    const delay = window.matchMedia?.("(prefers-reduced-motion: reduce)")
+      .matches
+      ? 0
+      : 150;
+    timer.current = setTimeout(() => {
+      ref.current?.close();
+      onClose();
+    }, delay);
+  }
   function trap(event) {
     if (event.key !== "Tab") return;
     const focusable = [
@@ -178,12 +200,22 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      className={`modal ${wide ? "wide" : ""}`}
+      className={`modal ${wide ? "wide" : ""} ${closing ? "is-closing" : ""}`}
       aria-labelledby={titleId}
       onKeyDown={trap}
+      onClick={(event) => {
+        if (event.target !== ref.current) return;
+        const rect = ref.current.getBoundingClientRect();
+        const outside =
+          event.clientX < rect.left ||
+          event.clientX > rect.right ||
+          event.clientY < rect.top ||
+          event.clientY > rect.bottom;
+        if (outside) requestClose();
+      }}
       onCancel={(event) => {
         event.preventDefault();
-        if (!busy) onClose();
+        requestClose();
       }}
     >
       <div className="modal-heading">
@@ -195,7 +227,7 @@ export function Modal({
           disabled={busy}
           className="icon-button"
           aria-label="Đóng"
-          onClick={onClose}
+          onClick={requestClose}
         >
           <Icon name="close" />
         </button>
