@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.gateway.security;
 
 import org.springframework.http.HttpMethod;
@@ -7,14 +11,9 @@ import org.springframework.web.util.pattern.PathPattern;
 import org.springframework.web.util.pattern.PathPatternParser;
 
 import java.util.List;
-
 /**
- * Bảng phân quyền của gateway. Rule đầu tiên khớp (method + path) sẽ thắng.
  *
- * <p>Public chỉ gồm luồng đăng nhập/đăng ký và các GET đọc dữ liệu công khai.
- * Path không khớp rule nào mặc định chỉ ADMIN được đi tiếp — endpoint mới không
- * tự động mở cho CUSTOMER. Path không chuẩn (encoded separator, dot segment,
- * matrix parameter, double slash...) bị từ chối trước khi so rule.
+ * @author quanghieu
  */
 final class GatewayAuthorizationRules {
 
@@ -31,13 +30,12 @@ final class GatewayAuthorizationRules {
     private static final PathPatternParser PARSER = new PathPatternParser();
 
     private static final List<Rule> RULES = List.of(
-            // CORS preflight không mang Authorization.
             rule(HttpMethod.OPTIONS, "/**", Access.PUBLIC),
 
             // Đăng nhập / đăng ký.
             rule(null, "/api/auth/**", Access.PUBLIC),
 
-            // GET công khai — movie-service.
+            // GET công khai
             rule(HttpMethod.GET, "/api/getMovies", Access.PUBLIC),
             rule(HttpMethod.GET, "/api/searchMovies", Access.PUBLIC),
             rule(HttpMethod.GET, "/api/getMovieById", Access.PUBLIC),
@@ -47,7 +45,7 @@ final class GatewayAuthorizationRules {
             rule(HttpMethod.GET, "/api/getShowtimeById", Access.PUBLIC),
             rule(HttpMethod.GET, "/api/getShowtimeSeats", Access.PUBLIC),
 
-            // GET công khai — venue-service.
+            // GET công khai
             rule(HttpMethod.GET, "/api/getCinemas", Access.PUBLIC),
             rule(HttpMethod.GET, "/api/getCinemaById", Access.PUBLIC),
             rule(HttpMethod.GET, "/api/getCities", Access.PUBLIC),
@@ -57,7 +55,7 @@ final class GatewayAuthorizationRules {
             rule(HttpMethod.GET, "/api/getSeatsByRoomId", Access.PUBLIC),
             rule(HttpMethod.GET, "/api/getSeatById", Access.PUBLIC),
 
-            // CRUD quản trị — movie-service.
+            // CRUD quản trị
             rule(HttpMethod.POST, "/api/createMovie", Access.ADMIN),
             rule(HttpMethod.PUT, "/api/updateMovie", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteMovie", Access.ADMIN),
@@ -68,7 +66,7 @@ final class GatewayAuthorizationRules {
             rule(HttpMethod.PUT, "/api/updateShowtime", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteShowtime", Access.ADMIN),
 
-            // CRUD quản trị — venue-service.
+            // CRUD quản trị
             rule(HttpMethod.POST, "/api/createCinema", Access.ADMIN),
             rule(HttpMethod.PUT, "/api/updateCinema", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteCinema", Access.ADMIN),
@@ -79,21 +77,20 @@ final class GatewayAuthorizationRules {
             rule(HttpMethod.PUT, "/api/updateSeat", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteSeat", Access.ADMIN),
 
-            // CRUD user legacy — user-service vẫn tự kiểm tra ADMIN, gateway chặn sớm.
+            // CRUD user
             rule(HttpMethod.GET, "/api/getUsers", Access.ADMIN),
             rule(HttpMethod.GET, "/api/getUserById", Access.ADMIN),
             rule(HttpMethod.POST, "/api/createUser", Access.ADMIN),
             rule(HttpMethod.PUT, "/api/updateUser", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteUser", Access.ADMIN),
 
-            // Hồ sơ của chính mình.
+            // ho so nguoi dung
             rule(HttpMethod.GET, "/api/users/**", Access.CUSTOMER_OR_ADMIN),
 
-            // Giữ/nhả ghế là thao tác của khách, không phải CRUD quản trị.
             rule(HttpMethod.POST, "/api/holdShowtimeSeat", Access.CUSTOMER_OR_ADMIN),
             rule(HttpMethod.POST, "/api/releaseShowtimeSeat", Access.CUSTOMER_OR_ADMIN),
 
-            // Booking / payment — ownership và trạng thái được kiểm tra ở booking-service.
+            // Booking / payment
             rule(HttpMethod.GET, "/api/getBookings", Access.ADMIN),
             rule(HttpMethod.GET, "/api/getBookingById", Access.CUSTOMER_OR_ADMIN),
             rule(HttpMethod.GET, "/api/getBookingsByUserId", Access.CUSTOMER_OR_ADMIN),
@@ -104,8 +101,6 @@ final class GatewayAuthorizationRules {
             rule(HttpMethod.POST, "/api/createPayment", Access.CUSTOMER_OR_ADMIN),
             rule(HttpMethod.GET, "/api/getPayments/**", Access.CUSTOMER_OR_ADMIN),
 
-            // Webhook máy chủ SePay gọi tới: không mang JWT của user, là PUBLIC.
-            // Độ tin cậy do payment-service tự kiểm tra bằng SePay API key trong header.
             rule(HttpMethod.POST, "/api/sepayWebhook", Access.PUBLIC)
     );
 
@@ -124,7 +119,6 @@ final class GatewayAuthorizationRules {
                 .filter(r -> r.path().matches(path))
                 .findFirst()
                 .map(Rule::access)
-                // Endpoint mới chưa khai báo: chỉ ADMIN, không tự mở cho CUSTOMER.
                 .orElse(Access.ADMIN);
     }
 
@@ -137,13 +131,6 @@ final class GatewayAuthorizationRules {
         };
     }
 
-    /**
-     * Chỉ chấp nhận path ASCII chuẩn, bắt đầu bằng '/', không có encoded byte,
-     * matrix parameter, backslash, double slash hoặc dot segment.
-     *
-     * <p>Một dấu '/' ở cuối được chuẩn hóa (bỏ đi) để rule khớp ổn định; các biến thể
-     * còn lại bị từ chối (404) thay vì để downstream tự normalize theo cách khác.
-     */
     private static PathContainer canonicalPath(String rawPath) {
         if (rawPath == null || rawPath.isEmpty() || rawPath.charAt(0) != '/') {
             return null;
@@ -154,7 +141,6 @@ final class GatewayAuthorizationRules {
                 || rawPath.indexOf('\\') >= 0) {
             return null;
         }
-        // Endpoint hiện tại đều ASCII; chặn luôn control char/khoảng trắng/Unicode.
         if (!rawPath.chars().allMatch(c -> c >= 0x21 && c <= 0x7E)) {
             return null;
         }

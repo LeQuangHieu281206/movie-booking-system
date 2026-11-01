@@ -68,7 +68,7 @@ public class PaymentCompletedListener {
     }
 
     private void releaseSeatsOnFailure(Booking booking) {
-        List<Long> seatIds = bookingDetailRepository.findByBookingId(booking.getBookingId()).stream()
+        List<Long> seatIds = bookingDetailRepository.findByBooking_BookingId(booking.getBookingId()).stream()
                 .map(BookingDetail::getSeatId)
                 .toList();
         if (seatIds.isEmpty()) {
@@ -76,7 +76,7 @@ public class PaymentCompletedListener {
         }
         try {
             showtimeClient.releaseSeats(new SeatIdsRequest(booking.getShowtimeId(), seatIds, null));
-            log.info("[booking-service] Đã trả ghế về AVAILABLE cho booking {} (bù trừ sau FAILED)",
+            log.info("[booking-service] Đã trả ghế về AVAILABLE cho booking {} (bù trừ sau FAILED, giữ dòng vì FK booking_details)",
                     booking.getBookingId());
         } catch (RuntimeException ex) {
             log.error("[booking-service] KHÔNG trả được ghế về AVAILABLE cho booking {}: {}",

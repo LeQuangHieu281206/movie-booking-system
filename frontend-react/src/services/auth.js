@@ -1,59 +1,26 @@
-const STORAGE_KEY = "cineroom-auth";
-
-// Chuyển UserSummary của backend ({id, email, fullName, role}) sang shape
-// {userId, fullName, email} mà App/Tickets/Booking đang dùng.
-function toProfile(summary) {
-  return {
-    userId: summary.id,
-    fullName: summary.fullName,
-    email: summary.email,
-    role: summary.role,
-  };
-}
-
-function read() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : null;
-    return parsed && parsed.user ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function write(session) {
-  try {
-    if (session) localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-    else localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    /* phiên vẫn dùng được trong tab hiện tại. */
-  }
-}
+import {
+  readSession,
+  sessionFromAuthResponse,
+  toProfile,
+  writeSession,
+} from "./session.js";
 
 export function createAuthService(request) {
   return {
     restore: () => {
-      const session = read();
+      const session = readSession();
       if (!session) return null;
-      // Session lưu profile đã map ({userId}); tránh map lặp nếu vẫn còn shape gốc ({id}).
-      const user = session.user?.id !== undefined
-        ? toProfile(session.user)
-        : session.user;
-      return { ...session, user };
+      return { ...session, user: toProfile(session.user) };
     },
-    persist: (session) => write(session),
-    logout: () => write(null),
+    logout: () => writeSession(null),
     async login(email, password) {
-      const data = await request("/auth/login", {
-        method: "POST",
-        body: { email: email.trim(), password },
-      });
-      const session = {
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        user: toProfile(data.user),
-      };
-      write(session);
+      const session = sessionFromAuthResponse(
+        await request("/auth/login", {
+          method: "POST",
+          body: { email: email.trim(), password },
+        }),
+      );
+      writeSession(session);
       return session;
     },
     async register(fields) {
@@ -70,16 +37,13 @@ export function createAuthService(request) {
       return this.login(fields.email, fields.password);
     },
     async refresh(refreshToken) {
-      const data = await request("/auth/refresh", {
-        method: "POST",
-        body: { refreshToken },
-      });
-      const session = {
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        user: toProfile(data.user),
-      };
-      write(session);
+      const session = sessionFromAuthResponse(
+        await request("/auth/refresh", {
+          method: "POST",
+          body: { refreshToken },
+        }),
+      );
+      writeSession(session);
       return session;
     },
   };

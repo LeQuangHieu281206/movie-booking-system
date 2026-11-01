@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createApi, createHttpClient } from "./services/api.js";
+import { createAuthService } from "./services/auth.js";
 import { useLoad } from "./lib/useLoad.js";
-import { Button, ErrorBox, Icon, Modal } from "./components/UI.jsx";
-import CustomerForm from "./components/CustomerForm.jsx";
+import { ErrorBox, Icon } from "./components/UI.jsx";
 import { Catalog, Home, MovieDetail } from "./pages/Catalog.jsx";
 import { Cinemas, Showtimes } from "./pages/Venues.jsx";
 import Booking from "./pages/Booking.jsx";
 import Tickets from "./pages/Tickets.jsx";
 import Auth from "./pages/Auth.jsx";
-import { createAuthService } from "./services/auth.js";
 
 const nav = [
   ["home", "Trang chủ"],
@@ -22,31 +21,14 @@ const readRoute = () =>
   nav.some(([key]) => key === location.hash.slice(1))
     ? location.hash.slice(1)
     : "home";
-function safeGet(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-function save(key, value) {
-  try {
-    value === null
-      ? localStorage.removeItem(key)
-      : localStorage.setItem(key, value);
-  } catch {
-    /* App remains usable without persistence. */
-  }
-}
 
 function Workspace() {
   const api = useMemo(() => createApi(), []);
   const auth = useMemo(() => createAuthService(createHttpClient()), []);
   const [route, setRoute] = useState(readRoute),
     [movie, setMovie] = useState(null),
-    [showtime, setShowtime] = useState(null),
-    [profileOpen, setProfileOpen] = useState(false);
-  const [user, setUser] = useState(null),
+    [showtime, setShowtime] = useState(null);
+  const [user, setUser] = useState(() => auth.restore()?.user || null),
     [userError, setUserError] = useState(""),
     [revision, setRevision] = useState(0);
   const [schedule, setSchedule] = useState({
@@ -73,38 +55,36 @@ function Workspace() {
     window.addEventListener("hashchange", change);
     return () => window.removeEventListener("hashchange", change);
   }, []);
+  // Xác thực lại phiên đã lưu bằng JWT; token hết hạn được tự đổi bằng refresh token.
   useEffect(() => {
-    const session = auth.restore();
-    if (session?.user) {
-      setUser(session.user);
-      save("cineroom-user", String(session.user.userId));
-    }
-  }, [auth]);
-  useEffect(() => {
-    const storedId = safeGet("cineroom-user");
-    if (!storedId) return;
+    if (!auth.restore()) return;
     let active = true;
     const controller = new AbortController();
     api
-      .user(storedId, { signal: controller.signal })
-      .then((user) => {
-        if (active) setUser(user);
-      })
+      .me({ signal: controller.signal })
+      .then((profile) => active && setUser(profile))
       .catch((error) => {
-        if (active && error.name !== "AbortError")
-          setUserError(
-            "Chưa tải lại được hồ sơ khách hàng. Bạn có thể mở Hồ sơ và nhập lại mã khách hàng.",
-          );
+        if (!active || error.name === "AbortError") return;
+        if (error.status === 401) {
+          auth.logout();
+          setUser(null);
+          setUserError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        } else setUserError(`Chưa tải lại được hồ sơ: ${error.message}`);
       });
     return () => {
       active = false;
       controller.abort();
     };
-      }, [api]);
-  function remember(customer) {
+  }, [api, auth]);
+  function setProfile(customer) {
     setUser(customer);
     setUserError("");
-    save("cineroom-user", customer ? String(customer.userId) : null);
+  }
+  function logout() {
+    auth.logout();
+    setUser(null);
+    setUserError("");
+    navigate("home");
   }
   function navigate(next) {
     setRoute(next);
@@ -122,6 +102,10 @@ function Workspace() {
   function closeBooking() {
     setShowtime(null);
     setRevision((value) => value + 1);
+  }
+  function goLogin() {
+    setShowtime(null);
+    navigate("auth");
   }
   return (
     <>
@@ -162,28 +146,25 @@ function Workspace() {
             ))}
           </nav>
           <div className="header-actions">
-            <button
-              className="profile-button"
-              aria-label={user ? `Hồ sơ ${user.fullName}` : "Hồ sơ khách hàng"}
-              onClick={() => setProfileOpen(true)}
-            >
-              <Icon name="user" size={18} />
-              <span>{user ? user.fullName.split(" ").at(-1) : "Hồ sơ"}</span>
-            </button>
             {user ? (
-              <button
-                className="profile-button"
-                aria-label="Đăng xuất"
-                onClick={() => {
-                  auth.logout();
-                  setUser(null);
-                  save("cineroom-user", null);
-                  navigate("home");
-                }}
-              >
-                <Icon name="close" size={16} />
-                <span>Đăng xuất</span>
-              </button>
+              <>
+                <button
+                  className="profile-button"
+                  aria-label={`Vé của ${user.fullName}`}
+                  onClick={() => navigate("tickets")}
+                >
+                  <Icon name="user" size={18} />
+                  <span>{user.fullName.split(" ").at(-1)}</span>
+                </button>
+                <button
+                  className="profile-button"
+                  aria-label="Đăng xuất"
+                  onClick={logout}
+                >
+                  <Icon name="close" size={16} />
+                  <span>Đăng xuất</span>
+                </button>
+              </>
             ) : (
               <button
                 className="profile-button"
@@ -231,7 +212,7 @@ function Workspace() {
           <Auth
             auth={auth}
             user={user}
-            onUser={remember}
+            onUser={setProfile}
             onDone={() => navigate("home")}
           />
         )}
@@ -239,7 +220,7 @@ function Workspace() {
           <Tickets
             api={api}
             user={user}
-            onUser={remember}
+            onLogin={goLogin}
             movies={movies}
             revision={revision}
           />
@@ -284,30 +265,13 @@ function Workspace() {
           showtimeId={showtime.showtimeId}
           movie={movies.find((movie) => movie.movieId === showtime.movieId)}
           user={user}
-          onUser={remember}
+          onLogin={goLogin}
           onClose={closeBooking}
           onTickets={() => {
             closeBooking();
             navigate("tickets");
           }}
         />
-      )}
-      {profileOpen && (
-        <Modal title="Hồ sơ khách hàng" onClose={() => setProfileOpen(false)}>
-          <CustomerForm api={api} user={user} onUser={remember} />
-          {user && (
-            <Button
-              className="full"
-              onClick={() => {
-                setProfileOpen(false);
-                navigate("tickets");
-              }}
-            >
-              Xem vé đã đặt
-              <Icon name="arrow" size={16} />
-            </Button>
-          )}
-        </Modal>
       )}
     </>
   );

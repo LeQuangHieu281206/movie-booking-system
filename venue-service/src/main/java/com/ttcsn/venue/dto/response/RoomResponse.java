@@ -7,7 +7,6 @@ package com.ttcsn.venue.dto.response;
 import com.ttcsn.venue.entity.enums.RoomType;
 
 import java.time.OffsetDateTime;
-
 /**
  *
  * @author quanghieu

@@ -3,7 +3,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Enum.java to edit this template
  */
 package com.ttcsn.venue.entity.enums;
-
 /**
  *
  * @author quanghieu

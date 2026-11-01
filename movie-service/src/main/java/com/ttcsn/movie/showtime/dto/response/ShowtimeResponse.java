@@ -17,7 +17,7 @@ public record ShowtimeResponse(
         Long movieId,
         Long roomId,
         String roomName,
-        String roomType,        // SOA: nhận String từ RoomDto của venue-service (bỏ RoomType enum cross-module)
+        String roomType,      
         Long cinemaId,
         String cinemaName,
         String cinemaAddress,
