@@ -28,6 +28,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -142,8 +143,13 @@ class PaymentServiceTest {
         SePayWebhookDto dto = webhook(9001L, "DH1 nguoi chuyen khoan", "100000");
         when(bookingClient.getBooking(1L))
                 .thenReturn(booking(1L, 7L, "100000", "PENDING"));
+        Payment pending = Payment.builder()
+                .paymentId(5L)
+                .bookingId(1L)
+                .status(PaymentStatus.PENDING)
+                .build();
         when(paymentRepository.findFirstByBookingIdAndStatusOrderByPaymentIdDesc(1L, PaymentStatus.PENDING))
-                .thenReturn(Optional.empty());
+                .thenReturn(Optional.of(pending));
 
         service.processSePayWebhook(dto);
 
@@ -156,13 +162,46 @@ class PaymentServiceTest {
         assertThat(event.amount()).isEqualByComparingTo("100000");
         assertThat(event.status()).isEqualTo(PaymentCompletedEvent.STATUS_SUCCESS);
 
-        ArgumentCaptor<Payment> paymentCaptor = ArgumentCaptor.forClass(Payment.class);
-        verify(paymentRepository).save(paymentCaptor.capture());
-        Payment saved = paymentCaptor.getValue();
-        assertThat(saved.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
-        assertThat(saved.getProviderTxnId()).isEqualTo("9001");
-        assertThat(saved.getPaidAt()).isNotNull();
-        assertThat(saved.getRawPayload()).isNotNull();
+        verify(paymentRepository).save(pending);
+        assertThat(pending.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+        assertThat(pending.getProviderTxnId()).isEqualTo("9001");
+        assertThat(pending.getPaidAt()).isNotNull();
+        assertThat(pending.getRawPayload()).isNotNull();
+    }
+
+    @Test
+    void webhookCreatesSuccessAtomicallyWhenNoPendingRowExists() {
+        SePayWebhookDto dto = webhook(9005L, "DH1", "100000");
+        when(bookingClient.getBooking(1L))
+                .thenReturn(booking(1L, 7L, "100000", "PENDING"));
+        when(paymentRepository.findFirstByBookingIdAndStatusOrderByPaymentIdDesc(1L, PaymentStatus.PENDING))
+                .thenReturn(Optional.empty());
+        when(paymentRepository.insertSuccessIfAbsent(
+                eq(1L), any(), eq("9005"), eq("DH1"), anyString(), any()))
+                .thenReturn(1);
+
+        service.processSePayWebhook(dto);
+
+        verify(rabbitTemplate).convertAndSend(
+                eq(RabbitMQConfig.EXCHANGE), eq(Topics.PAYMENT_COMPLETED), any(PaymentCompletedEvent.class));
+        verify(paymentRepository).insertSuccessIfAbsent(
+                eq(1L), any(), eq("9005"), eq("DH1"), anyString(), any());
+    }
+
+    @Test
+    void webhookDoesNotPublishWhenConcurrentInsertLoses() {
+        SePayWebhookDto dto = webhook(9006L, "DH1", "100000");
+        when(bookingClient.getBooking(1L))
+                .thenReturn(booking(1L, 7L, "100000", "PENDING"));
+        when(paymentRepository.findFirstByBookingIdAndStatusOrderByPaymentIdDesc(1L, PaymentStatus.PENDING))
+                .thenReturn(Optional.empty());
+        when(paymentRepository.insertSuccessIfAbsent(
+                eq(1L), any(), eq("9006"), eq("DH1"), anyString(), any()))
+                .thenReturn(0);
+
+        service.processSePayWebhook(dto);
+
+        verifyNoInteractions(rabbitTemplate);
     }
 
     @Test
@@ -182,14 +221,31 @@ class PaymentServiceTest {
         SePayWebhookDto dto = webhook(9002L, "DH1", "50000");
         when(bookingClient.getBooking(1L))
                 .thenReturn(booking(1L, 7L, "100000", "PENDING"));
+        when(paymentRepository.insertFailedIfAbsent(
+                eq(1L), any(), eq("9002"), eq("DH1"), anyString(), anyString()))
+                .thenReturn(1);
 
         service.processSePayWebhook(dto);
 
         verifyNoInteractions(rabbitTemplate);
-        ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
-        verify(paymentRepository).save(captor.capture());
-        assertThat(captor.getValue().getStatus()).isEqualTo(PaymentStatus.FAILED);
-        assertThat(captor.getValue().getFailureReason()).contains("Số tiền không khớp");
+        verify(paymentRepository).insertFailedIfAbsent(
+                eq(1L), any(), eq("9002"), eq("DH1"), anyString(), anyString());
+    }
+
+    @Test
+    void webhookRecordsFailedPaymentWhenBookingIsNotPending() {
+        SePayWebhookDto dto = webhook(9007L, "DH1", "100000");
+        when(bookingClient.getBooking(1L))
+                .thenReturn(booking(1L, 7L, "100000", "PAID"));
+        when(paymentRepository.insertFailedIfAbsent(
+                eq(1L), any(), eq("9007"), eq("DH1"), anyString(), anyString()))
+                .thenReturn(1);
+
+        service.processSePayWebhook(dto);
+
+        verifyNoInteractions(rabbitTemplate);
+        verify(paymentRepository).insertFailedIfAbsent(
+                eq(1L), any(), eq("9007"), eq("DH1"), anyString(), anyString());
     }
 
     @Test

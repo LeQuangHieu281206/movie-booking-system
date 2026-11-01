@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -155,51 +156,63 @@ public class PaymentService {
         }
 
         String referenceCode = BOOKING_PREFIX + bookingId;
-        Payment payment = paymentRepository
-                .findFirstByBookingIdAndStatusOrderByPaymentIdDesc(bookingId, PaymentStatus.PENDING)
-                .orElseGet(() -> Payment.builder()
-                        .bookingId(bookingId)
-                        .provider(PROVIDER_SEPAY)
-                        .currency(CURRENCY_VND)
-                        .build());
+        String rawPayload = objectMapper.valueToTree(request).toString();
+        OffsetDateTime paidAt = OffsetDateTime.now();
+        Long savedPaymentId;
 
-        payment.setAmount(receivedAmount);
-        payment.setStatus(PaymentStatus.SUCCESS);
-        payment.setProviderTxnId(providerTxnId);
-        payment.setReferenceCode(referenceCode);
-        payment.setRawPayload(objectMapper.valueToTree(request));
-        payment.setPaidAt(OffsetDateTime.now());
-        payment.setFailureReason(null);
-        Payment saved = paymentRepository.save(payment);
+        // Khóa payment PENDING của booking để hai webhook đồng thời không cùng publish.
+        // Nếu không có dòng PENDING, insert atomic + ON CONFLICT để chỉ một transaction thắng.
+        Optional<Payment> pending = paymentRepository
+                .findFirstByBookingIdAndStatusOrderByPaymentIdDesc(bookingId, PaymentStatus.PENDING);
+        if (pending.isPresent()) {
+            Payment payment = pending.get();
+            payment.setAmount(receivedAmount);
+            payment.setStatus(PaymentStatus.SUCCESS);
+            payment.setProviderTxnId(providerTxnId);
+            payment.setReferenceCode(referenceCode);
+            payment.setRawPayload(objectMapper.valueToTree(request));
+            payment.setPaidAt(paidAt);
+            payment.setFailureReason(null);
+            savedPaymentId = paymentRepository.save(payment).getPaymentId();
+        } else {
+            int inserted = paymentRepository.insertSuccessIfAbsent(
+                    bookingId, receivedAmount, providerTxnId, referenceCode, rawPayload, paidAt);
+            if (inserted == 0) {
+                log.info("[payment-service] Webhook đồng thời đã được xử lý, bỏ qua publish trùng. bookingId={}, providerTxnId={}",
+                        bookingId, providerTxnId);
+                return;
+            }
+            savedPaymentId = null;
+        }
 
         PaymentCompletedEvent event = new PaymentCompletedEvent(
                 UUID.randomUUID(),
                 bookingId,
                 booking.userId(),
                 receivedAmount,
-                OffsetDateTime.now(),
+                paidAt,
                 PaymentCompletedEvent.STATUS_SUCCESS
         );
         rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, Topics.PAYMENT_COMPLETED, event);
 
         log.info("[payment-service] Đã xác nhận thanh toán bookingId={}, paymentId={}, providerTxnId={}, amount={}",
-                bookingId, saved.getPaymentId(), providerTxnId, receivedAmount);
+                bookingId, savedPaymentId, providerTxnId, receivedAmount);
     }
 
     private void recordFailed(Long bookingId, SePayWebhookDto request, String providerTxnId, String reason) {
-        Payment payment = Payment.builder()
-                .bookingId(bookingId)
-                .amount(request.getTransferAmount() == null ? BigDecimal.ZERO : request.getTransferAmount())
-                .currency(CURRENCY_VND)
-                .status(PaymentStatus.FAILED)
-                .provider(PROVIDER_SEPAY)
-                .providerTxnId(providerTxnId)
-                .referenceCode(BOOKING_PREFIX + bookingId)
-                .rawPayload(objectMapper.valueToTree(request))
-                .failureReason(reason)
-                .build();
-        paymentRepository.save(payment);
-        log.warn("[payment-service] Ghi nhận payment FAILED cho bookingId={}, lý do: {}", bookingId, reason);
+        int inserted = paymentRepository.insertFailedIfAbsent(
+                bookingId,
+                request.getTransferAmount() == null ? BigDecimal.ZERO : request.getTransferAmount(),
+                providerTxnId,
+                BOOKING_PREFIX + bookingId,
+                objectMapper.valueToTree(request).toString(),
+                reason);
+        if (inserted > 0) {
+            log.warn("[payment-service] Ghi nhận payment FAILED cho bookingId={}, lý do: {}", bookingId, reason);
+        } else {
+            log.info("[payment-service] Payment FAILED đã tồn tại, bỏ qua. bookingId={}, providerTxnId={}",
+                    bookingId, providerTxnId);
+        }
     }
 
     /**
