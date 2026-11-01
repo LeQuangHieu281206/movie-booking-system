@@ -7,6 +7,9 @@ export function toProfile(user) {
     userId: user.userId ?? user.id,
     fullName: user.fullName,
     email: user.email,
+    ...(user.phoneNumber !== undefined
+      ? { phoneNumber: user.phoneNumber }
+      : {}),
     role: user.role,
   };
 }
