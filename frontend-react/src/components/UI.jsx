@@ -32,6 +32,13 @@ export function Icon({ name, size = 20, ...props }) {
       </>
     ),
     play: <path d="m9 5 11 7-11 7V5Z" />,
+    sun: (
+      <>
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+      </>
+    ),
+    moon: <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" />,
     user: (
       <>
         <circle cx="12" cy="8" r="4" />
