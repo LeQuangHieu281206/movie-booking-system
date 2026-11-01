@@ -274,13 +274,9 @@ function Workspace() {
             <a href="#cinemas">Hệ thống rạp</a>
             <a href="#tickets">Vé của tôi</a>
           </div>
-          <div className="footer-note">
-            <span>ĐỒ ÁN WEBSITE ĐẶT VÉ XEM PHIM</span>
-            <p>React · Java Spring Boot · SOA</p>
-          </div>
         </div>
         <div className="container footer-bottom">
-          <span>© 2026 CineRoom · Dự án học tập</span>
+          <span>© 2026 CineRoom</span>
           <span>Để mỗi bộ phim là một trải nghiệm.</span>
         </div>
       </footer>

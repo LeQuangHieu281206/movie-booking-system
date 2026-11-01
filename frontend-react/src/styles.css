@@ -3262,6 +3262,9 @@ footer .brand svg {
 .footer-bottom {
   color: var(--muted);
 }
+.footer-inner .footer-links {
+  margin-left: auto;
+}
 .footer-bottom {
   border-top-color: var(--line);
 }
