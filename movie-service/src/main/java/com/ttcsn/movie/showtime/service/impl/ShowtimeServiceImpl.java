@@ -96,9 +96,8 @@ public class ShowtimeServiceImpl implements ShowtimeService {
             RETURNING seat_id
             """;
 
-    /** Bù trừ: trả một nhóm ghế về AVAILABLE trong 1 lượt. Không thể DELETE vì
-     *  booking_details (audit) giữ FK booking_details_showtime_seat_id_fkey
-     *  vào showtime_seat_id — xóa dòng sẽ vi phạm FK; AVAILABLE ≈ "không có dòng". */
+    /** Bù trừ: trả một nhóm ghế về AVAILABLE trong 1 lượt.
+     *  Giữ dòng để audit lịch sử giữ/đặt ghế; AVAILABLE ≈ "không có dòng". */
     private static final String RELEASE_SEATS_INTERNAL_SQL = """
             UPDATE showtime_seats
             SET status = 'AVAILABLE', hold_until = NULL, hold_by = NULL, updated_at = now()

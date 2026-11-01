@@ -47,7 +47,7 @@ API Gateway :8080  (routes /api/** theo service)
     +-> movie-service :8081   (Movie / Genre / Showtime / ShowtimeSeat)
     +-> booking-service :8082 (Booking / BookingDetail)  <-- Feign user/venue/movie
     +-> user-service :8084    (User)
-    +-> payment-service :8086 (Thanh toán mô phỏng)      --> RabbitMQ
+    +-> payment-service :8086 (SePay QR + payments)      --> RabbitMQ
     +-> notification-service :8087 (Nhận event)          <-- RabbitMQ
 
 RabbitMQ "payment.completed" --> booking-service (PAID/CANCELLED + trả ghế)
@@ -65,7 +65,7 @@ Quy ước API: các endpoint dạng **verb-path** dưới gateway `/api/**` (v�
 | movie-service | 8081 | Movie, Genre, Showtime, ShowtimeSeat | CRUD phim/suất chiếu; **tồn kho ghế phát sinh theo tương tác** (giữ/nhả/chốt mới sinh bản ghi); giữ/trả/chốt ghế cho booking |
 | booking-service | 8082 | Booking, BookingDetail | Saga orchestrator-lite: kiểm user/suất/phòng, chốt ghế, tạo Booking PENDING; consume `payment.completed` |
 | user-service | 8084 | User, Auth | CRUD người dùng; đăng ký/đăng nhập JWT (`/api/auth/**`); expose `/internal/users/{id}/exists` |
-| payment-service | 8086 | Payment (mô phỏng) | Ghi nhận thanh toán, publish `payment.completed` lên RabbitMQ |
+| payment-service | 8086 | Payment | Tạo QR SePay, lưu lịch sử vào `payments` (PENDING/SUCCESS/FAILED), chống trùng webhook, publish `payment.completed` |
 | notification-service | 8087 | Notification | Consume `payment.completed`, gửi vé (hiện log) |
 
 ## Cấu trúc repository
@@ -77,7 +77,8 @@ movie-booking-system/
 ├── movie-service/          # Movie/Genre/Showtime/ShowtimeSeat :8081
 ├── booking-service/        # Booking + Saga-lite :8082
 ├── user-service/           # User :8084
-├── payment-service/        # Payment mô phỏng :8086
+├── payment-service/        # Payment + lịch sử giao dịch :8086
+├── database/migrations/    # Migration SQL (payments + index/ràng buộc)
 ├── notification-service/   # Notification :8087
 ├── common/                 # DTO/event/exception dùng chung
 ├── frontend-react/         # Giao diện React + Vite (:5173, proxy /api/**)
@@ -108,6 +109,16 @@ docker compose up -d --build
 - Trước khi chạy, tắt service local để không trùng cổng (`./stop-services.sh`, `Ctrl+C` ở `npm run dev`). Cần ~4 GB RAM trống.
 - Muốn đổi `JWT_SECRET`/`INTERNAL_TOKEN` (production): tạo file `.env` cạnh `docker-compose.yml` rồi `docker compose up -d` lại — gateway và user-service phải dùng cùng `JWT_SECRET`. Muốn dùng DB khác Supabase, thêm `SPRING_DATASOURCE_URL/USERNAME/PASSWORD` vào `.env`.
 
+### Áp migration database
+
+Schema hiện tại cần bảng `payments` và một số index/ràng buộc mới. Chạy một lần trên Supabase (SQL Editor hoặc psql):
+
+```bash
+psql "$SUPABASE_DB_URL" -f database/migrations/001_payments_and_hardening.sql
+```
+
+Script idempotent, chạy lại không lỗi. Sau khi áp migration, khởi động lại `payment-service` và `booking-service`.
+
 ## Chạy không qua Docker (tuỳ chọn)
 
 Yêu cầu: **JDK 21 + Maven**, **Node.js ≥ 20.19 (hoặc ≥ 22.12)**, RabbitMQ chạy sẵn (`docker compose up -d rabbitmq`).
@@ -127,7 +138,7 @@ Chạy thành công khi: trang hiển thị phim đang chiếu (có poster), b�
 - [x] CRUD rạp/phòng/ghế (venue) + CRUD phim/thể loại/suất chiếu (movie)
 - [x] Tồn kho ghế-theo-suất phát sinh theo tương tác: chọn ghế → `HOLDING` (giữ 10 phút qua `hold_until`), chốt vé → `BOOKED`, quá hạn tự coi như trống
 - [x] Đặt vé Saga-lite: giữ/chốt ghế, Booking PENDING, chi tiết vé
-- [x] Thanh toán mô phỏng: publish event → Booking `PAID/CANCELLED` + trả ghế (bù trừ); đặt trùng ghế trả **409**
+- [x] Thanh toán SePay: tạo QR + lưu `payments`, webhook idempotent, đối soát số tiền, publish event → Booking `PAID/CANCELLED` + trả ghế (bù trừ); đặt trùng ghế trả **409**
 - [x] Giao diện React: duyệt phim, lịch chiếu, chọn ghế, đặt vé, vé của tôi
 - [x] Xác thực JWT (đăng ký/đăng nhập, refresh token ở user-service)
 - [ ] Cổng thanh toán thật, kiểm thử tự động + OpenAPI

@@ -77,7 +77,7 @@ class PaymentCompletedListenerTest {
         Booking booking = booking(BookingStatus.PENDING);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(bookingDetailRepository.findByBooking_BookingId(1L))
-                .thenReturn(List.of(BookingDetail.builder().booking(Booking.builder().bookingId(1L).build()).showtimeSeatId(100L).build()));
+                .thenReturn(List.of(BookingDetail.builder().booking(Booking.builder().bookingId(1L).build()).seatId(100L).build()));
 
         listener.onPaymentCompleted(event(PaymentCompletedEvent.STATUS_FAILED));
 

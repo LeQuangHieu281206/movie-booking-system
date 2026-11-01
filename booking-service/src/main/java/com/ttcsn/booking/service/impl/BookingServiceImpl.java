@@ -167,9 +167,9 @@ public class BookingServiceImpl implements BookingService {
             Booking savedBooking = bookingRepository.save(booking);
 
             List<BookingDetail> details = seatIds.stream()
-                    .map(showtimeSeatId -> BookingDetail.builder()
+                    .map(seatId -> BookingDetail.builder()
                             .booking(savedBooking)
-                            .showtimeSeatId(showtimeSeatId)
+                            .seatId(seatId)
                             .price(basePrice)
                             .createdAt(OffsetDateTime.now())
                             .build())
@@ -219,7 +219,7 @@ public class BookingServiceImpl implements BookingService {
 
     private void releaseBookingSeats(Long bookingId, Long showtimeId) {
         List<Long> seatIds = bookingDetailRepository.findByBooking_BookingId(bookingId).stream()
-                .map(BookingDetail::getShowtimeSeatId)
+                .map(BookingDetail::getSeatId)
                 .toList();
         try {
             showtimeClient.releaseSeats(new SeatIdsRequest(showtimeId, seatIds, null));

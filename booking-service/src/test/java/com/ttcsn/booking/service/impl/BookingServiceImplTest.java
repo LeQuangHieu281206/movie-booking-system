@@ -146,7 +146,7 @@ class BookingServiceImplTest {
         Booking booking = booking(1L, 1L, BookingStatus.PENDING);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(bookingDetailRepository.findByBooking_BookingId(1L))
-                .thenReturn(List.of(BookingDetail.builder().booking(Booking.builder().bookingId(1L).build()).showtimeSeatId(100L).build()));
+                .thenReturn(List.of(BookingDetail.builder().booking(Booking.builder().bookingId(1L).build()).seatId(100L).build()));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
 
         BookingResponse response = service.updateBooking(
@@ -200,7 +200,7 @@ class BookingServiceImplTest {
         Booking booking = booking(1L, 1L, BookingStatus.PENDING);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(bookingDetailRepository.findByBooking_BookingId(1L))
-                .thenReturn(List.of(BookingDetail.builder().booking(Booking.builder().bookingId(1L).build()).showtimeSeatId(100L).build()));
+                .thenReturn(List.of(BookingDetail.builder().booking(Booking.builder().bookingId(1L).build()).seatId(100L).build()));
 
         service.deleteBooking(1L, 1L, "CUSTOMER");
 
@@ -261,7 +261,7 @@ class BookingServiceImplTest {
         when(bookingRepository.expireIfPending(1L)).thenReturn(1);
         BookingDetail detail = BookingDetail.builder()
                 .booking(stale)
-                .showtimeSeatId(77L)
+                .seatId(77L)
                 .price(new BigDecimal("50000"))
                 .build();
         when(bookingDetailRepository.findByBooking_BookingId(1L)).thenReturn(List.of(detail));
