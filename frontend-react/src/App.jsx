@@ -25,6 +25,8 @@ const scrollBehavior = () =>
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
     ? "auto"
     : "smooth";
+const readTheme = () =>
+  document.documentElement.dataset.theme === "dark" ? "dark" : "light";
 
 function Workspace() {
   const api = useMemo(() => createApi(), []);
@@ -35,6 +37,7 @@ function Workspace() {
   const [user, setUser] = useState(() => auth.restore()?.user || null),
     [userError, setUserError] = useState(""),
     [revision, setRevision] = useState(0);
+  const [theme, setTheme] = useState(readTheme);
   const [schedule, setSchedule] = useState({
     movieId: "",
     cinemaId: "",
@@ -59,6 +62,17 @@ function Workspace() {
     window.addEventListener("hashchange", change);
     return () => window.removeEventListener("hashchange", change);
   }, []);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      localStorage.setItem("cineroom-theme", theme);
+    } catch {
+      // localStorage có thể bị chặn ở chế độ riêng tư.
+    }
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", theme === "dark" ? "#0f1012" : "#1d1d1f");
+  }, [theme]);
   // Xác thực lại phiên đã lưu bằng JWT; token hết hạn được tự đổi bằng refresh token.
   useEffect(() => {
     if (!auth.restore()) return;
@@ -150,6 +164,21 @@ function Workspace() {
             ))}
           </nav>
           <div className="header-actions">
+            <button
+              className="theme-toggle"
+              type="button"
+              aria-label={
+                theme === "dark"
+                  ? "Chuyển sang giao diện sáng"
+                  : "Chuyển sang giao diện tối"
+              }
+              aria-pressed={theme === "dark"}
+              onClick={() =>
+                setTheme((current) => (current === "dark" ? "light" : "dark"))
+              }
+            >
+              <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
+            </button>
             {user ? (
               <>
                 <button
