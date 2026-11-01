@@ -1,20 +1,14 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.gateway.config;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
 /**
- * Security configuration for the gateway.
  *
- * <p>Map from application.yml:
- * <pre>
- * gateway.security.jwt-secret      ← JWT_SECRET (bắt buộc, >= 32 ký tự)
- * gateway.security.jwt-issuer      ← issuer dùng chung với user-service
- * gateway.security.internal-token  ← INTERNAL_TOKEN (bắt buộc, >= 32 ký tự, gateway → service)
- * </pre>
- *
- * <p>Fail-fast lúc khởi động nếu thiếu secret/token, tránh chạy gateway ở trạng thái
- * không thể xác thực hoặc chuyển tiếp request nội bộ.
+ * @author quanghieu
  */
 @ConfigurationProperties(prefix = "gateway.security")
 public record GatewaySecurityProperties(
@@ -23,10 +17,10 @@ public record GatewaySecurityProperties(
         String internalToken
 ) implements InitializingBean {
 
-    /** Độ dài tối thiểu của secret HS256 (ký tự ASCII = byte). */
+    /** do dai toi thieu cua secret */
     public static final int MIN_SECRET_LENGTH = 32;
 
-    /** Độ dài tối thiểu của token nội bộ gateway → service. */
+    /** do dai toi thieu cua token noi bo */
     public static final int MIN_INTERNAL_TOKEN_LENGTH = 32;
 
     @Override

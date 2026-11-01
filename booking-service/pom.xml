@@ -3,9 +3,6 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- ================= booking-service :8082 =================
-	     Đặt vé & giữ ghế — Saga orchestrator sau này.
-	     -->
 	<parent>
 		<groupId>com.ttcsn</groupId>
 		<artifactId>movie-booking-parent</artifactId>
@@ -30,13 +27,11 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 
-		<!-- Gọi user-service / movie-service -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
 
-		<!-- RabbitMQ: consume PaymentCompletedEvent (SOA Step 3) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-amqp</artifactId>

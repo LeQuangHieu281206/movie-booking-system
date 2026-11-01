@@ -1,6 +1,6 @@
 # CineRoom — Frontend React cho backend SOA
 
-Frontend React đã tích hợp theo controller/DTO trong bản `movie-booking-source-share.zip` của nhóm. Giao diện tiếng Việt, màu tối/vàng, gồm phim, lịch chiếu, rạp, chọn ghế, hồ sơ khách, booking, thanh toán mô phỏng và vé đã đặt.
+Frontend React đã tích hợp theo controller/DTO của backend SOA. Giao diện tiếng Việt, màu tối/vàng, gồm phim, lịch chiếu, rạp, chọn ghế, đăng nhập JWT, booking, thanh toán QR SePay và vé đã đặt. Toàn bộ dữ liệu lấy từ backend/database thật; không còn chế độ dữ liệu mẫu.
 
 Đây là mã nguồn frontend để đặt trong repository của nhóm. Không cần chép Java bridge của bản frontend cũ sang backend SOA.
 
@@ -37,12 +37,6 @@ npm.cmd run dev
 
 Mở <http://localhost:5173>. Giữ cửa sổ npm đang chạy. Dùng Ctrl+C để dừng. Các lệnh `.cmd` hoạt động trong PowerShell mà không cần đổi chính sách chạy script của Windows.
 
-### Khi chỉ cần xem giao diện
-
-Bấm **Thử dữ liệu mẫu** trên banner hoặc **Backend thật** ở thanh đầu trang để chuyển chế độ. Có thể mở trực tiếp <http://localhost:5173/?mode=demo>.
-
-Dữ liệu mẫu gồm phim/rạp hư cấu, không gửi yêu cầu đến backend. Vé mẫu chỉ lưu trong trình duyệt; bộ dữ liệu mẫu tự làm mới sau 24 giờ. Không dùng ảnh vé mẫu làm bằng chứng đã kết nối database.
-
 ### Khi kết nối backend của nhóm
 
 Mặc định frontend gọi `/api/...` trên cùng origin, Vite proxy sang **http://localhost:8080**, là cổng API Gateway của nhóm (`api-gateway/src/main/resources/application.yml`). Nếu máy bạn có chương trình khác đang chiếm cổng 8080, tạo `.env.local` với `BACKEND_URL=http://localhost:<cổng khác>` và chạy Gateway ở cổng đó.
@@ -58,9 +52,9 @@ Lệnh này dùng JAR đã build. Chờ thông báo Started, rồi kiểm tra <h
 
 Các service khác vẫn dùng cấu hình hiện tại: movie 8081, booking 8082, venue 8083, user 8084, payment 8086, notification 8087. RabbitMQ phải sẵn sàng cho sự kiện thanh toán. `common` là thư viện, không chạy riêng.
 
-Trên giao diện, chọn **Backend thật**. Nếu API lỗi, trang báo lỗi; không tự thay bằng dữ liệu mẫu.
+Trên giao diện, đăng nhập hoặc đăng ký tài khoản trước khi đặt vé. Nếu API lỗi, trang báo lỗi; không có dữ liệu thay thế.
 
-### Nếu nhóm đổi Gateway về 8080
+### Nếu Gateway chạy ở cổng khác
 
 Tại thư mục `frontend-react`, tạo file `.env.local` từ mẫu:
 
@@ -68,11 +62,7 @@ Tại thư mục `frontend-react`, tạo file `.env.local` từ mẫu:
 Copy-Item .env.example .env.local
 ```
 
-Sửa nội dung `.env.local` thành:
-
-```dotenv
-BACKEND_URL=http://localhost:8080
-```
+Sửa `BACKEND_URL` trong `.env.local` thành cổng Gateway thực tế, ví dụ `http://localhost:8088`.
 
 Tắt rồi chạy lại npm. Biến môi trường `BACKEND_URL` có sẵn trong cửa sổ PowerShell sẽ được ưu tiên hơn file này. Không đặt mật khẩu database vào frontend.
 
@@ -81,15 +71,15 @@ Tắt rồi chạy lại npm. Biến môi trường `BACKEND_URL` có sẵn tron
 1. Phim: thử tìm tên không dấu, lọc thể loại, Đang chiếu/Sắp chiếu, mở chi tiết phim.
 2. Rạp: chọn thành phố, mở lịch chiếu của một rạp.
 3. Lịch chiếu: chọn phim/ngày/thành phố; chỉ suất SCHEDULED chưa bắt đầu mới hiện nút đặt.
-4. Chọn ghế: ghế BOOKED/HELD bị khóa, chọn 1–8 ghế trống, tổng tiền = basePrice × số ghế.
-5. Hồ sơ: tạo khách hàng thử nghiệm hoặc dùng mã khách có sẵn. Ghi lại mã khách.
-6. Xác nhận thông tin và đặt vé. Tạo thành công nhận bookingCode và trạng thái PENDING.
-7. Chọn mô phỏng thanh toán thành công. UI chỉ báo PAID sau khi `getBookingById` trả PAID.
-8. Tạo vé khác và thử thất bại: backend phải cập nhật CANCELLED và trả ghế. Kiểm tra lại sơ đồ.
-9. Vé của tôi: xem danh sách, cập nhật trạng thái, hủy booking PENDING chưa gửi thanh toán.
-10. Tải lại trang: mã khách của từng chế độ được lưu riêng; thông tin vé thật phải tải lại từ backend.
+4. Đăng ký tài khoản mới hoặc đăng nhập ở mục **Tài khoản**.
+5. Chọn ghế: ghế BOOKED/HELD bị khóa, chọn 1–8 ghế trống, tổng tiền = basePrice × số ghế.
+6. Xác nhận đặt vé. Tạo thành công nhận bookingCode và trạng thái PENDING.
+7. Bấm **Tạo mã QR thanh toán**: backend payment-service trả mã VietQR SePay. Quét mã bằng ứng dụng ngân hàng, chuyển đúng số tiền/nội dung.
+8. Chờ webhook SePay → RabbitMQ → booking-service cập nhật PAID; panel tự hỏi trạng thái 3 phút, hoặc bấm **Cập nhật trạng thái**.
+9. Vé của tôi: xem danh sách, cập nhật trạng thái, hủy booking PENDING chưa thanh toán (ghế được trả).
+10. Tải lại trang: phiên đăng nhập giữ nguyên; access token hết hạn được tự đổi bằng refresh token. Vé luôn tải lại từ backend.
 
-Chưa có API đăng nhập/xác thực trong backend được cung cấp. UI dùng **hồ sơ khách hàng**, không giả lập đăng nhập bằng cách đọc danh sách người dùng. Khi tạo hồ sơ, adapter gửi password ngẫu nhiên và role CUSTOMER theo DTO bắt buộc; password không được lưu hoặc hiển thị ở frontend. Chức năng này không thay thế hệ thống đăng nhập.
+Backend xác thực bằng JWT: gateway kiểm tra token, tự gắn `X-User-Id`/`X-User-Role` và chặn các API quản trị. Frontend không tự gửi `userId`, `totalAmount` hay `role`; booking-service lấy từ token và giá suất chiếu.
 
 ## 4. Kiểm tra và build
 
@@ -114,9 +104,9 @@ npm.cmd run preview
 | Phần | File chính | Người đề xuất |
 |---|---|---|
 | Phim, trang chủ, chi tiết, tìm kiếm | `src/pages/Catalog.jsx` | Bạn frontend 2 |
-| Rạp, lịch chiếu, hồ sơ khách | `src/pages/Venues.jsx`, `src/components/ScheduleBoard.jsx`, `src/components/CustomerForm.jsx` | Bạn frontend 3 |
+| Rạp, lịch chiếu | `src/pages/Venues.jsx`, `src/components/ScheduleBoard.jsx` | Bạn frontend 3 |
 | Chọn ghế, booking, thanh toán, vé | `src/pages/Booking.jsx`, `src/pages/Tickets.jsx`, `src/components/PaymentPanel.jsx` | Bạn |
-| API, kiểu dữ liệu, layout, CSS chung | `src/services/api.js`, `src/lib/`, `src/App.jsx`, `src/components/UI.jsx`, `src/styles.css` | Thống nhất người tích hợp; mọi thay đổi phải review |
+| Đăng nhập JWT, API, kiểu dữ liệu, layout, CSS chung | `src/services/*`, `src/pages/Auth.jsx`, `src/lib/`, `src/App.jsx`, `src/components/UI.jsx`, `src/styles.css` | Thống nhất người tích hợp; mọi thay đổi phải review |
 
 Đây là bản nền được hỗ trợ tạo bằng AI. Đóng góp cá nhân nên là công việc thực tế: hiểu, chỉnh sửa, kiểm thử, tìm lỗi, tích hợp và tài liệu. Không chia một bản mã có sẵn thành commit giả để nhận là tự viết từ đầu.
 
@@ -128,8 +118,9 @@ npm.cmd run preview
 
 ## 7. Các giới hạn cần biết
 
-Đã đối chiếu controller/DTO trong ZIP và kiểm tra frontend bằng unit test, build và luồng mẫu trên trình duyệt. Chưa chạy thử với database và các service Java trên máy bạn trong phiên này; cần hoàn tất checklist Backend thật trước khi kết luận tích hợp end-to-end thành công.
+Frontend đã đối chiếu controller/DTO và kiểm tra bằng unit test + build; cần chạy lại checklist với Gateway, database và RabbitMQ thực tế trước khi kết luận end-to-end thành công.
 
-Backend hiện chưa có xác thực/ủy quyền, còn nhận tổng tiền từ client, giữ ghế chưa có khóa bảo vệ cạnh tranh đầy đủ và thanh toán chỉ mô phỏng. Đây là phạm vi đồ án cục bộ, chưa phải hệ thống bán vé công khai sẵn sàng thu tiền. Chi tiết và nhiệm vụ phía backend nằm trong tài liệu API.
-
-Các poster SVG mẫu được tái sử dụng từ frontend CineRoom cũ; phim thật hiển thị posterUrl từ backend, ảnh lỗi có placeholder.
+- Access token sống 2 giờ, refresh token 7 ngày; hết refresh token phải đăng nhập lại.
+- Thanh toán dùng QR SePay; booking chỉ chuyển PAID khi webhook chuyển khoản về và RabbitMQ gửi được sự kiện. Chưa có huỷ/hoàn tiền tự động.
+- API lịch sử booking không trả chi tiết ghế; ghế hiển thị theo dữ liệu suất chiếu hiện tại.
+- Poster lấy từ `posterUrl` của backend (http/https hoặc `/assets/...`); URL lỗi hoặc thiếu thì hiện placeholder.

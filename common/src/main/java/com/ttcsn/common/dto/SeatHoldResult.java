@@ -1,14 +1,26 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.common.dto;
 
 import java.util.List;
-
-/** Kết quả giữ/trả ghế: movie-service -> booking-service (internal). */
+import java.util.Map;
+/**
+ *
+ * @author quanghieu
+ */
 public record SeatHoldResult(
         boolean success,
         List<Long> unavailableSeatIds,
-        String message
+        String message,
+        Map<Long, Long> seatToShowtimeSeatId
 ) {
+    public static SeatHoldResult ok(Map<Long, Long> seatToShowtimeSeatId) {
+        return new SeatHoldResult(true, List.of(), "OK", seatToShowtimeSeatId);
+    }
+
     public static SeatHoldResult ok() {
-        return new SeatHoldResult(true, List.of(), "OK");
+        return ok(Map.of());
     }
 }

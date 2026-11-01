@@ -9,10 +9,6 @@ import jakarta.persistence.*;
 
 import com.ttcsn.user.entity.enums.UserRole;
 
-import com.ttcsn.user.entity.User;
-import com.ttcsn.user.entity.enums.UserRole;
-import com.ttcsn.user.entity.User;
-import com.ttcsn.user.entity.enums.UserRole;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -48,7 +44,7 @@ public class User {
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "varchar(32)")
     private UserRole role;
 
     @CreationTimestamp

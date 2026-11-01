@@ -2,14 +2,12 @@ spring:
   application:
     name: booking-service
 
-  # ---------- RabbitMQ (SOA Step 3) ----------
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
 
-  # ---------- DataSource: Supabase (DB chính, cấu hình mặc định) ----------
   datasource:
     url: jdbc:postgresql://aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0
     username: postgres.tpofaymsrfgveiqjtocx
@@ -24,9 +22,15 @@ server:
   address: 127.0.0.1
   port: 8082
 
-# ---------- Feign targets ----------
 app:
   services:
     user-url: http://127.0.0.1:8084
     movie-url: http://127.0.0.1:8081
     venue-url: http://127.0.0.1:8083
+  booking:
+    # Booking PENDING quá hạn này (phút) -> EXPIRED + nhả ghế. Phải lớn hơn
+    # thời gian giữ chỗ tạm (HOLD 10 phút ở movie-service).
+    pending-expiry-minutes: 15
+    # Chu kỳ scheduler quét booking quá hạn (ms).
+    expiry-check-interval-ms: 60000
+    expiry-initial-delay-ms: 60000

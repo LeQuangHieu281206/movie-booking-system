@@ -1,8 +1,11 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.common.dto;
-
 /**
- * SOA Step 0 — Hộp thư chung cho mọi service.
- * VOI gọi — Dùng chung cho mọi service. Tất cả REST API (trả về Response) đều bọc body dạng này qua api-gateway.
+ *
+ * @author quanghieu
  */
 public record ApiResponse<T>(
         boolean success,

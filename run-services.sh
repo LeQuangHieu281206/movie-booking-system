@@ -2,6 +2,18 @@
 cd "$(dirname "$0")"
 mkdir -p logs
 
+# Spring Boot không đọc .env → nạp vào môi trường cho cả 7 service.
+# Lần đầu chạy sẽ tự sinh secret dev vào .env (đã gitignore); production phải tự đặt.
+[ -f .env ] || cp .env.example .env
+set -a; . ./.env; set +a
+for var in JWT_SECRET INTERNAL_TOKEN; do
+    if [ -z "${!var}" ]; then
+        value=$(openssl rand -base64 48)
+        sed -i "s|^$var=.*|$var=$value|" .env
+        export "$var=$value"
+    fi
+done
+
 SERVICES=("venue-service" "user-service" "movie-service" "booking-service" "payment-service" "notification-service" "api-gateway")
 
 for s in "${SERVICES[@]}"; do

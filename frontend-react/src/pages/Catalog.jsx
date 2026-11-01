@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { filterMovies } from "../lib/domain.js";
+import { filterMovies, youtubeEmbed } from "../lib/domain.js";
 import {
   Button,
   Empty,
@@ -269,11 +269,8 @@ export function Home({ catalog, onMovie, onNavigate, onSchedule }) {
 }
 
 export function MovieDetail({ movie, api, onClose, onSelect }) {
-  const trailer = /^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(
-    movie.trailerUrl || "",
-  )
-    ? movie.trailerUrl
-    : "";
+  const trailer = youtubeEmbed(movie.trailerUrl);
+  const [trailerOpen, setTrailerOpen] = useState(false);
   return (
     <Modal wide title={movie.title} onClose={onClose}>
       <div className="movie-detail">
@@ -299,15 +296,10 @@ export function MovieDetail({ movie, api, onClose, onSelect }) {
             <dd>{movie.releaseDate || "Đang cập nhật"}</dd>
           </dl>
           {trailer && (
-            <a
-              className="button small"
-              href={trailer}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <Button className="small" onClick={() => setTrailerOpen(true)}>
               <Icon name="play" size={16} />
               Xem trailer
-            </a>
+            </Button>
           )}
         </div>
       </div>
@@ -319,6 +311,22 @@ export function MovieDetail({ movie, api, onClose, onSelect }) {
         <Empty title="Phim sắp ra mắt">Lịch chiếu sẽ được cập nhật sau.</Empty>
       ) : (
         <ScheduleBoard api={api} movieId={movie.movieId} onSelect={onSelect} />
+      )}
+      {trailerOpen && (
+        <Modal
+          wide
+          title={`Trailer · ${movie.title}`}
+          onClose={() => setTrailerOpen(false)}
+        >
+          <div className="trailer-frame">
+            <iframe
+              src={`${trailer}?autoplay=1&rel=0`}
+              title={`Trailer ${movie.title}`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+        </Modal>
       )}
     </Modal>
   );

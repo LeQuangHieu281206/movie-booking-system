@@ -31,8 +31,13 @@ test("login thành công trả session có user profile dạng userId", () =>
         accessToken: "at",
         refreshToken: "rt",
         tokenType: "Bearer",
-        expiresIn: 900,
-        user: { id: 7, email: "a@b.c", fullName: "Nguyễn Văn A", role: "CUSTOMER" },
+        expiresIn: 7200,
+        user: {
+          id: 7,
+          email: "a@b.c",
+          fullName: "Nguyễn Văn A",
+          role: "CUSTOMER",
+        },
       };
     });
     const session = await auth.login("a@b.c", "secret123");
@@ -48,6 +53,7 @@ test("login thành công trả session có user profile dạng userId", () =>
       role: "CUSTOMER",
     });
     assert.equal(session.accessToken, "at");
+    assert.equal(auth.restore().accessToken, "at");
   }));
 
 test("register gửi đúng payload rồi tự đăng nhập", () =>

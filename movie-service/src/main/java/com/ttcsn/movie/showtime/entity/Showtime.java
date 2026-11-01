@@ -32,12 +32,10 @@ public class Showtime {
     @Column(name = "showtime_id")
     private Long showtimeId;
 
-    // Movie cùng bounded context (movie-service) -> giữ quan hệ entity
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "movie_id", nullable = false)
     private Movie movie;
 
-    // SOA: Room thuộc venue-service -> chỉ giữ FK id (bỏ @ManyToOne)
     @Column(name = "room_id", nullable = false)
     private Long roomId;
 

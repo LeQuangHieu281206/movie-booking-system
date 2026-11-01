@@ -7,8 +7,8 @@
 - [Kiến trúc tổng quan](#kiến-trúc-tổng-quan)
 - [Các service](#các-service)
 - [Cấu trúc repository](#cấu-trúc-repository)
-- [Yêu cầu môi trường](#yêu-cầu-môi-trường)
-- [Các bước chạy dự án](#các-bước-chạy-dự-án)
+- [Cài đặt & chạy bằng Docker (khuyến nghị)](#cài-đặt--chạy-bằng-docker-khuyến-nghị)
+- [Chạy không qua Docker (tuỳ chọn)](#chạy-không-qua-docker-tuỳ-chọn)
 - [Phạm vi chức năng](#phạm-vi-chức-năng)
 - [Nhóm thực hiện](#nhóm-thực-hiện)
 
@@ -47,7 +47,7 @@ API Gateway :8080  (routes /api/** theo service)
     +-> movie-service :8081   (Movie / Genre / Showtime / ShowtimeSeat)
     +-> booking-service :8082 (Booking / BookingDetail)  <-- Feign user/venue/movie
     +-> user-service :8084    (User)
-    +-> payment-service :8086 (Thanh toán mô phỏng)      --> RabbitMQ
+    +-> payment-service :8086 (SePay QR + payments)      --> RabbitMQ
     +-> notification-service :8087 (Nhận event)          <-- RabbitMQ
 
 RabbitMQ "payment.completed" --> booking-service (PAID/CANCELLED + trả ghế)
@@ -65,7 +65,7 @@ Quy ước API: các endpoint dạng **verb-path** dưới gateway `/api/**` (v�
 | movie-service | 8081 | Movie, Genre, Showtime, ShowtimeSeat | CRUD phim/suất chiếu; **tồn kho ghế phát sinh theo tương tác** (giữ/nhả/chốt mới sinh bản ghi); giữ/trả/chốt ghế cho booking |
 | booking-service | 8082 | Booking, BookingDetail | Saga orchestrator-lite: kiểm user/suất/phòng, chốt ghế, tạo Booking PENDING; consume `payment.completed` |
 | user-service | 8084 | User, Auth | CRUD người dùng; đăng ký/đăng nhập JWT (`/api/auth/**`); expose `/internal/users/{id}/exists` |
-| payment-service | 8086 | Payment (mô phỏng) | Ghi nhận thanh toán, publish `payment.completed` lên RabbitMQ |
+| payment-service | 8086 | Payment | Tạo QR SePay, lưu lịch sử vào `payments` (PENDING/SUCCESS/FAILED), chống trùng webhook, publish `payment.completed` |
 | notification-service | 8087 | Notification | Consume `payment.completed`, gửi vé (hiện log) |
 
 ## Cấu trúc repository
@@ -77,46 +77,59 @@ movie-booking-system/
 ├── movie-service/          # Movie/Genre/Showtime/ShowtimeSeat :8081
 ├── booking-service/        # Booking + Saga-lite :8082
 ├── user-service/           # User :8084
-├── payment-service/        # Payment mô phỏng :8086
+├── payment-service/        # Payment + lịch sử giao dịch :8086
+├── database/migrations/    # Migration SQL (payments + index/ràng buộc)
 ├── notification-service/   # Notification :8087
 ├── common/                 # DTO/event/exception dùng chung
 ├── frontend-react/         # Giao diện React + Vite (:5173, proxy /api/**)
-├── docker-compose.yml      # RabbitMQ (Redis chỉ dự phòng, không dùng)
+├── docker-compose.yml      # Cách chạy nhanh: RabbitMQ + 7 service Java + frontend
+├── Dockerfile              # Build chung 1 image chứa 7 jar backend
+├── frontend-react/Dockerfile  # Build React + Nginx (proxy /api → gateway)
 ├── run-services.sh         # Chạy 7 service nền
 ├── stop-services.sh        # Dừng toàn bộ service
 ├── postman_collection_v3.json  # Bộ kiểm thử E2E qua gateway :8080
 └── pom.xml                 # Parent pom
 ```
 
-## Yêu cầu môi trường
+## Cài đặt & chạy bằng Docker (khuyến nghị)
 
-- **JDK 21** và **Maven** (kiểm tra bằng `mvn -v`)
-- **Node.js ≥ 20.19 (hoặc ≥ 22.12)** cho frontend
-- **Docker** — chỉ cần để bật RabbitMQ
-- Database: dùng lại **Supabase chung của nhóm** (đã cấu hình sẵn trong các service); muốn dùng DB riêng thì sửa `spring.datasource.url/username/password` trong 5 file cấu hình (`venue/movie/user`: `application.properties`; `booking/payment/notification/api-gateway`: `application.yml`)
+Chỉ cần cài **Docker Desktop** (Windows/macOS) hoặc **Docker Engine + Compose plugin** (Linux), kèm internet. Không cần JDK, Maven hay Node — database là Supabase chung của nhóm đã cấu hình sẵn.
 
-## Các bước chạy dự án
-
-### 1. Bật RabbitMQ
 ```bash
-docker compose up -d rabbitmq   # AMQP :5672, UI :15672 (guest/guest)
+git clone https://github.com/LeQuangHieu281206/movie-booking-system.git
+cd movie-booking-system
+docker compose up -d --build
 ```
 
-### 2. Build và chạy backend
-```bash
-mvn -DskipTests install     # build toàn bộ 8 module
-./run-services.sh           # chạy nền 7 service, log tại logs/<service>.log
-./stop-services.sh          # dừng toàn bộ khi cần
-```
-Đợi ~45 giây, script tự kiểm tra các port 8080–8087 đã UP.
+- Lần đầu build khoảng **3–6 phút** (Maven + npm trong Docker), các lần sau dùng cache.
+- Mở **http://localhost:5173** để dùng hệ thống.
+- Gateway: **http://localhost:8080** · RabbitMQ UI: **http://localhost:15672** (guest/guest).
+- Lệnh hữu ích: `docker compose logs -f api-gateway` (xem log) · `docker compose stop` (dừng giữ container) · `docker compose down` (dừng + xoá container, thêm `-v` để xoá dữ liệu RabbitMQ/Redis).
+- Lưu ý: khi chạy bằng Docker thì **không dùng** `./stop-services.sh` hay thoát `npm run dev` — những lệnh đó chỉ dành cho cách chạy thủ công. Docker chạy ngầm (`-d`), muốn dừng phải dùng `docker compose down`.
+- Trước khi chạy, tắt service local để không trùng cổng (`./stop-services.sh`, `Ctrl+C` ở `npm run dev`). Cần ~4 GB RAM trống.
+- Muốn đổi `JWT_SECRET`/`INTERNAL_TOKEN` (production): tạo file `.env` cạnh `docker-compose.yml` rồi `docker compose up -d` lại — gateway và user-service phải dùng cùng `JWT_SECRET`. Muốn dùng DB khác Supabase, thêm `SPRING_DATASOURCE_URL/USERNAME/PASSWORD` vào `.env`.
 
-### 3. Chạy frontend
+### Áp migration database
+
+Schema hiện tại cần bảng `payments` và một số index/ràng buộc mới. Chạy một lần trên Supabase (SQL Editor hoặc psql):
+
 ```bash
-cd frontend-react
-npm install
-npm run dev
+psql "$SUPABASE_DB_URL" -f database/migrations/001_payments_and_hardening.sql
 ```
-Mở **http://localhost:5173** (phải chạy backend trước). Nếu gateway không chạy ở cổng 8080, tạo `frontend-react/.env.local` với `BACKEND_URL=http://localhost:<cổng>` (xem `.env.example`).
+
+Script idempotent, chạy lại không lỗi. Sau khi áp migration, khởi động lại `payment-service` và `booking-service`.
+
+## Chạy không qua Docker (tuỳ chọn)
+
+Yêu cầu: **JDK 21 + Maven**, **Node.js ≥ 20.19 (hoặc ≥ 22.12)**, RabbitMQ chạy sẵn (`docker compose up -d rabbitmq`).
+
+```bash
+mvn -DskipTests install     # build 8 module backend
+./run-services.sh           # chạy nền 7 service, log tại logs/<service>.log; dừng: ./stop-services.sh
+cd frontend-react && npm install && npm run dev
+```
+
+Đợi ~45 giây rồi mở **http://localhost:5173**. Nếu gateway không ở cổng 8080, tạo `frontend-react/.env.local` với `BACKEND_URL=http://localhost:<cổng>`.
 
 Chạy thành công khi: trang hiển thị phim đang chiếu (có poster), bấm vào phim thấy lịch chiếu, chọn suất thấy sơ đồ ghế.
 
@@ -125,7 +138,7 @@ Chạy thành công khi: trang hiển thị phim đang chiếu (có poster), b�
 - [x] CRUD rạp/phòng/ghế (venue) + CRUD phim/thể loại/suất chiếu (movie)
 - [x] Tồn kho ghế-theo-suất phát sinh theo tương tác: chọn ghế → `HOLDING` (giữ 10 phút qua `hold_until`), chốt vé → `BOOKED`, quá hạn tự coi như trống
 - [x] Đặt vé Saga-lite: giữ/chốt ghế, Booking PENDING, chi tiết vé
-- [x] Thanh toán mô phỏng: publish event → Booking `PAID/CANCELLED` + trả ghế (bù trừ); đặt trùng ghế trả **409**
+- [x] Thanh toán SePay: tạo QR + lưu `payments`, webhook idempotent, đối soát số tiền, publish event → Booking `PAID/CANCELLED` + trả ghế (bù trừ); đặt trùng ghế trả **409**
 - [x] Giao diện React: duyệt phim, lịch chiếu, chọn ghế, đặt vé, vé của tôi
 - [x] Xác thực JWT (đăng ký/đăng nhập, refresh token ở user-service)
 - [ ] Cổng thanh toán thật, kiểm thử tự động + OpenAPI

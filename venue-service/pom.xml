@@ -3,9 +3,6 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- ================= venue-service :8083 =================
-	     Rạp (Cinema) + Phòng chiếu (Room) + Sơ đồ ghế (Seat)
-	     -->
 	<parent>
 		<groupId>com.ttcsn</groupId>
 		<artifactId>movie-booking-parent</artifactId>

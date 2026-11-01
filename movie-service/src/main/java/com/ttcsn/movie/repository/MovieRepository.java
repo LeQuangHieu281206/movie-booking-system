@@ -20,7 +20,6 @@ import java.util.Set;
  */
 @Repository
 public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecificationExecutor<Movie> {
-    /** Load phim kèm thể loại trong 1 câu (JOIN FETCH) — tránh N+1 query chậm qua pooler. */
     @Query("SELECT DISTINCT m FROM Movie m LEFT JOIN FETCH m.genres")
     List<Movie> findAllWithGenres();
 

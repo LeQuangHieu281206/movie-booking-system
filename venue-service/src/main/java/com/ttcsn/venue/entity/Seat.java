@@ -8,9 +8,6 @@ import jakarta.persistence.*;
 
 import com.ttcsn.venue.entity.enums.SeatType;
 
-import com.ttcsn.venue.entity.Room;
-import com.ttcsn.venue.entity.Seat;
-import com.ttcsn.venue.entity.enums.SeatType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

@@ -30,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -64,7 +66,8 @@ class BookingServiceImplTest {
         when(userClient.userExists(7L)).thenReturn(true);
         when(movieClient.getShowtimeById(10L)).thenReturn(showtime());
         when(venueClient.getRoom(2L)).thenReturn(new RoomDto(2L, "R1", "2D", 100, 3L, "C", "A", "H"));
-        when(showtimeClient.holdSeats(any(SeatIdsRequest.class))).thenReturn(SeatHoldResult.ok());
+        when(showtimeClient.holdSeats(any(SeatIdsRequest.class)))
+                .thenReturn(SeatHoldResult.ok(Map.of(100L, 1000L, 101L, 1001L)));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
             Booking booking = invocation.getArgument(0);
             booking.setBookingId(99L);
@@ -90,6 +93,9 @@ class BookingServiceImplTest {
         verify(bookingDetailRepository).saveAll(detailsCaptor.capture());
         assertThat(detailsCaptor.getValue()).hasSize(2)
                 .allMatch(detail -> new BigDecimal("50000").compareTo(detail.getPrice()) == 0);
+        assertThat(detailsCaptor.getValue())
+                .extracting(BookingDetail::getShowtimeSeatId)
+                .containsExactly(1000L, 1001L);
     }
 
     @Test
@@ -144,8 +150,8 @@ class BookingServiceImplTest {
     void customerCanCancelOwnPendingBookingAndSeatsAreReleased() {
         Booking booking = booking(1L, 1L, BookingStatus.PENDING);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(bookingDetailRepository.findByBookingId(1L))
-                .thenReturn(List.of(BookingDetail.builder().bookingId(1L).seatId(100L).build()));
+        when(bookingDetailRepository.findByBooking_BookingId(1L))
+                .thenReturn(List.of(BookingDetail.builder().booking(Booking.builder().bookingId(1L).build()).seatId(100L).build()));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
 
         BookingResponse response = service.updateBooking(
@@ -198,8 +204,8 @@ class BookingServiceImplTest {
     void customerCanDeleteOwnPendingBookingAndSeatsAreReleased() {
         Booking booking = booking(1L, 1L, BookingStatus.PENDING);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(bookingDetailRepository.findByBookingId(1L))
-                .thenReturn(List.of(BookingDetail.builder().bookingId(1L).seatId(100L).build()));
+        when(bookingDetailRepository.findByBooking_BookingId(1L))
+                .thenReturn(List.of(BookingDetail.builder().booking(Booking.builder().bookingId(1L).build()).seatId(100L).build()));
 
         service.deleteBooking(1L, 1L, "CUSTOMER");
 
@@ -241,6 +247,62 @@ class BookingServiceImplTest {
                 .paymentMethod(PaymentMethod.CASH)
                 .bookingTime(OffsetDateTime.now())
                 .build();
+    }
+
+    // ---------- expireStalePendingBookings (scheduler hết hạn) ----------
+
+    private void expireTestSetup() {
+        org.springframework.test.util.ReflectionTestUtils
+                .setField(service, "pendingExpiryMinutes", 15L);
+    }
+
+    @Test
+    void expiresStalePendingBookingAndReleasesSeats() {
+        expireTestSetup();
+        Booking stale = booking(1L, 2L, BookingStatus.PENDING);
+        when(bookingRepository.findByStatusAndBookingTimeBefore(
+                org.mockito.ArgumentMatchers.eq(BookingStatus.PENDING), any(OffsetDateTime.class)))
+                .thenReturn(List.of(stale));
+        when(bookingRepository.expireIfPending(1L)).thenReturn(1);
+        BookingDetail detail = BookingDetail.builder()
+                .booking(stale)
+                .seatId(77L)
+                .price(new BigDecimal("50000"))
+                .build();
+        when(bookingDetailRepository.findByBooking_BookingId(1L)).thenReturn(List.of(detail));
+
+        int expired = service.expireStalePendingBookings();
+
+        assertEquals(1, expired);
+        verify(showtimeClient).releaseSeats(new SeatIdsRequest(10L, List.of(77L), null));
+    }
+
+    @Test
+    void skipsBookingWhoseStatusChangedConcurrently() {
+        expireTestSetup();
+        Booking stale = booking(1L, 2L, BookingStatus.PENDING);
+        when(bookingRepository.findByStatusAndBookingTimeBefore(
+                org.mockito.ArgumentMatchers.eq(BookingStatus.PENDING), any(OffsetDateTime.class)))
+                .thenReturn(List.of(stale));
+        // Event thanh toán đã xử lý trước (PAID/CANCELLED) -> guarded update không ảnh hưởng dòng nào
+        when(bookingRepository.expireIfPending(1L)).thenReturn(0);
+
+        int expired = service.expireStalePendingBookings();
+
+        assertEquals(0, expired);
+        verify(bookingDetailRepository, never()).findByBooking_BookingId(1L);
+        verifyNoInteractions(showtimeClient);
+    }
+
+    @Test
+    void returnsZeroWhenNoStaleBooking() {
+        expireTestSetup();
+        when(bookingRepository.findByStatusAndBookingTimeBefore(
+                org.mockito.ArgumentMatchers.eq(BookingStatus.PENDING), any(OffsetDateTime.class)))
+                .thenReturn(List.of());
+
+        assertEquals(0, service.expireStalePendingBookings());
+        verifyNoInteractions(showtimeClient);
     }
 
     private static ShowtimeView showtime() {

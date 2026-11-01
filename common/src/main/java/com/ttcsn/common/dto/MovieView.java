@@ -1,6 +1,12 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.common.dto;
-
-/** View cho Feign: dữ liệu Phim thu gọn (movie-service -> booking-service/others). */
+/**
+ *
+ * @author quanghieu
+ */
 public record MovieView(
         Long movieId,
         String title,
@@ -9,5 +15,4 @@ public record MovieView(
         String status,
         String director
 ) {
-    // Jackson sẽ map phàn nàn các field dư (genres, createdAt...) tự bỏ qua.
 }

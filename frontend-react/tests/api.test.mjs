@@ -1,6 +1,23 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHttpClient, createLiveApi } from "../src/services/api.js";
+
+function withStorage(run, session) {
+  const map = new Map();
+  if (session) map.set("cineroom-auth", JSON.stringify(session));
+  const storage = {
+    getItem: (k) => (map.has(k) ? map.get(k) : null),
+    setItem: (k, v) => map.set(k, String(v)),
+    removeItem: (k) => map.delete(k),
+  };
+  const original = globalThis.localStorage;
+  globalThis.localStorage = storage;
+  return Promise.resolve(run(storage)).finally(() => {
+    if (original === undefined) delete globalThis.localStorage;
+    else globalThis.localStorage = original;
+  });
+}
+
 test("Đọc JSON thô và ApiResponse wrapper", async () => {
   for (const data of [
     [{ movieId: 1 }],
@@ -20,14 +37,14 @@ test("Lỗi validation được hiển thị, không dùng dữ liệu mẫu tha
       new Response(
         JSON.stringify({
           message: "Không hợp lệ",
-          fieldErrors: { userId: "Thiếu khách hàng" },
+          fieldErrors: { seatIds: "Thiếu ghế" },
         }),
         { status: 400 },
       ),
   );
   await assert.rejects(
     request("/createBooking", { method: "POST", body: {} }),
-    (e) => e.status === 400 && e.message === "Thiếu khách hàng",
+    (e) => e.status === 400 && e.message === "Thiếu ghế",
   );
 });
 test("Phản hồi HTML không bị hiểu nhầm thành thành công", async () => {
@@ -50,49 +67,76 @@ test("Ghế phải gọi 2 API public và ghép bằng đúng ID", async () => {
     ["/getSeatsByRoomId?roomId=3", "/getShowtimeSeats?showtimeId=2"].sort(),
   );
 });
-test("Đặt vé và thanh toán dùng DTO và đường dẫn SOA, không gọi bridge cũ", async () => {
+test("Booking, thanh toán và hủy dùng đúng DTO của backend", async () => {
   const calls = [];
   const api = createLiveApi(async (path, options) => {
     calls.push({ path, ...options });
     return {};
   });
-  const body = {
-    userId: 3,
-    showtimeId: 7,
-    showtimeSeatIds: [91],
-    totalAmount: 85000,
-    paymentMethod: "CASH",
-  };
+  const body = { showtimeId: 7, seatIds: [91], paymentMethod: "CASH" };
   await api.createBooking(body);
-  await api.pay({ bookingId: 4, userId: 3, totalAmount: 85000 }, true);
+  await api.createPayment(4);
+  await api.me();
   await api.cancel(4);
   assert.deepEqual(calls[0], { path: "/createBooking", method: "POST", body });
-  assert.deepEqual(calls[1].body, {
-    bookingId: 4,
-    userId: 3,
-    amount: 85000,
-    simulateFailure: true,
+  assert.deepEqual(calls[1], {
+    path: "/createPayment",
+    method: "POST",
+    body: { bookingId: 4 },
   });
-  assert.equal(calls[2].path, "/updateBooking?id=4");
-  assert.deepEqual(calls[2].body, { status: "CANCELLED" });
+  assert.equal(calls[2].path, "/users/me");
+  assert.equal(calls[3].path, "/updateBooking?id=4");
+  assert.deepEqual(calls[3].body, { status: "CANCELLED" });
 });
-test("Tạo hồ sơ luôn CUSTOMER, không lấy danh sách người dùng", async () => {
-  let sent;
-  const api = createLiveApi(async (path, options) => {
-    sent = { path, ...options };
-    return { userId: 1 };
-  });
-  await api.createCustomer({
-    fullName: " An ",
-    email: " an@example.com ",
-    phoneNumber: " 0123456789 ",
-    role: "ADMIN",
-  });
-  assert.equal(sent.path, "/createUser");
-  assert.equal(sent.body.role, "CUSTOMER");
-  assert.equal(sent.body.fullName, "An");
-  assert.ok(sent.body.password.length >= 32);
-});
+test("Mọi request gắn Bearer token của phiên đăng nhập", () =>
+  withStorage(
+    async () => {
+      const request = createHttpClient(async (url, options) => {
+        assert.equal(options.headers.Authorization, "Bearer access-1");
+        return new Response(JSON.stringify({ userId: 1 }));
+      });
+      assert.deepEqual(await createLiveApi(request).me(), { userId: 1 });
+    },
+    {
+      accessToken: "access-1",
+      refreshToken: "refresh-1",
+      user: { userId: 1, fullName: "A", email: "a@b.c", role: "CUSTOMER" },
+    },
+  ));
+test("401 tự đổi refresh token rồi gửi lại đúng một lần", () =>
+  withStorage(
+    async (storage) => {
+      const calls = [];
+      const request = createHttpClient(async (url, options) => {
+        calls.push({ url, auth: options.headers?.Authorization });
+        if (url === "/api/auth/refresh")
+          return new Response(
+            JSON.stringify({
+              accessToken: "access-2",
+              refreshToken: "refresh-2",
+              user: { id: 1, fullName: "A", email: "a@b.c", role: "CUSTOMER" },
+            }),
+          );
+        if (calls.length === 1)
+          return new Response(JSON.stringify({ message: "Hết hạn" }), {
+            status: 401,
+          });
+        return new Response(JSON.stringify({ userId: 1 }));
+      });
+      assert.deepEqual(await createLiveApi(request).me(), { userId: 1 });
+      assert.deepEqual(
+        calls.map((call) => call.url),
+        ["/api/users/me", "/api/auth/refresh", "/api/users/me"],
+      );
+      assert.equal(calls[2].auth, "Bearer access-2");
+      assert.match(storage.getItem("cineroom-auth"), /access-2/);
+    },
+    {
+      accessToken: "access-1",
+      refreshToken: "refresh-1",
+      user: { userId: 1, fullName: "A", email: "a@b.c", role: "CUSTOMER" },
+    },
+  ));
 test("Không tự gửi lại POST khi kết nối lỗi", async () => {
   let count = 0;
   const request = createHttpClient(async () => {

@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.venue.controller;
 
 import com.ttcsn.common.dto.RoomDto;
@@ -5,6 +9,7 @@ import com.ttcsn.common.dto.SeatDto;
 import com.ttcsn.venue.entity.Room;
 import com.ttcsn.venue.repository.RoomRepository;
 import com.ttcsn.venue.repository.SeatRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,10 +19,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-
 /**
- * Internal API — movie-service gọi sang khi tạo showtime / render showtime detail.
- * Trả DTO dạng đủ nhẹ (RoomDto/SeatDto) — anti-corruption layer của venue.
+ *
+ * @author quanghieu
  */
 @RestController
 @RequestMapping("/internal")
@@ -32,7 +36,7 @@ public class InternalVenueController {
     public RoomDto getRoom(@PathVariable Long roomId) {
         return roomRepository.findWithCinemaById(roomId)
                 .map(this::toRoomDto)
-                .orElse(null); // null -> phía gọi tự quyết định NotFoundException
+                .orElse(null);
     }
 
     @GetMapping("/rooms/{roomId}/seats")
@@ -48,7 +52,6 @@ public class InternalVenueController {
                 .toList();
     }
 
-    /** Lấy nhiều phòng trong 1 lần gọi + 1 câu JOIN FETCH rạp — tránh 1 Feign call / suất (list 1.000+ suất). */
     @GetMapping("/rooms/by-ids")
     @Transactional(readOnly = true)
     public List<RoomDto> getRoomsByIds(@RequestParam("ids") List<Long> ids) {

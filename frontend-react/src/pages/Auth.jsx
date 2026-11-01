@@ -32,7 +32,11 @@ export default function Auth({ auth, user, onUser, onDone }) {
   return (
     <div className="container page-section" id="auth-page">
       <div className="auth-card">
-        <div className="segmented" role="group" aria-label="Đăng nhập hoặc đăng ký">
+        <div
+          className="segmented"
+          role="group"
+          aria-label="Đăng nhập hoặc đăng ký"
+        >
           <button
             type="button"
             className={tab === "login" ? "active" : ""}
@@ -60,7 +64,14 @@ export default function Auth({ auth, user, onUser, onDone }) {
             {tab === "register" && (
               <label>
                 Họ và tên
-                <input name="fullName" required placeholder="Nguyễn Văn A" />
+                <input
+                  name="fullName"
+                  required
+                  minLength={2}
+                  maxLength={100}
+                  autoComplete="name"
+                  placeholder="Nguyễn Văn A"
+                />
               </label>
             )}
             <label>
@@ -69,6 +80,7 @@ export default function Auth({ auth, user, onUser, onDone }) {
                 name="email"
                 type="email"
                 required
+                maxLength={150}
                 autoComplete="email"
                 placeholder="ban@example.com"
               />
@@ -100,13 +112,18 @@ export default function Auth({ auth, user, onUser, onDone }) {
                 </label>
                 <label>
                   Số điện thoại (không bắt buộc)
-                  <input name="phoneNumber" inputMode="tel" placeholder="09xx xxx xxx" />
+                  <input
+                    name="phoneNumber"
+                    inputMode="tel"
+                    maxLength={20}
+                    placeholder="09xx xxx xxx"
+                  />
                 </label>
               </>
             )}
             <Button primary className="full" type="submit">
               {busy
-                ? "Đang xử lý..."
+                ? "Đang xử lý…"
                 : tab === "login"
                   ? "Đăng nhập"
                   : "Tạo tài khoản"}
@@ -116,8 +133,8 @@ export default function Auth({ auth, user, onUser, onDone }) {
         </form>
         {user && tab === "login" && (
           <p className="auth-hint">
-            Bạn đang đăng nhập với <b>{user.email}</b>. Đăng nhập lại để đổi
-            tài khoản.
+            Bạn đang đăng nhập với <b>{user.email}</b>. Đăng nhập lại để đổi tài
+            khoản.
           </p>
         )}
       </div>

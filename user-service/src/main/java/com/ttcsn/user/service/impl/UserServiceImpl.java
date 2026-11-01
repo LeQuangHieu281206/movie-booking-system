@@ -13,6 +13,7 @@ import com.ttcsn.user.exception.UserNotFoundException;
 import com.ttcsn.user.repository.UserRepository;
 import com.ttcsn.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<UserResponse> getAllUsers() {
@@ -76,7 +78,7 @@ public class UserServiceImpl implements UserService {
             user.setRole(request.role());
         }
         if (request.password() != null && !request.password().isBlank()) {
-            user.setPasswordHash(request.password());
+            user.setPasswordHash(passwordEncoder.encode(request.password()));
         }
 
         User updatedUser = userRepository.save(user);

@@ -3,7 +3,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Record.java to edit this template
  */
 package com.ttcsn.movie.dto.response;
-
 /**
  *
  * @author quanghieu

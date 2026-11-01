@@ -5,16 +5,11 @@
 package com.ttcsn.movie.controller;
 
 import org.springframework.web.bind.annotation.*;
-import com.ttcsn.movie.dto.request.MovieRequest;
-import com.ttcsn.movie.dto.response.MovieResponse;
-import com.ttcsn.movie.entity.enums.MovieStatus;
-import com.ttcsn.movie.service.MovieService;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import com.ttcsn.movie.controller.MovieController;
+
 import com.ttcsn.movie.dto.request.MovieRequest;
 import com.ttcsn.movie.dto.response.MovieResponse;
 import com.ttcsn.movie.service.MovieService;

@@ -6,8 +6,6 @@ package com.ttcsn.movie.entity;
 
 import jakarta.persistence.*;
 
-import com.ttcsn.movie.entity.Genre;
-import com.ttcsn.movie.entity.Movie;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

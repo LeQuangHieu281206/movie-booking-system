@@ -1,6 +1,11 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.ttcsn.gateway.security;
 
 import com.ttcsn.gateway.config.GatewaySecurityProperties;
+
 import io.jsonwebtoken.JwtException;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -14,18 +19,9 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
-
 /**
- * Xác thực JWT và phân quyền tại gateway — trust boundary duy nhất của hệ thống.
  *
- * <p>Thứ tự -100: chạy trước các filter routing (RouteToRequestUrlFilter order 10000)
- * để request chưa xác thực không bao giờ được chuyển tiếp.
- *
- * <p>Header do client gửi luôn bị xóa; sau khi verify mới gắn lại X-User-Id,
- * X-User-Role và X-Internal-Token. Nhờ vậy client không thể giả danh user/role.
- *
- * <p>Path không chuẩn (encoded separator/dot, matrix parameter, double slash...)
- * bị trả 404; header method-override bị trả 403 trước khi phân quyền.
+ * @author quanghieu
  */
 @Component
 public class GatewayJwtFilter implements GlobalFilter, Ordered {
@@ -56,8 +52,6 @@ public class GatewayJwtFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
 
-        // Không hỗ trợ method override; từ chối để downstream không tự đổi method
-        // sau khi gateway đã phân quyền theo method gốc.
         if (request.getHeaders().containsKey(METHOD_OVERRIDE_HEADER)
                 || request.getHeaders().containsKey(METHOD_OVERRIDE_HEADER_ALIAS)) {
             return writeError(exchange, HttpStatus.FORBIDDEN, FORBIDDEN_BODY);
@@ -82,8 +76,6 @@ public class GatewayJwtFilter implements GlobalFilter, Ordered {
         try {
             user = jwtVerifier.verify(token);
         } catch (JwtException | IllegalArgumentException ex) {
-            // Sai chữ ký, hết hạn, sai issuer, sai loại token, sai role...
-            // Không trả chi tiết để tránh dò lỗi.
             return writeError(exchange, HttpStatus.UNAUTHORIZED, UNAUTHORIZED_BODY);
         }
 
@@ -98,7 +90,6 @@ public class GatewayJwtFilter implements GlobalFilter, Ordered {
                                JwtVerifier.VerifiedUser user) {
         ServerHttpRequest mutated = exchange.getRequest().mutate()
                 .headers(headers -> {
-                    // Luôn xóa header client tự gửi, kể cả khi request là public.
                     headers.remove(USER_ID_HEADER);
                     headers.remove(USER_ROLE_HEADER);
                     headers.remove(INTERNAL_TOKEN_HEADER);

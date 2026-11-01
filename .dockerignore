@@ -1,0 +1,10 @@
+.git
+.gitignore
+**/target
+logs
+*.log
+.env
+.env.*
+!.env.example
+frontend-react/node_modules
+frontend-react/dist

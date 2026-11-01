@@ -42,6 +42,7 @@ public class Booking {
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(32)")
     private BookingStatus status;
 
     @Enumerated(EnumType.STRING)

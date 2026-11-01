@@ -100,7 +100,12 @@ export function Showtimes({
   initialCinemaId,
   onSelect,
 }) {
-  const [movieId, setMovieId] = useState(String(initialMovieId || ""));
+  const [chosenMovieId, setMovieId] = useState(String(initialMovieId || ""));
+  // /getShowtimes không lọc sẽ trả toàn bộ lịch của rạp (rất lớn), nên luôn
+  // chọn sẵn một phim đang chiếu thay vì gọi không tham số.
+  const movieId =
+    chosenMovieId ||
+    String(movies.find((movie) => movie.status === "SHOWING")?.movieId ?? "");
   const [cinemaId, setCinemaId] = useState(String(initialCinemaId || ""));
   // Chỉ tải danh sách rạp khi đang lọc theo rạp, để hiện tên rạp thay vì "#id".
   const filteringCinema = Boolean(cinemaId);
@@ -127,7 +132,6 @@ export function Showtimes({
             value={movieId}
             onChange={(event) => setMovieId(event.target.value)}
           >
-            <option value="">Tất cả phim</option>
             {movieOptions(movies, movieId).map((movie) => (
               <option key={movie.id} value={movie.id}>
                 {movie.title}
@@ -148,16 +152,20 @@ export function Showtimes({
           </button>
         </p>
       )}
-      <ScheduleBoard
-        key={movieId}
-        api={api}
-        movieId={movieId}
-        cinemaId={cinemaId}
-        cinemaName={cinemaName}
-        movies={movies}
-        onSelect={onSelect}
-        onClearCinema={() => setCinemaId("")}
-      />
+      {movieId ? (
+        <ScheduleBoard
+          key={movieId}
+          api={api}
+          movieId={movieId}
+          cinemaId={cinemaId}
+          cinemaName={cinemaName}
+          movies={movies}
+          onSelect={onSelect}
+          onClearCinema={() => setCinemaId("")}
+        />
+      ) : (
+        <Loading label="Đang tải danh sách phim…" />
+      )}
     </section>
   );
 }

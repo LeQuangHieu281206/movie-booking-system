@@ -5,21 +5,16 @@
 package com.ttcsn.movie.showtime.controller;
 
 import org.springframework.web.bind.annotation.*;
-import com.ttcsn.movie.showtime.dto.request.ShowtimeRequest;
-import com.ttcsn.movie.showtime.dto.response.ShowtimeResponse;
-import com.ttcsn.movie.showtime.service.ShowtimeService;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import com.ttcsn.movie.showtime.controller.ShowtimeController;
+
 import com.ttcsn.movie.showtime.dto.request.ShowtimeRequest;
 import com.ttcsn.movie.showtime.dto.response.ShowtimeResponse;
 import com.ttcsn.movie.showtime.service.ShowtimeService;
 
 import java.util.List;
-
 /**
  *
  * @author quanghieu
@@ -46,14 +41,12 @@ public class ShowtimeController {
         return ResponseEntity.ok(showtimeService.getShowtimeById(id));
     }
 
-    /** Sơ đồ ghế theo suất chiếu: id + trạng thái (AVAILABLE/HELD/BOOKED) */
     @GetMapping("/getShowtimeSeats")
     public ResponseEntity<List<com.ttcsn.movie.showtime.dto.response.ShowtimeSeatView>> getShowtimeSeats(
             @RequestParam Long showtimeId) {
         return ResponseEntity.ok(showtimeService.getShowtimeSeats(showtimeId));
     }
 
-    /** Giữ chỗ tạm 10 phút; holdBy lấy từ X-User-Id do gateway gắn. */
     @PostMapping("/holdShowtimeSeat")
     public ResponseEntity<com.ttcsn.movie.showtime.dto.response.ShowtimeSeatView> holdShowtimeSeat(
             @Valid @RequestBody com.ttcsn.movie.showtime.dto.request.ShowtimeSeatInteractionRequest request,
@@ -62,7 +55,6 @@ public class ShowtimeController {
                 request.showtimeId(), request.seatId(), userId));
     }
 
-    /** Bỏ giữ chỗ: chỉ người giữ hoặc ADMIN. */
     @PostMapping("/releaseShowtimeSeat")
     public ResponseEntity<com.ttcsn.movie.showtime.dto.response.ShowtimeSeatView> releaseShowtimeSeat(
             @Valid @RequestBody com.ttcsn.movie.showtime.dto.request.ShowtimeSeatInteractionRequest request,
