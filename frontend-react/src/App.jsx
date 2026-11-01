@@ -83,7 +83,7 @@ function Workspace() {
       .then((profile) => active && setUser(profile))
       .catch((error) => {
         if (!active || error.name === "AbortError") return;
-        if (error.status === 401) {
+        if (error.status === 401 || error.status === 404) {
           auth.logout();
           setUser(null);
           setUserError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");

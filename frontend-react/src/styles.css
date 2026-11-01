@@ -3284,6 +3284,91 @@ footer .brand svg {
 .auth-hint {
   color: var(--muted);
 }
+.auth-shell {
+  max-width: 460px;
+  margin: 0 auto;
+}
+.auth-tabs {
+  position: relative;
+  z-index: 2;
+  width: fit-content;
+  margin: 0 auto -22px;
+  padding: 5px;
+  display: flex;
+  gap: 4px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+.auth-tabs button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 24px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    background var(--duration-quick) var(--ease-smooth-out),
+    color var(--duration-quick) var(--ease-smooth-out),
+    transform var(--duration-fast) var(--ease-smooth-out);
+}
+.auth-tabs button:hover {
+  color: var(--ink);
+}
+.auth-tabs button:active {
+  transform: scale(0.97);
+}
+.auth-tabs button.active {
+  background: var(--primary);
+  color: #1d1d1f;
+}
+.auth-shell .auth-card {
+  max-width: none;
+  margin: 0;
+  padding: 44px 32px 32px;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06);
+}
+.auth-intro {
+  margin-bottom: 2px;
+}
+.auth-intro h1 {
+  margin: 6px 0 4px;
+  font-size: 26px;
+  letter-spacing: -0.03em;
+}
+.auth-intro p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.auth-card form fieldset {
+  display: grid;
+  gap: 16px;
+}
+.auth-card form label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.auth-card form label + label {
+  margin-top: 0;
+}
+.auth-card form .button {
+  margin-top: 4px;
+}
+.auth-card input {
+  padding: 13px 14px;
+  font-size: 14px;
+  border-radius: 12px;
+}
+.auth-card .error-box {
+  margin: 0;
+}
 .profile-card {
   max-width: 760px;
   margin: 0 auto;
@@ -3590,6 +3675,24 @@ footer .brand svg {
   .profile-actions .button {
     width: 100%;
   }
+  .auth-shell {
+    max-width: 100%;
+  }
+  .auth-shell .auth-card {
+    padding: 40px 20px 24px;
+    border-radius: 18px;
+  }
+  .auth-tabs {
+    width: 100%;
+    justify-content: center;
+  }
+  .auth-tabs button {
+    flex: 1;
+    padding: 9px 16px;
+  }
+  .auth-intro h1 {
+    font-size: 23px;
+  }
 }
 
 /* ---------- Dark theme ---------- */
@@ -3798,6 +3901,10 @@ footer .brand svg {
 }
 [data-theme="dark"] .hero-art {
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+[data-theme="dark"] .auth-tabs,
+[data-theme="dark"] .auth-shell .auth-card {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
 }
 [data-theme="dark"] .experience {
   background: #1d1d1f;

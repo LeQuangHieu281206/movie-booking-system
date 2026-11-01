@@ -164,15 +164,12 @@ export default function Auth({ auth, api, user, onUser, onDone }) {
 
   return (
     <div className="container page-section" id="auth-page">
-      <div className="auth-card">
-        <div
-          className="segmented"
-          role="group"
-          aria-label="Đăng nhập hoặc đăng ký"
-        >
+      <div className="auth-shell">
+        <div className="auth-tabs" role="group" aria-label="Đăng nhập hoặc đăng ký">
           <button
             type="button"
             className={tab === "login" ? "active" : ""}
+            aria-pressed={tab === "login"}
             onClick={() => {
               setTab("login");
               setError("");
@@ -183,6 +180,7 @@ export default function Auth({ auth, api, user, onUser, onDone }) {
           <button
             type="button"
             className={tab === "register" ? "active" : ""}
+            aria-pressed={tab === "register"}
             onClick={() => {
               setTab("register");
               setError("");
@@ -191,79 +189,90 @@ export default function Auth({ auth, api, user, onUser, onDone }) {
             Đăng ký
           </button>
         </div>
-        {error && <ErrorBox message={error} />}
-        <form onSubmit={submit} key={tab}>
-          <fieldset disabled={busy}>
-            {tab === "register" && (
+        <div className="auth-card">
+          <div className="auth-intro">
+            <span className="eyebrow">CINEROOM / TÀI KHOẢN</span>
+            <h1>{tab === "login" ? "Chào mừng trở lại" : "Tạo tài khoản mới"}</h1>
+            <p>
+              {tab === "login"
+                ? "Đăng nhập để đặt vé và xem vé của bạn."
+                : "Chỉ mất một phút để bắt đầu đặt vé."}
+            </p>
+          </div>
+          {error && <ErrorBox message={error} />}
+          <form onSubmit={submit} key={tab}>
+            <fieldset disabled={busy}>
+              {tab === "register" && (
+                <label>
+                  Họ và tên
+                  <input
+                    name="fullName"
+                    required
+                    minLength={2}
+                    maxLength={100}
+                    autoComplete="name"
+                    placeholder="Nguyễn Văn A"
+                  />
+                </label>
+              )}
               <label>
-                Họ và tên
+                Email
                 <input
-                  name="fullName"
+                  name="email"
+                  type="email"
                   required
-                  minLength={2}
-                  maxLength={100}
-                  autoComplete="name"
-                  placeholder="Nguyễn Văn A"
+                  maxLength={150}
+                  autoComplete="email"
+                  placeholder="ban@example.com"
                 />
               </label>
-            )}
-            <label>
-              Email
-              <input
-                name="email"
-                type="email"
-                required
-                maxLength={150}
-                autoComplete="email"
-                placeholder="ban@example.com"
-              />
-            </label>
-            <label>
-              Mật khẩu
-              <input
-                name="password"
-                type="password"
-                required
-                minLength={tab === "register" ? 8 : undefined}
-                autoComplete={
-                  tab === "login" ? "current-password" : "new-password"
-                }
-                placeholder="••••••••"
-              />
-            </label>
-            {tab === "register" && (
-              <>
-                <label>
-                  Xác nhận mật khẩu
-                  <input
-                    name="confirm"
-                    type="password"
-                    required
-                    autoComplete="new-password"
-                    placeholder="••••••••"
-                  />
-                </label>
-                <label>
-                  Số điện thoại (không bắt buộc)
-                  <input
-                    name="phoneNumber"
-                    inputMode="tel"
-                    maxLength={20}
-                    placeholder="09xx xxx xxx"
-                  />
-                </label>
-              </>
-            )}
-            <Button primary className="full" type="submit">
-              {busy
-                ? "Đang xử lý…"
-                : tab === "login"
-                  ? "Đăng nhập"
-                  : "Tạo tài khoản"}
-              <Icon name="arrow" size={16} />
-            </Button>
-          </fieldset>
-        </form>
+              <label>
+                Mật khẩu
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  minLength={tab === "register" ? 8 : undefined}
+                  autoComplete={
+                    tab === "login" ? "current-password" : "new-password"
+                  }
+                  placeholder="••••••••"
+                />
+              </label>
+              {tab === "register" && (
+                <>
+                  <label>
+                    Xác nhận mật khẩu
+                    <input
+                      name="confirm"
+                      type="password"
+                      required
+                      autoComplete="new-password"
+                      placeholder="••••••••"
+                    />
+                  </label>
+                  <label>
+                    Số điện thoại (không bắt buộc)
+                    <input
+                      name="phoneNumber"
+                      inputMode="tel"
+                      maxLength={20}
+                      placeholder="09xx xxx xxx"
+                    />
+                  </label>
+                </>
+              )}
+              <Button primary className="full" type="submit">
+                {busy
+                  ? "Đang xử lý…"
+                  : tab === "login"
+                    ? "Đăng nhập"
+                    : "Tạo tài khoản"}
+                <Icon name="arrow" size={16} />
+              </Button>
+            </fieldset>
+          </form>
+        </div>
       </div>
     </div>
   );
