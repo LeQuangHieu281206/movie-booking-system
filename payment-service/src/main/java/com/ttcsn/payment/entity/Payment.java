@@ -52,20 +52,20 @@ public class Payment {
     @Column(nullable = false, precision = 12, scale = 0)
     private BigDecimal amount;
 
-    @Column(nullable = false, length = 8)
+    @Column(nullable = false, columnDefinition = "text")
     private String currency;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
     private PaymentStatus status;
 
-    @Column(nullable = false, length = 32)
+    @Column(nullable = false, columnDefinition = "text")
     private String provider;
 
-    @Column(name = "provider_txn_id")
+    @Column(name = "provider_txn_id", columnDefinition = "text")
     private String providerTxnId;
 
-    @Column(name = "reference_code")
+    @Column(name = "reference_code", columnDefinition = "text")
     private String referenceCode;
 
     @Column(name = "qr_url", columnDefinition = "text")

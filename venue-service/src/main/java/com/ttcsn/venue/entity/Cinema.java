@@ -26,16 +26,16 @@ public class Cinema {
     @Column(name = "cinema_id")
     private Long cinemaId;
  
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, columnDefinition = "text")
     private String name;
  
-    @Column(name = "address", nullable = false)
+    @Column(name = "address", nullable = false, columnDefinition = "text")
     private String address;
  
-    @Column(name = "city", nullable = false)
+    @Column(name = "city", nullable = false, columnDefinition = "text")
     private String city;
  
-    @Column(name = "phone_number")
+    @Column(name = "phone_number", columnDefinition = "varchar(12)")
     private String phoneNumber;
  
     @Column(name = "created_at", nullable = false, updatable = false)

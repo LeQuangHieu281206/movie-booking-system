@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.ColumnTransformer;
 
 import java.time.OffsetDateTime;
 /**
@@ -35,14 +36,16 @@ public class Room {
     @JoinColumn(name = "cinema_id", nullable = false)
     private Cinema cinema;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, columnDefinition = "text")
     private String name;
 
     @Column(name = "total_seats")
     private Short totalSeats;
 
+    // RoomType dùng nhãn '2D'/'3D'... khác tên hằng Java nên vẫn đi qua converter.
     @Convert(converter = RoomTypeConverter.class)
-    @Column(name = "room_type")
+    @ColumnTransformer(write = "?::room_type_enum")
+    @Column(name = "room_type", columnDefinition = "room_type_enum")
     private RoomType roomType;
 
     @Column(name = "created_at", nullable = false, updatable = false)
