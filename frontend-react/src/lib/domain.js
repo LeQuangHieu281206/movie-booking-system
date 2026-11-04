@@ -88,7 +88,7 @@ export function bookingPayload(
   const price = Number(show.basePrice);
   if (!Number.isFinite(price) || price <= 0)
     throw new Error("Suất chiếu chưa có giá vé hợp lệ.");
-  if (!["CASH", "BANK_TRANSFER", "CARD", "E_WALLET"].includes(paymentMethod))
+  if (!["CASH", "BANK_TRANSFER"].includes(paymentMethod))
     throw new Error("Phương thức thanh toán không hợp lệ.");
   return {
     showtimeId: show.showtimeId,

@@ -17,8 +17,6 @@ const labels = {
   COUPLE: "Đôi",
   CASH: "Tiền mặt",
   BANK_TRANSFER: "Chuyển khoản",
-  CARD: "Thẻ",
-  E_WALLET: "Ví điện tử",
   ADMIN: "Quản trị viên",
   CUSTOMER: "Khách hàng",
 };

@@ -1,0 +1,311 @@
+%% ---------------------------------------------------------------------------
+%% Movie Booking System - Class Diagram (SOA)
+%% Nguon su that: cac file entity + service interface trong repo.
+%% Quy uoc:
+%%   - Thuoc tinh: ten field Java thuc te (camelCase).
+%%   - Method trong tung box la method cua SERVICE tuong ung (khong phai entity).
+%%   - Entity chi co onCreate()/onUpdate() (protected) + Lombok getter/setter.
+%%   - Quan he net dut "..>" = tham chieu ID cross-service, KHONG co FK trong DB.
+%% ---------------------------------------------------------------------------
+classDiagram
+    direction LR
+
+    class movies {
+        -Long movieId
+        -String title
+        -String description
+        -Short durationMinutes
+        -String language
+        -LocalDate releaseDate
+        -String posterUrl
+        -String trailerUrl
+        -AgeRestriction ageRestriction
+        -MovieStatus status
+        -String director
+        -String actors
+        -OffsetDateTime createdAt
+        -OffsetDateTime updatedAt
+        -Set~Genre~ genres
+        #onCreate()
+        #onUpdate()
+        +getMovieById(Long) MovieResponse
+        +getAllMovies() List~MovieResponse~
+        +createMovie(MovieRequest) MovieResponse
+        +updateMovie(Long, MovieRequest) MovieResponse
+        +deleteMovie(Long) void
+        +searchMovies(MovieStatus, List~Long~, String) List~MovieResponse~
+        +searchByKeyword(String, int) List~MovieResponse~
+    }
+
+    class genres {
+        -Long genreId
+        -String name
+        -Set~Movie~ movies
+        +getAllGenres() List~GenreResponse~
+        +getGenreById(Long) GenreResponse
+        +createGenre(GenreRequest) GenreResponse
+        +updateGenre(Long, GenreRequest) GenreResponse
+        +deleteGenre(Long) void
+    }
+
+    class showtimes {
+        -Long showtimeId
+        -Movie movie
+        -Long roomId
+        -OffsetDateTime startTime
+        -OffsetDateTime endTime
+        -BigDecimal basePrice
+        -ShowtimeStatus status
+        -OffsetDateTime createdAt
+        -OffsetDateTime updatedAt
+        #onCreate()
+        #onUpdate()
+        +getAllShowtimes() List~ShowtimeResponse~
+        +getShowtimesByMovieId(Long) List~ShowtimeResponse~
+        +getShowtimeById(Long) ShowtimeResponse
+        +getShowtimeSeats(Long) List~ShowtimeSeatView~
+        +holdShowtimeSeat(Long, Long, Long) ShowtimeSeatView
+        +releaseShowtimeSeat(Long, Long, Long, Boolean) ShowtimeSeatView
+        +bookSeats(Long, List~Long~, String) SeatHoldResult
+        +releaseSeatsInternal(Long, List~Long~) void
+        +createShowtime(ShowtimeRequest) ShowtimeResponse
+        +updateShowtime(Long, ShowtimeRequest) ShowtimeResponse
+        +deleteShowtime(Long) void
+    }
+
+    class showtime_seats {
+        -Long showtimeSeatId
+        -Showtime showtime
+        -Long seatId
+        -SeatStatus status
+        -OffsetDateTime holdUntil
+        -String holdBy
+        -OffsetDateTime updatedAt
+    }
+
+    class cinemas {
+        -Long cinemaId
+        -String name
+        -String address
+        -String city
+        -String phoneNumber
+        -OffsetDateTime createdAt
+        -OffsetDateTime updatedAt
+        #onCreate()
+        #onUpdate()
+        +getAllCinemas() List~CinemaResponse~
+        +getCinemaById(Long) CinemaResponse
+        +getAllCities() List~String~
+        +getCinemasByCity(String) List~CinemaResponse~
+        +createCinema(CinemaRequest) CinemaResponse
+        +updateCinema(Long, CinemaRequest) CinemaResponse
+        +deleteCinema(Long) void
+    }
+
+    class rooms {
+        -Long roomId
+        -Cinema cinema
+        -String name
+        -Short totalSeats
+        -RoomType roomType
+        -OffsetDateTime createdAt
+        -OffsetDateTime updatedAt
+        #onCreate()
+        #onUpdate()
+        +getAllRooms() List~RoomResponse~
+        +getRoomsByCinemaId(Long) List~RoomResponse~
+        +getRoomById(Long) RoomResponse
+        +createRoom(RoomRequest) RoomResponse
+        +updateRoom(Long, RoomRequest) RoomResponse
+        +deleteRoom(Long) void
+    }
+
+    class seats {
+        -Long seatId
+        -Room room
+        -String seatRow
+        -Short seatNumber
+        -SeatType seatType
+        -OffsetDateTime createdAt
+        -OffsetDateTime updatedAt
+        #onCreate()
+        #onUpdate()
+        +getSeatsByRoomId(Long) List~SeatResponse~
+        +getSeatById(Long) SeatResponse
+        +createSeat(SeatRequest) SeatResponse
+        +updateSeat(Long, SeatRequest) SeatResponse
+        +deleteSeat(Long) void
+    }
+
+    class bookings {
+        -Long bookingId
+        -Long userId
+        -Long showtimeId
+        -String bookingCode
+        -BigDecimal totalAmount
+        -BookingStatus status
+        -PaymentMethod paymentMethod
+        -OffsetDateTime bookingTime
+        -OffsetDateTime createdAt
+        -OffsetDateTime updatedAt
+        +getAllBookings(String) List~BookingResponse~
+        +getBookingById(Long, Long, String) BookingResponse
+        +getBookingsByUserId(Long, Long, String) List~BookingResponse~
+        +getBookingsByShowtimeId(Long, String) List~BookingResponse~
+        +createBooking(BookingCreateRequest, Long) BookingResponse
+        +updateBooking(Long, BookingUpdateRequest, Long, String) BookingResponse
+        +deleteBooking(Long, Long, String) void
+        +getPaymentView(Long) BookingPaymentView
+        +expireStalePendingBookings() int
+    }
+
+    class booking_details {
+        -Long bookingDetailId
+        -Booking booking
+        -Long seatId
+        -Long showtimeSeatId
+        -BigDecimal price
+        -OffsetDateTime createdAt
+    }
+
+    class payments {
+        -Long paymentId
+        -Long bookingId
+        -BigDecimal amount
+        -String currency
+        -PaymentStatus status
+        -String provider
+        -String providerTxnId
+        -String referenceCode
+        -String qrUrl
+        -JsonNode rawPayload
+        -String failureReason
+        -OffsetDateTime paidAt
+        -OffsetDateTime createdAt
+        -OffsetDateTime updatedAt
+        +createSePayPayment(Long, Long) String
+        +processSePayWebhook(SePayWebhookDto) void
+    }
+
+    class users {
+        -Long userId
+        -String fullName
+        -String email
+        -String passwordHash
+        -String phoneNumber
+        -UserRole role
+        -OffsetDateTime createdAt
+        -OffsetDateTime updatedAt
+        +getAllUsers() List~UserResponse~
+        +getUserById(Long) UserResponse
+        +createUser(UserCreateRequest) UserResponse
+        +updateUser(Long, UserUpdateRequest) UserResponse
+        +updateProfile(Long, ProfileUpdateRequest) UserResponse
+        +deleteUser(Long) void
+        +register(RegisterRequest) UserSummary
+        +login(LoginRequest) AuthResponse
+        +refresh(String) AuthResponse
+    }
+
+    %% ---------------------------- Enumerations ----------------------------
+    class AgeRestriction {
+        <<enumeration>>
+        P
+        K
+        T13
+        T16
+        T18
+    }
+
+    class MovieStatus {
+        <<enumeration>>
+        UPCOMING
+        SHOWING
+        ENDED
+    }
+
+    class ShowtimeStatus {
+        <<enumeration>>
+        SCHEDULED
+        ONGOING
+        ENDED
+        CANCELLED
+    }
+
+    class SeatStatus {
+        <<enumeration>>
+        AVAILABLE
+        BOOKED
+        HOLDING
+    }
+
+    class RoomType {
+        <<enumeration>>
+        TWO_D
+        THREE_D
+        IMAX
+        FOUR_DX
+    }
+
+    class SeatType {
+        <<enumeration>>
+        NORMAL
+        VIP
+        COUPLE
+    }
+
+    class BookingStatus {
+        <<enumeration>>
+        PENDING
+        PAID
+        CANCELLED
+        EXPIRED
+    }
+
+    class PaymentMethod {
+        <<enumeration>>
+        CASH
+        BANK_TRANSFER
+    }
+
+    class PaymentStatus {
+        <<enumeration>>
+        PENDING
+        SUCCESS
+        FAILED
+    }
+
+    class UserRole {
+        <<enumeration>>
+        CUSTOMER
+        ADMIN
+    }
+
+    %% --------------------------- Relationships ----------------------------
+    movies "*" -- "*" genres : movie_genres
+    movies "1" --> "0..*" showtimes : movie
+    cinemas "1" --> "0..*" rooms : cinema
+    rooms "1" --> "0..*" seats : room
+    showtimes "1" --> "0..*" showtime_seats : showtime
+    bookings "1" *-- "0..*" booking_details : booking
+
+    %% Cross-service ID references (no DB foreign key)
+    rooms "1" ..> "0..*" showtimes : roomId (ref)
+    showtime_seats "0..*" ..> "1" seats : seatId (ref)
+    bookings "0..*" ..> "1" users : userId (ref)
+    bookings "0..*" ..> "1" showtimes : showtimeId (ref)
+    bookings "1" ..> "0..*" payments : bookingId (ref)
+    booking_details "0..*" ..> "1" seats : seatId (ref)
+    booking_details "0..*" ..> "1" showtime_seats : showtimeSeatId (ref)
+
+    %% Enum usages
+    movies ..> AgeRestriction
+    movies ..> MovieStatus
+    showtimes ..> ShowtimeStatus
+    showtime_seats ..> SeatStatus
+    rooms ..> RoomType
+    seats ..> SeatType
+    bookings ..> BookingStatus
+    bookings ..> PaymentMethod
+    payments ..> PaymentStatus
+    users ..> UserRole

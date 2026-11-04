@@ -10,7 +10,5 @@ package com.ttcsn.booking.entity.enums;
  */
 public enum PaymentMethod {
     CASH,
-    BANK_TRANSFER,
-    CARD,
-    E_WALLET
+    BANK_TRANSFER
 }

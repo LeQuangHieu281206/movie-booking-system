@@ -50,7 +50,7 @@ Sơ đồ thể hiện theo hàng và thứ tự seatNumber. API chưa cung cấ
 
 Các ID trên chỉ minh họa. Phải lấy ID thật từ API của cùng môi trường. Giới hạn 8 ghế là quy tắc UI, không phải kiểm soát bảo mật phía server.
 
-Enum paymentMethod: CASH, BANK_TRANSFER, CARD, E_WALLET.
+Enum paymentMethod: CASH, BANK_TRANSFER.
 Enum booking status: PENDING, PAID, CANCELLED, EXPIRED.
 Enum showtime status: SCHEDULED, ONGOING, ENDED, CANCELLED. UI chỉ cho đặt SCHEDULED trong tương lai.
 
