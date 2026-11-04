@@ -1044,7 +1044,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"showtimeId\": \"{{showtimeId}}\",\n  \"showtimeSeatIds\": {{seatIds}},\n  \"totalAmount\": 100000,\n  \"paymentMethod\": \"E_WALLET\"\n}",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"showtimeId\": \"{{showtimeId}}\",\n  \"showtimeSeatIds\": {{seatIds}},\n  \"totalAmount\": 100000,\n  \"paymentMethod\": \"BANK_TRANSFER\"\n}",
               "options": { "raw": { "language": "json" } }
             }
           },

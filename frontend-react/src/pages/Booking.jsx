@@ -256,8 +256,6 @@ export default function Booking({
                   >
                     <option value="BANK_TRANSFER">Chuyển khoản</option>
                     <option value="CASH">Tiền mặt</option>
-                    <option value="CARD">Thẻ</option>
-                    <option value="E_WALLET">Ví điện tử</option>
                   </select>
                 </label>
                 <div className="notice">
