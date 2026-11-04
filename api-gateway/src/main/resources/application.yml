@@ -37,7 +37,7 @@ spring:
             - id: booking-service
               uri: ${BOOKING_SERVICE_URL:http://127.0.0.1:8082}
               predicates:
-                - Path=/api/getBookings,/api/getBookingById,/api/getBookingsByUserId,/api/getBookingsByShowtimeId,/api/createBooking,/api/updateBooking,/api/deleteBooking
+                - Path=/api/getBookings,/api/getBookingById,/api/getBookingsByUserId,/api/getBookingsByShowtimeId,/api/getBookingStats,/api/createBooking,/api/updateBooking,/api/deleteBooking
 
             # ---------------- payment-service :8086 ----------------
             - id: payment-service

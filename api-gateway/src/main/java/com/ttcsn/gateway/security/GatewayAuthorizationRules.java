@@ -19,6 +19,7 @@ final class GatewayAuthorizationRules {
 
     enum Access {
         PUBLIC,
+        CUSTOMER,
         CUSTOMER_OR_ADMIN,
         ADMIN,
         INVALID
@@ -92,10 +93,12 @@ final class GatewayAuthorizationRules {
 
             // Booking / payment
             rule(HttpMethod.GET, "/api/getBookings", Access.ADMIN),
+            rule(HttpMethod.GET, "/api/getBookingStats", Access.ADMIN),
             rule(HttpMethod.GET, "/api/getBookingById", Access.CUSTOMER_OR_ADMIN),
             rule(HttpMethod.GET, "/api/getBookingsByUserId", Access.CUSTOMER_OR_ADMIN),
             rule(HttpMethod.GET, "/api/getBookingsByShowtimeId", Access.ADMIN),
-            rule(HttpMethod.POST, "/api/createBooking", Access.CUSTOMER_OR_ADMIN),
+            // Quản trị viên không đặt vé; chỉ tài khoản khách hàng được tạo booking.
+            rule(HttpMethod.POST, "/api/createBooking", Access.CUSTOMER),
             rule(HttpMethod.PUT, "/api/updateBooking", Access.CUSTOMER_OR_ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteBooking", Access.CUSTOMER_OR_ADMIN),
             rule(HttpMethod.POST, "/api/createPayment", Access.CUSTOMER_OR_ADMIN),
@@ -125,6 +128,7 @@ final class GatewayAuthorizationRules {
     static boolean allows(Access access, String role) {
         return switch (access) {
             case PUBLIC -> true;
+            case CUSTOMER -> "CUSTOMER".equals(role);
             case CUSTOMER_OR_ADMIN -> "CUSTOMER".equals(role) || "ADMIN".equals(role);
             case ADMIN -> "ADMIN".equals(role);
             case INVALID -> false;

@@ -34,6 +34,12 @@ export function createHttpClient(fetchImpl = globalThis.fetch) {
       try {
         data = text ? JSON.parse(text) : null;
       } catch {
+        // Một số API xoá trả text/plain thành công, không phải JSON.
+        if (
+          response.ok &&
+          response.headers.get("content-type")?.includes("text/plain")
+        )
+          return text;
         throw new Error(
           "Phản hồi không phải JSON. Kiểm tra Gateway và BACKEND_URL.",
         );
@@ -118,6 +124,16 @@ export function createLiveApi(request = createHttpClient()) {
     // Trả { qrUrl, message } của SePay; booking chỉ PAID sau khi webhook chuyển khoản về.
     createPayment: (bookingId) =>
       request("/createPayment", { method: "POST", body: { bookingId } }),
+    // CRUD quản trị: gateway chỉ cho ADMIN gọi các endpoint này.
+    admin: {
+      get: (path, options) => request(path, options),
+      list: (path, options) => list(path, options),
+      create: (path, body) => request(path, { method: "POST", body }),
+      update: (path, rowId, body) =>
+        request(`${path}?id=${id(rowId)}`, { method: "PUT", body }),
+      remove: (path, rowId) =>
+        request(`${path}?id=${id(rowId)}`, { method: "DELETE" }),
+    },
   };
 }
 

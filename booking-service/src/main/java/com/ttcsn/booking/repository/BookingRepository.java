@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -31,4 +32,25 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             WHERE b.bookingId = :bookingId AND b.status = com.ttcsn.booking.entity.enums.BookingStatus.PENDING
             """)
     int expireIfPending(@Param("bookingId") Long bookingId);
+
+    /** Tổng doanh thu của các booking đã thanh toán. */
+    @Query("""
+            SELECT COALESCE(SUM(b.totalAmount), 0) FROM Booking b
+            WHERE b.status = com.ttcsn.booking.entity.enums.BookingStatus.PAID
+            """)
+    BigDecimal sumPaidRevenue();
+
+    long countByStatus(BookingStatus status);
+
+    /** Doanh thu theo ngày (giờ Việt Nam) của các booking đã thanh toán. */
+    @Query(value = """
+            SELECT CAST(booking_time AT TIME ZONE 'Asia/Ho_Chi_Minh' AS date) AS day,
+                   COALESCE(SUM(total_amount), 0) AS revenue,
+                   COUNT(*) AS bookings
+            FROM bookings
+            WHERE status = 'PAID' AND booking_time >= :from
+            GROUP BY day
+            ORDER BY day
+            """, nativeQuery = true)
+    List<Object[]> sumPaidRevenueByDay(@Param("from") OffsetDateTime from);
 }

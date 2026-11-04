@@ -3,6 +3,7 @@ package com.ttcsn.booking.controller;
 import com.ttcsn.booking.dto.request.BookingCreateRequest;
 import com.ttcsn.booking.dto.request.BookingUpdateRequest;
 import com.ttcsn.booking.dto.response.BookingResponse;
+import com.ttcsn.booking.dto.response.BookingStatsResponse;
 import com.ttcsn.booking.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,12 @@ public class BookingController {
             @RequestParam Long showtimeId,
             @RequestHeader("X-User-Role") String role) {
         return ResponseEntity.ok(bookingService.getBookingsByShowtimeId(showtimeId, role));
+    }
+
+    @GetMapping("/getBookingStats")
+    public ResponseEntity<BookingStatsResponse> getBookingStats(
+            @RequestHeader("X-User-Role") String role) {
+        return ResponseEntity.ok(bookingService.getBookingStats(role));
     }
 
     @PostMapping("/createBooking")

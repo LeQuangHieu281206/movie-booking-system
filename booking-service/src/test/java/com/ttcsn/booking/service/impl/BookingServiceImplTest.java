@@ -305,6 +305,32 @@ class BookingServiceImplTest {
         verifyNoInteractions(showtimeClient);
     }
 
+    @Test
+    void statsFillSevenDaysAndIgnoreMissingDays() {
+        java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+        java.time.LocalDate yesterday = today.minusDays(1);
+        when(bookingRepository.sumPaidRevenueByDay(any()))
+                .thenReturn(List.<Object[]>of(new Object[]{
+                        java.sql.Date.valueOf(yesterday), new BigDecimal("250000"), 2L}));
+        when(bookingRepository.sumPaidRevenue()).thenReturn(new BigDecimal("250000"));
+        when(bookingRepository.countByStatus(BookingStatus.PAID)).thenReturn(2L);
+        when(bookingDetailRepository.countPaidSeats()).thenReturn(3L);
+
+        var stats = service.getBookingStats("ADMIN");
+
+        assertThat(stats.dailyRevenue()).hasSize(7);
+        assertThat(stats.dailyRevenue().get(5).date()).isEqualTo(yesterday.toString());
+        assertThat(stats.dailyRevenue().get(5).revenue()).isEqualByComparingTo("250000");
+        assertThat(stats.dailyRevenue().get(6).revenue()).isEqualByComparingTo("0");
+        assertThat(stats.ticketsSold()).isEqualTo(3);
+    }
+
+    @Test
+    void statsAreAdminOnly() {
+        assertThrows(ForbiddenException.class, () -> service.getBookingStats("CUSTOMER"));
+        verifyNoInteractions(bookingRepository);
+    }
+
     private static ShowtimeView showtime() {
         return new ShowtimeView(
                 10L, 1L, 2L, "R1", "2D", 3L, "C", "A", "H",

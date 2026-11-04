@@ -58,6 +58,62 @@ export function Icon({ name, size = 20, ...props }) {
         <path d="M6 13V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8M4 11v7h16v-7M6 21v-3m12 3v-3M4 14h16" />
       </>
     ),
+    dashboard: (
+      <>
+        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      </>
+    ),
+    chart: (
+      <>
+        <path d="M4 20V4M4 20h16" />
+        <path d="m7 15 4-4 3 3 5-6" />
+      </>
+    ),
+    plus: <path d="M12 5v14M5 12h14" />,
+    edit: (
+      <>
+        <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z" />
+        <path d="m14.5 5.5 3 3" />
+      </>
+    ),
+    trash: (
+      <>
+        <path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14" />
+        <path d="M10 11v6m4-6v6" />
+      </>
+    ),
+    film: (
+      <>
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="M7 4v16M17 4v16M3 9h4m10 0h4M3 15h4m10 0h4" />
+      </>
+    ),
+    tag: (
+      <>
+        <path d="M20 13 11 4H4v7l9 9a2 2 0 0 0 3 0l4-4a2 2 0 0 0 0-3Z" />
+        <circle cx="7.5" cy="7.5" r="1" />
+      </>
+    ),
+    calendar: (
+      <>
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M8 3v4m8-4v4M3 11h18" />
+      </>
+    ),
+    building: (
+      <>
+        <path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16M16 9h3a1 1 0 0 1 1 1v11M8 7h4M8 11h4M8 15h4M2 21h20" />
+      </>
+    ),
+    room: (
+      <>
+        <rect x="3" y="4" width="18" height="13" rx="2" />
+        <path d="M7 21h10M12 17v4" />
+      </>
+    ),
   };
   return (
     <svg
@@ -148,6 +204,7 @@ export function Modal({
   onClose,
   wide = false,
   busy = false,
+  className = "",
 }) {
   const ref = useRef(null),
     previous = useRef(null),
@@ -200,7 +257,7 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      className={`modal ${wide ? "wide" : ""} ${closing ? "is-closing" : ""}`}
+      className={`modal ${wide ? "wide" : ""} ${closing ? "is-closing" : ""} ${className}`}
       aria-labelledby={titleId}
       onKeyDown={trap}
       onClick={(event) => {
