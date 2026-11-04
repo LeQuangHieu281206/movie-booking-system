@@ -58,6 +58,19 @@ export default function Booking({
         </div>
       </Modal>
     );
+  if (user.role === "ADMIN")
+    return (
+      <Modal title="Không thể đặt vé" onClose={onClose}>
+        <Empty title="Tài khoản quản trị không đặt vé">
+          Vui lòng đăng xuất và dùng tài khoản khách hàng để đặt vé.
+        </Empty>
+        <div className="booking-actions">
+          <Button primary onClick={onClose}>
+            Đóng
+          </Button>
+        </div>
+      </Modal>
+    );
   function toggle(seat) {
     setError("");
     if (selected.includes(seat.seatId))

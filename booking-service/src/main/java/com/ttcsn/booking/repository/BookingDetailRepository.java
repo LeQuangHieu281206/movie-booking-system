@@ -2,6 +2,7 @@ package com.ttcsn.booking.repository;
 
 import com.ttcsn.booking.entity.BookingDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,4 +14,11 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetail, Lo
     List<BookingDetail> findBySeatId(Long seatId);
 
     List<BookingDetail> findByShowtimeSeatId(Long showtimeSeatId);
+
+    /** Số ghế đã bán, tính theo booking đã thanh toán. */
+    @Query("""
+            SELECT COUNT(bd) FROM BookingDetail bd
+            WHERE bd.booking.status = com.ttcsn.booking.entity.enums.BookingStatus.PAID
+            """)
+    long countPaidSeats();
 }

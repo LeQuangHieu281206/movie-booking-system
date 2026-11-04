@@ -7,6 +7,7 @@ import com.ttcsn.booking.client.VenueClient;
 import com.ttcsn.booking.dto.request.BookingCreateRequest;
 import com.ttcsn.booking.dto.request.BookingUpdateRequest;
 import com.ttcsn.booking.dto.response.BookingResponse;
+import com.ttcsn.booking.dto.response.BookingStatsResponse;
 import com.ttcsn.booking.entity.Booking;
 import com.ttcsn.booking.entity.BookingDetail;
 import com.ttcsn.booking.entity.enums.BookingStatus;
@@ -29,7 +30,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,6 +56,8 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingService {
 
     private static final String ADMIN = "ADMIN";
+    private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final int REVENUE_DAYS = 7;
 
     /**
      * Chuyển trạng thái được phép qua API.
@@ -100,6 +107,35 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository.findByShowtimeId(showtimeId).stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BookingStatsResponse getBookingStats(String role) {
+        requireAdmin(role);
+        LocalDate firstDay = LocalDate.now(VN_ZONE).minusDays(REVENUE_DAYS - 1L);
+        Map<LocalDate, BookingStatsResponse.DailyRevenue> byDay = new HashMap<>();
+        for (Object[] row : bookingRepository.sumPaidRevenueByDay(
+                firstDay.atStartOfDay(VN_ZONE).toOffsetDateTime())) {
+            LocalDate day = LocalDate.parse(row[0].toString());
+            byDay.put(day, new BookingStatsResponse.DailyRevenue(
+                    day.toString(),
+                    (BigDecimal) row[1],
+                    ((Number) row[2]).longValue()
+            ));
+        }
+        List<BookingStatsResponse.DailyRevenue> dailyRevenue = new ArrayList<>();
+        for (int i = 0; i < REVENUE_DAYS; i++) {
+            LocalDate day = firstDay.plusDays(i);
+            dailyRevenue.add(byDay.getOrDefault(day,
+                    new BookingStatsResponse.DailyRevenue(day.toString(), BigDecimal.ZERO, 0)));
+        }
+        return new BookingStatsResponse(
+                bookingRepository.sumPaidRevenue(),
+                bookingRepository.countByStatus(BookingStatus.PAID),
+                bookingDetailRepository.countPaidSeats(),
+                dailyRevenue
+        );
     }
 
     @Override

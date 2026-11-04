@@ -257,6 +257,28 @@ class GatewayJwtFilterTest {
     }
 
     @Test
+    void adminCannotCreateBooking() {
+        Result result = run(MockServerHttpRequest.post("/api/createBooking")
+                .header("Authorization", "Bearer " + accessToken("ADMIN"))
+                .build());
+
+        assertForbidden(result);
+    }
+
+    @Test
+    void bookingStatsAreAdminOnly() {
+        Result customer = run(MockServerHttpRequest.get("/api/getBookingStats")
+                .header("Authorization", "Bearer " + accessToken("CUSTOMER"))
+                .build());
+        Result admin = run(MockServerHttpRequest.get("/api/getBookingStats")
+                .header("Authorization", "Bearer " + accessToken("ADMIN"))
+                .build());
+
+        assertForbidden(customer);
+        assertNotNull(admin.forwarded());
+    }
+
+    @Test
     void customerCanReadOwnBookingThroughGateway() {
         Result result = run(MockServerHttpRequest.get("/api/getBookingById?id=1")
                 .header("Authorization", "Bearer " + accessToken("CUSTOMER"))

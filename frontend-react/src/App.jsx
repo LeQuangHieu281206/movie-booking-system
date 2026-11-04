@@ -8,6 +8,7 @@ import { Cinemas, Showtimes } from "./pages/Venues.jsx";
 import Booking from "./pages/Booking.jsx";
 import Tickets from "./pages/Tickets.jsx";
 import Auth from "./pages/Auth.jsx";
+import Admin from "./pages/Admin.jsx";
 
 const nav = [
   ["home", "Trang chủ"],
@@ -17,10 +18,13 @@ const nav = [
   ["tickets", "Vé của tôi"],
   ["auth", "Tài khoản"],
 ];
-const readRoute = () =>
-  nav.some(([key]) => key === location.hash.slice(1))
-    ? location.hash.slice(1)
+const adminLink = ["admin", "Quản trị"];
+const readRoute = () => {
+  const route = location.hash.slice(1);
+  return nav.some(([key]) => key === route) || route === adminLink[0]
+    ? route
     : "home";
+};
 const scrollBehavior = () =>
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
     ? "auto"
@@ -54,6 +58,11 @@ function Workspace() {
     [api],
   );
   const movies = catalog.data?.movies || [];
+  const isAdmin = user?.role === "ADMIN";
+  // Quản trị viên không đặt vé nên không có "Vé của tôi".
+  const links = isAdmin
+    ? [...nav.filter(([key]) => key !== "tickets"), adminLink]
+    : nav;
   useEffect(() => {
     const change = () => {
       setRoute(readRoute());
@@ -62,6 +71,9 @@ function Workspace() {
     window.addEventListener("hashchange", change);
     return () => window.removeEventListener("hashchange", change);
   }, []);
+  useEffect(() => {
+    if (isAdmin && route === "tickets") navigate("home");
+  }, [isAdmin, route]);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try {
@@ -144,7 +156,7 @@ function Workspace() {
             <Icon name="ticket" size={23} />
           </a>
           <nav aria-label="Điều hướng chính">
-            {nav.map(([key, label]) => (
+            {links.map(([key, label]) => (
               <a
                 key={key}
                 href={`#${key}`}
@@ -259,6 +271,14 @@ function Workspace() {
             revision={revision}
           />
         )}
+        {route === "admin" && (
+          <Admin
+            api={api}
+            user={user}
+            onLogin={() => navigate("auth")}
+            onHome={() => navigate("home")}
+          />
+        )}
       </main>
       <footer>
         <div className="container footer-inner">
@@ -272,7 +292,7 @@ function Workspace() {
           <div className="footer-links">
             <a href="#movies">Khám phá phim</a>
             <a href="#cinemas">Hệ thống rạp</a>
-            <a href="#tickets">Vé của tôi</a>
+            {!isAdmin && <a href="#tickets">Vé của tôi</a>}
           </div>
         </div>
         <div className="container footer-bottom">
