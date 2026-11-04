@@ -12,6 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
  
 import java.time.OffsetDateTime;
 /**
@@ -34,14 +36,15 @@ public class Seat {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
  
-    @Column(name = "seat_row", nullable = false)
+    @Column(name = "seat_row", nullable = false, columnDefinition = "text")
     private String seatRow;
  
     @Column(name = "seat_number", nullable = false)
     private Short seatNumber;
  
     @Enumerated(EnumType.STRING)
-    @Column(name = "seat_type", columnDefinition = "varchar(32)")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "seat_type", columnDefinition = "seat_type_enum")
     private SeatType seatType;
  
     @Column(name = "created_at", nullable = false, updatable = false)

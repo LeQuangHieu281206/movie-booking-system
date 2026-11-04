@@ -8,7 +8,9 @@ import com.ttcsn.movie.showtime.entity.enums.SeatStatus;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 /**
@@ -40,13 +42,14 @@ public class ShowtimeSeat {
     private Long seatId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "varchar(32)")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false, columnDefinition = "seat_status_enum")
     private SeatStatus status;
 
     @Column(name = "hold_until")
     private OffsetDateTime holdUntil;
 
-    @Column(name = "hold_by", length = 64)
+    @Column(name = "hold_by", columnDefinition = "text")
     private String holdBy;
 
     @UpdateTimestamp

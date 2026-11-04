@@ -9,6 +9,9 @@ import jakarta.persistence.*;
 import com.ttcsn.movie.entity.enums.AgeRestriction;
 import com.ttcsn.movie.entity.enums.MovieStatus;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -34,7 +37,7 @@ public class Movie {
     @Column(name = "movie_id")
     private Long movieId;
  
-    @Column(name = "title", nullable = false)
+    @Column(name = "title", nullable = false, columnDefinition = "text")
     private String title;
  
     @Column(name = "description", columnDefinition = "text")
@@ -43,27 +46,29 @@ public class Movie {
     @Column(name = "duration_minutes")
     private Short durationMinutes;
  
-    @Column(name = "language")
+    @Column(name = "language", columnDefinition = "text")
     private String language;
  
     @Column(name = "release_date")
     private LocalDate releaseDate;
  
-    @Column(name = "poster_url")
+    @Column(name = "poster_url", columnDefinition = "text")
     private String posterUrl;
  
-    @Column(name = "trailer_url")
+    @Column(name = "trailer_url", columnDefinition = "text")
     private String trailerUrl;
  
     @Enumerated(EnumType.STRING)
-    @Column(name = "age_restriction", columnDefinition = "varchar(32)")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "age_restriction", columnDefinition = "age_restriction_enum")
     private AgeRestriction ageRestriction;
  
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "varchar(32)")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "status", columnDefinition = "movie_status_enum")
     private MovieStatus status;
  
-    @Column(name = "director")
+    @Column(name = "director", columnDefinition = "text")
     private String director;
  
     @Column(name = "actors", columnDefinition = "text")

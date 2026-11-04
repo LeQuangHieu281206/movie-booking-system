@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Button, ErrorBox, Icon } from "../components/UI.jsx";
 
+const PHONE_PATTERN = "[0-9]{8,11}|[+]84[0-9]{9}";
+const PHONE_TITLE = "Số điện thoại gồm 8-11 chữ số hoặc +84 theo sau 9 chữ số";
+
 function roleLabel(role) {
   return role === "ADMIN" ? "Quản trị viên" : "Khách hàng";
 }
@@ -103,10 +106,12 @@ function ProfilePanel({ auth, api, user, onUser }) {
                 name="phoneNumber"
                 value={phoneNumber}
                 onChange={(event) => setPhoneNumber(event.target.value)}
-                maxLength={20}
+                maxLength={12}
+                pattern={PHONE_PATTERN}
+                title={PHONE_TITLE}
                 inputMode="tel"
                 autoComplete="tel"
-                placeholder="09xx xxx xxx"
+                placeholder="0912345678"
               />
             </label>
           </div>
@@ -256,8 +261,10 @@ export default function Auth({ auth, api, user, onUser, onDone }) {
                     <input
                       name="phoneNumber"
                       inputMode="tel"
-                      maxLength={20}
-                      placeholder="09xx xxx xxx"
+                      maxLength={12}
+                      pattern={PHONE_PATTERN}
+                      title={PHONE_TITLE}
+                      placeholder="0912345678"
                     />
                   </label>
                 </>
