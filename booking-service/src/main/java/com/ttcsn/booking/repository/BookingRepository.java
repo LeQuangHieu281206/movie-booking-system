@@ -16,7 +16,6 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByUserId(Long userId);        // SOA: thay findByUser_UserId (bỏ ManyToOne)
     List<Booking> findByShowtimeId(Long showtimeId); // SOA: thay findByShowtime_ShowtimeId
-    boolean existsByBookingCode(String bookingCode);
 
     /** Booking PENDING đã quá hạn chờ thanh toán — nguồn cho scheduler hết hạn. */
     List<Booking> findByStatusAndBookingTimeBefore(BookingStatus status, OffsetDateTime cutoff);

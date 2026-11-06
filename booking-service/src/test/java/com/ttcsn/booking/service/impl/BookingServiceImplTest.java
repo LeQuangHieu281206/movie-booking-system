@@ -14,11 +14,13 @@ import com.ttcsn.booking.entity.enums.PaymentMethod;
 import com.ttcsn.booking.exception.BookingNotFoundException;
 import com.ttcsn.booking.repository.BookingDetailRepository;
 import com.ttcsn.booking.repository.BookingRepository;
+import com.ttcsn.booking.service.BookingSeatReleaser;
 import com.ttcsn.common.dto.BookingPaymentView;
 import com.ttcsn.common.dto.RoomDto;
 import com.ttcsn.common.dto.SeatHoldResult;
 import com.ttcsn.common.dto.SeatIdsRequest;
 import com.ttcsn.common.dto.ShowtimeView;
+import com.ttcsn.common.exception.ConflictException;
 import com.ttcsn.common.exception.ForbiddenException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,6 +59,8 @@ class BookingServiceImplTest {
     private VenueClient venueClient;
     @Mock
     private ShowtimeClient showtimeClient;
+    @Mock
+    private BookingSeatReleaser seatReleaser;
 
     @InjectMocks
     private BookingServiceImpl service;
@@ -150,17 +154,13 @@ class BookingServiceImplTest {
     void customerCanCancelOwnPendingBookingAndSeatsAreReleased() {
         Booking booking = booking(1L, 1L, BookingStatus.PENDING);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(bookingDetailRepository.findByBooking_BookingId(1L))
-                .thenReturn(List.of(BookingDetail.builder().booking(Booking.builder().bookingId(1L).build()).seatId(100L).build()));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
 
         BookingResponse response = service.updateBooking(
                 1L, new BookingUpdateRequest(BookingStatus.CANCELLED), 1L, "CUSTOMER");
 
         assertEquals(BookingStatus.CANCELLED, response.status());
-        ArgumentCaptor<SeatIdsRequest> captor = ArgumentCaptor.forClass(SeatIdsRequest.class);
-        verify(showtimeClient).releaseSeats(captor.capture());
-        assertThat(captor.getValue().seatIds()).containsExactly(100L);
+        verify(seatReleaser).release(booking);
     }
 
     @Test
@@ -168,7 +168,7 @@ class BookingServiceImplTest {
         Booking booking = booking(1L, 1L, BookingStatus.PENDING);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
-        assertThrows(IllegalStateException.class, () -> service.updateBooking(
+        assertThrows(ConflictException.class, () -> service.updateBooking(
                 1L, new BookingUpdateRequest(BookingStatus.PAID), 1L, "CUSTOMER"));
 
         assertEquals(BookingStatus.PENDING, booking.getStatus());
@@ -204,12 +204,10 @@ class BookingServiceImplTest {
     void customerCanDeleteOwnPendingBookingAndSeatsAreReleased() {
         Booking booking = booking(1L, 1L, BookingStatus.PENDING);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(bookingDetailRepository.findByBooking_BookingId(1L))
-                .thenReturn(List.of(BookingDetail.builder().booking(Booking.builder().bookingId(1L).build()).seatId(100L).build()));
 
         service.deleteBooking(1L, 1L, "CUSTOMER");
 
-        verify(showtimeClient).releaseSeats(any(SeatIdsRequest.class));
+        verify(seatReleaser).release(booking);
         verify(bookingRepository).delete(booking);
     }
 
@@ -220,7 +218,7 @@ class BookingServiceImplTest {
 
         service.deleteBooking(1L, 1L, "ADMIN");
 
-        verify(showtimeClient, never()).releaseSeats(any(SeatIdsRequest.class));
+        verifyNoInteractions(seatReleaser);
         verify(bookingRepository).delete(booking);
     }
 
@@ -264,17 +262,11 @@ class BookingServiceImplTest {
                 org.mockito.ArgumentMatchers.eq(BookingStatus.PENDING), any(OffsetDateTime.class)))
                 .thenReturn(List.of(stale));
         when(bookingRepository.expireIfPending(1L)).thenReturn(1);
-        BookingDetail detail = BookingDetail.builder()
-                .booking(stale)
-                .seatId(77L)
-                .price(new BigDecimal("50000"))
-                .build();
-        when(bookingDetailRepository.findByBooking_BookingId(1L)).thenReturn(List.of(detail));
 
         int expired = service.expireStalePendingBookings();
 
         assertEquals(1, expired);
-        verify(showtimeClient).releaseSeats(new SeatIdsRequest(10L, List.of(77L), null));
+        verify(seatReleaser).release(stale);
     }
 
     @Test
@@ -290,8 +282,7 @@ class BookingServiceImplTest {
         int expired = service.expireStalePendingBookings();
 
         assertEquals(0, expired);
-        verify(bookingDetailRepository, never()).findByBooking_BookingId(1L);
-        verifyNoInteractions(showtimeClient);
+        verifyNoInteractions(seatReleaser);
     }
 
     @Test

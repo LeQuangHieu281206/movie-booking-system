@@ -23,8 +23,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     boolean existsByProviderAndProviderTxnId(String provider, String providerTxnId);
 
-    List<Payment> findByBookingIdOrderByPaymentIdDesc(Long bookingId);
-
     /**
      * Tạo hoặc cập nhật payment PENDING của booking trong một câu lệnh.
      * Unique index một phần uk_payments_one_pending_per_booking bảo đảm hai request

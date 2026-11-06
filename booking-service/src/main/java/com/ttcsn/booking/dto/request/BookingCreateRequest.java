@@ -1,6 +1,7 @@
 package com.ttcsn.booking.dto.request;
 
 import com.ttcsn.booking.entity.enums.PaymentMethod;
+import com.ttcsn.common.dto.SeatIds;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -20,4 +21,8 @@ public record BookingCreateRequest(
         @NotNull(message = "Phương thức thanh toán không được để trống")
         PaymentMethod paymentMethod
 ) {
+    /** Ghế đã bỏ null/trùng; rỗng thì 400 với thông điệp chung. */
+    public List<Long> normalizedSeatIds() {
+        return SeatIds.normalize(seatIds);
+    }
 }

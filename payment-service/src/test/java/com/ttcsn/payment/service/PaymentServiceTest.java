@@ -8,6 +8,7 @@ import com.ttcsn.common.exception.ConflictException;
 import com.ttcsn.common.exception.NotFoundException;
 import com.ttcsn.payment.client.BookingClient;
 import com.ttcsn.payment.config.RabbitMQConfig;
+import com.ttcsn.payment.config.SepayProperties;
 import com.ttcsn.payment.dto.request.SePayWebhookDto;
 import com.ttcsn.payment.entity.Payment;
 import com.ttcsn.payment.entity.PaymentStatus;
@@ -45,6 +46,8 @@ class PaymentServiceTest {
     private RabbitTemplate rabbitTemplate;
     @Mock
     private PaymentRepository paymentRepository;
+    @Mock
+    private SepayProperties sepayProperties;
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -53,6 +56,8 @@ class PaymentServiceTest {
 
     @BeforeEach
     void setUp() {
+        lenient().when(sepayProperties.accountNumber()).thenReturn("1234567890");
+        lenient().when(sepayProperties.bankName()).thenReturn("MBBank");
         lenient().when(paymentRepository.save(any(Payment.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
     }

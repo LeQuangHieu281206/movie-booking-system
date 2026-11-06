@@ -1,14 +1,18 @@
 package com.ttcsn.payment.controller;
 
+import com.ttcsn.payment.config.SepayProperties;
 import com.ttcsn.payment.dto.request.SePayWebhookDto;
 import com.ttcsn.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST Controller đóng vai trò Webhook Listener.
@@ -23,17 +27,16 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class SepayController {
 
-    private final PaymentService paymentService;
+    private static final String BEARER_PREFIX = "Bearer ";
 
-    @Value("${app.sepay.webhook-api-key:}")
-    private String webhookApiKey;
+    private final PaymentService paymentService;
+    private final SepayProperties sepayProperties;
 
     /**
      * Endpoint tiếp nhận POST request từ máy chủ SePay.
-     * Yêu cầu expose public trong môi trường phát triển (sử dụng Ngrok hoặc localtunnel).
+     * Lỗi xử lý để ApiExceptionHandler trả JSON lỗi chuẩn, không lộ chi tiết nội bộ.
      */
     @PostMapping("/sepayWebhook")
     public ResponseEntity<String> sepayWebhook(
@@ -46,15 +49,12 @@ public class SepayController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("API key không hợp lệ");
         }
 
-        try {
-            paymentService.processSePayWebhook(request);
-            return ResponseEntity.ok("Xử lý Webhook SePay thành công");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Lỗi xử lý hệ thống Webhook: " + e.getMessage());
-        }
+        paymentService.processSePayWebhook(request);
+        return ResponseEntity.ok("Xử lý Webhook SePay thành công");
     }
 
     private boolean isAuthorizedCaller(String authorization, String secretKey) {
+        String webhookApiKey = sepayProperties.webhookApiKey();
         if (!StringUtils.hasText(webhookApiKey)) {
             log.warn("[payment-service] CHƯA cấu hình app.sepay.webhook-api-key — webhook đang mở cho mọi nguồn gọi (chỉ dùng khi dev)");
             return true;
@@ -63,7 +63,7 @@ public class SepayController {
             return true;
         }
         return StringUtils.hasText(authorization)
-                && authorization.startsWith("Bearer ")
-                && webhookApiKey.equals(authorization.substring("Bearer ".length()));
+                && authorization.startsWith(BEARER_PREFIX)
+                && webhookApiKey.equals(authorization.substring(BEARER_PREFIX.length()));
     }
 }

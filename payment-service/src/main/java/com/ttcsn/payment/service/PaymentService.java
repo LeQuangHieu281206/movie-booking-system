@@ -8,6 +8,7 @@ import com.ttcsn.common.exception.ConflictException;
 import com.ttcsn.common.exception.NotFoundException;
 import com.ttcsn.payment.client.BookingClient;
 import com.ttcsn.payment.config.RabbitMQConfig;
+import com.ttcsn.payment.config.SepayProperties;
 import com.ttcsn.payment.dto.request.SePayWebhookDto;
 import com.ttcsn.payment.entity.Payment;
 import com.ttcsn.payment.entity.PaymentStatus;
@@ -24,6 +25,8 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Service xử lý nghiệp vụ thanh toán tích hợp cổng SePay (mô hình SOA).
@@ -45,15 +48,15 @@ import java.util.UUID;
 public class PaymentService {
 
     private static final String PROVIDER_SEPAY = "SEPAY";
-    private static final String CURRENCY_VND = "VND";
-    private static final String BANK_NAME = "MBBank";
-    private static final String ACCOUNT_NUMBER = "1234567890";
     private static final String BOOKING_PREFIX = "DH";
+    private static final Pattern BOOKING_REFERENCE =
+            Pattern.compile(Pattern.quote(BOOKING_PREFIX) + "(\\d+)");
 
     private final BookingClient bookingClient;
     private final RabbitTemplate rabbitTemplate;
     private final PaymentRepository paymentRepository;
     private final ObjectMapper objectMapper;
+    private final SepayProperties sepayProperties;
 
     /**
      * Xác thực booking, ghi nhận payment PENDING rồi sinh URL ảnh VietQR.
@@ -69,9 +72,10 @@ public class PaymentService {
 
         BookingPaymentView booking = loadOwnedPendingBooking(bookingId, userId);
         BigDecimal amount = booking.totalAmount();
-        String referenceCode = BOOKING_PREFIX + bookingId;
+        String referenceCode = referenceCode(bookingId);
         String qrUrl = String.format("https://qr.sepay.vn/img?acc=%s&bank=%s&amount=%s&des=%s",
-                ACCOUNT_NUMBER, BANK_NAME, amount.toPlainString(), referenceCode);
+                sepayProperties.accountNumber(), sepayProperties.bankName(),
+                amount.toPlainString(), referenceCode);
 
         paymentRepository.upsertPendingPayment(bookingId, amount, referenceCode, qrUrl);
         Long paymentId = paymentRepository
@@ -102,7 +106,7 @@ public class PaymentService {
             return;
         }
 
-        Long bookingId = extractBookingIdFromContent(content.toUpperCase(), BOOKING_PREFIX);
+        Long bookingId = extractBookingId(content.toUpperCase());
         if (bookingId == null) {
             log.warn("[payment-service] Không tìm thấy mã đối soát (prefix {}) trong nội dung: {}",
                     BOOKING_PREFIX, content);
@@ -130,12 +134,6 @@ public class PaymentService {
                     "Không đọc được booking " + bookingId + " để đối soát thanh toán", ex);
         }
 
-        if (booking == null) {
-            log.warn("[payment-service] Bỏ qua webhook vì booking {} không tồn tại, providerTxnId={}",
-                    bookingId, providerTxnId);
-            return;
-        }
-
         if (!"PENDING".equalsIgnoreCase(booking.status())) {
             recordFailed(bookingId, request, providerTxnId,
                     "Booking đang ở trạng thái " + booking.status() + ", không nhận thanh toán");
@@ -151,8 +149,8 @@ public class PaymentService {
             return;
         }
 
-        String referenceCode = BOOKING_PREFIX + bookingId;
-        String rawPayload = objectMapper.valueToTree(request).toString();
+        String referenceCode = referenceCode(bookingId);
+        String rawPayload = rawPayload(request);
         OffsetDateTime paidAt = OffsetDateTime.now();
         Long savedPaymentId;
 
@@ -200,8 +198,8 @@ public class PaymentService {
                 bookingId,
                 request.getTransferAmount() == null ? BigDecimal.ZERO : request.getTransferAmount(),
                 providerTxnId,
-                BOOKING_PREFIX + bookingId,
-                objectMapper.valueToTree(request).toString(),
+                referenceCode(bookingId),
+                rawPayload(request),
                 reason);
         if (inserted > 0) {
             log.warn("[payment-service] Ghi nhận payment FAILED cho bookingId={}, lý do: {}", bookingId, reason);
@@ -234,26 +232,24 @@ public class PaymentService {
         return booking;
     }
 
-    private Long extractBookingIdFromContent(String content, String prefix) {
-        try {
-            if (content.contains(prefix)) {
-                int startIndex = content.indexOf(prefix) + prefix.length();
-                StringBuilder idStr = new StringBuilder();
-                for (int i = startIndex; i < content.length(); i++) {
-                    char c = content.charAt(i);
-                    if (Character.isDigit(c)) {
-                        idStr.append(c);
-                    } else {
-                        break;
-                    }
-                }
-                if (!idStr.isEmpty()) {
-                    return Long.parseLong(idStr.toString());
-                }
-            }
-        } catch (Exception e) {
-            log.error("[payment-service] Lỗi trích xuất Booking ID từ nội dung Webhook: {}", content, e);
+    private String referenceCode(Long bookingId) {
+        return BOOKING_PREFIX + bookingId;
+    }
+
+    private String rawPayload(SePayWebhookDto request) {
+        return objectMapper.valueToTree(request).toString();
+    }
+
+    private Long extractBookingId(String content) {
+        Matcher matcher = BOOKING_REFERENCE.matcher(content);
+        if (!matcher.find()) {
+            return null;
         }
-        return null;
+        try {
+            return Long.parseLong(matcher.group(1));
+        } catch (NumberFormatException ex) {
+            log.error("[payment-service] Mã booking trong nội dung webhook không phải số hợp lệ: {}", content);
+            return null;
+        }
     }
 }

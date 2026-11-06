@@ -1,6 +1,16 @@
 import React, { useRef, useState } from "react";
 import { useLoad } from "../lib/useLoad.js";
-import { bookingPayload, money, time, date } from "../lib/domain.js";
+import {
+  DEFAULT_PAYMENT_METHOD,
+  MAX_SEATS_PER_BOOKING,
+  PAYMENT_METHODS,
+  date,
+  isAdmin,
+  labelOf,
+  money,
+  time,
+} from "../lib/domain.js";
+import { assertCreatedBooking, prepareBooking } from "../booking/flow.js";
 import {
   Button,
   Empty,
@@ -31,15 +41,16 @@ export default function Booking({
   );
   const [selected, setSelected] = useState([]),
     [step, setStep] = useState(1),
-    [method, setMethod] = useState("BANK_TRANSFER");
+    [method, setMethod] = useState(DEFAULT_PAYMENT_METHOD);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [booking, setBooking] = useState(null),
     [uncertain, setUncertain] = useState(false),
     [agreed, setAgreed] = useState(false);
   const [freshSeats, setFreshSeats] = useState(null);
+  const [freshShow, setFreshShow] = useState(null);
   const submitting = useRef(false);
-  const show = result.data?.show,
+  const show = freshShow || result.data?.show,
     seats = freshSeats || result.data?.seats || [];
   const chosen = selected
     .map((id) => seats.find((seat) => seat.seatId === id))
@@ -58,7 +69,7 @@ export default function Booking({
         </div>
       </Modal>
     );
-  if (user.role === "ADMIN")
+  if (isAdmin(user.role))
     return (
       <Modal title="Không thể đặt vé" onClose={onClose}>
         <Empty title="Tài khoản quản trị không đặt vé">
@@ -75,13 +86,14 @@ export default function Booking({
     setError("");
     if (selected.includes(seat.seatId))
       setSelected(selected.filter((id) => id !== seat.seatId));
-    else if (selected.length >= 8)
-      setError("Bạn có thể chọn tối đa 8 ghế cho mỗi lần đặt.");
+    else if (selected.length >= MAX_SEATS_PER_BOOKING)
+      setError(`Bạn có thể chọn tối đa ${MAX_SEATS_PER_BOOKING} ghế cho mỗi lần đặt.`);
     else setSelected([...selected, seat.seatId]);
   }
   function reloadSeats() {
     setSelected([]);
     setFreshSeats(null);
+    setFreshShow(null);
     setError("");
     result.reload();
   }
@@ -92,20 +104,28 @@ export default function Booking({
     setError("");
     let posted = false;
     try {
-      const latestShow = await api.showtime(showtimeId);
-      const latestSeats = await api.seats(latestShow);
-      setFreshSeats(latestSeats);
-      const payload = bookingPayload(latestShow, latestSeats, selected, method);
-      if (Number(latestShow.basePrice) !== Number(show.basePrice))
-        throw new Error(
-          "Giá vé đã thay đổi. Hãy đóng cửa sổ và chọn lại suất chiếu để xác nhận giá mới.",
-        );
       if (!agreed)
         throw new Error(
           "Vui lòng kiểm tra thông tin và xác nhận trước khi đặt.",
         );
+      const prepared = await prepareBooking(api, {
+        show,
+        seats,
+        ids: selected,
+        paymentMethod: method,
+      });
+      setFreshShow(prepared.inventory.show);
+      setFreshSeats(prepared.inventory.seats);
+      setSelected(prepared.ids);
+      if (!prepared.payload) {
+        setError(prepared.message);
+        return;
+      }
       posted = true;
-      const saved = await api.createBooking(payload);
+      const saved = assertCreatedBooking(
+        await api.createBooking(prepared.payload),
+        { ...prepared.payload, userId: user.userId },
+      );
       setBooking(saved);
       setStep(3);
     } catch (error) {
@@ -162,8 +182,8 @@ export default function Booking({
                   </Button>
                 </div>
                 <p className="hint">
-                  Ghế được xác nhận khi backend tạo booking. Tối đa 8 ghế mỗi
-                  lần đặt.
+                  Ghế được xác nhận khi backend tạo booking. Tối đa{" "}
+                  {MAX_SEATS_PER_BOOKING} ghế mỗi lần đặt.
                 </p>
                 {!seats.length ? (
                   <Empty title="Suất chiếu chưa có ghế">
@@ -254,8 +274,11 @@ export default function Booking({
                     disabled={busy}
                     onChange={(event) => setMethod(event.target.value)}
                   >
-                    <option value="BANK_TRANSFER">Chuyển khoản</option>
-                    <option value="CASH">Tiền mặt</option>
+                    {PAYMENT_METHODS.map((value) => (
+                      <option key={value} value={value}>
+                        {labelOf(value)}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <div className="notice">

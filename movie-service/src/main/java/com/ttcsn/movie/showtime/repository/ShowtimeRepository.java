@@ -19,12 +19,8 @@ import java.util.List;
  */
 @Repository
 public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
-    List<Showtime> findByMovie_MovieId(Long movieId);
-
     @Query("SELECT s FROM Showtime s JOIN FETCH s.movie WHERE s.movie.movieId = :movieId")
     List<Showtime> findAllWithMovieByMovieId(@Param("movieId") Long movieId);
-
-    List<Showtime> findByRoomId(Long roomId);
 
     @Query("SELECT COUNT(s) > 0 FROM Showtime s WHERE s.roomId = :roomId " +
            "AND (:showtimeId IS NULL OR s.showtimeId <> :showtimeId) " +

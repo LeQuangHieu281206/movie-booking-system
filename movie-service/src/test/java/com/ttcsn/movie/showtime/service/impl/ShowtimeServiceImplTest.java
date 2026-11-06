@@ -74,7 +74,7 @@ class ShowtimeServiceImplTest {
         when(showtimeSeatRepository.findByShowtime_ShowtimeIdAndSeatId(10L, 100L))
                 .thenReturn(Optional.of(heldBy("2")));
 
-        assertThrows(IllegalStateException.class,
+        assertThrows(com.ttcsn.common.exception.ConflictException.class,
                 () -> service.releaseShowtimeSeat(10L, 100L, 1L, false));
 
         verify(em, never()).createNativeQuery(anyString());

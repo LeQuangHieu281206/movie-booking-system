@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLoad } from "../lib/useLoad.js";
 import { date, money, statusText, time } from "../lib/domain.js";
+import { filterTickets } from "../booking/flow.js";
 import { Button, Empty, ErrorBox, Icon, Loading } from "../components/UI.jsx";
 import PaymentPanel from "../components/PaymentPanel.jsx";
 
@@ -72,9 +73,7 @@ function TicketList({ api, user, movies, revision }) {
       </div>
       {showsError && <p className="hint">{showsError}</p>}
       <div className="tickets-list">
-        {[...result.data]
-          .sort((a, b) => new Date(b.bookingTime) - new Date(a.bookingTime))
-          .map((original) => {
+        {filterTickets(result.data).map((original) => {
             const booking = updates[original.bookingId] || original;
             const show = shows[booking.showtimeId],
               movie = movies.find((movie) => movie.movieId === show?.movieId);

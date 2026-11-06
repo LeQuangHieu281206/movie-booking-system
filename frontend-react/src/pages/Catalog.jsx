@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { filterMovies, youtubeEmbed } from "../lib/domain.js";
+import { filterMovies, labelOf, youtubeEmbed } from "../lib/domain.js";
 import {
   Button,
   Empty,
@@ -43,11 +43,7 @@ export function MovieGrid({ movies, onMovie }) {
             <span
               className={`status-dot ${movie.status === "UPCOMING" ? "upcoming" : ""}`}
             >
-              {movie.status === "UPCOMING"
-                ? "Sắp chiếu"
-                : movie.status === "ENDED"
-                  ? "Đã kết thúc"
-                  : "Đang chiếu"}
+              {labelOf(movie.status)}
             </span>
             <button className="text-button" onClick={() => onMovie(movie)}>
               {movie.status === "SHOWING" ? "Đặt vé" : "Chi tiết"}

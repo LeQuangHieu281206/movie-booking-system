@@ -11,10 +11,6 @@ import java.util.List;
 public interface BookingDetailRepository extends JpaRepository<BookingDetail, Long> {
     List<BookingDetail> findByBooking_BookingId(Long bookingId);
 
-    List<BookingDetail> findBySeatId(Long seatId);
-
-    List<BookingDetail> findByShowtimeSeatId(Long showtimeSeatId);
-
     /** Số ghế đã bán, tính theo booking đã thanh toán. */
     @Query("""
             SELECT COUNT(bd) FROM BookingDetail bd

@@ -72,7 +72,6 @@ public class CinemaServiceImpl implements CinemaService {
         cinema.setAddress(request.address());
         cinema.setCity(request.city());
         cinema.setPhoneNumber(request.phoneNumber());
-        cinema.setUpdatedAt(java.time.OffsetDateTime.now());
         return toResponse(cinemaRepository.save(cinema));
     }
 

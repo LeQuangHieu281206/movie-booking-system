@@ -56,12 +56,6 @@ public class ApiExceptionHandler {
         return ErrorResponseFactory.build(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
-    /** Tranh chấp ghế (giữ chỗ bởi khách khác, ghế đã chốt, ghế đã bắt đầu chiếu...). */
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ErrorResponse> handleSeatConflict(IllegalStateException ex, HttpServletRequest request) {
-        return ErrorResponseFactory.build(HttpStatus.CONFLICT, ex.getMessage(), request);
-    }
-
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
         return ErrorResponseFactory.build(HttpStatus.CONFLICT, "Dữ liệu vi phạm ràng buộc, vui lòng kiểm tra lại", request);

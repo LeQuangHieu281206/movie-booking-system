@@ -15,6 +15,7 @@ import com.ttcsn.booking.exception.BookingNotFoundException;
 import com.ttcsn.booking.exception.SeatAlreadyBookedException;
 import com.ttcsn.booking.repository.BookingDetailRepository;
 import com.ttcsn.booking.repository.BookingRepository;
+import com.ttcsn.booking.service.BookingSeatReleaser;
 import com.ttcsn.booking.service.BookingService;
 import com.ttcsn.common.dto.BookingPaymentView;
 import com.ttcsn.common.dto.SeatHoldResult;
@@ -23,6 +24,7 @@ import com.ttcsn.common.dto.ShowtimeView;
 import com.ttcsn.common.exception.ConflictException;
 import com.ttcsn.common.exception.ForbiddenException;
 import com.ttcsn.common.exception.NotFoundException;
+import com.ttcsn.common.security.Roles;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,7 +57,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
-    private static final String ADMIN = "ADMIN";
     private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
     private static final int REVENUE_DAYS = 7;
 
@@ -73,6 +74,7 @@ public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final BookingDetailRepository bookingDetailRepository;
+    private final BookingSeatReleaser seatReleaser;
     private final UserClient userClient;
     private final MovieClient movieClient;    // SOA: đọc thông tin Phim/Suất chiếu (sync)
     private final VenueClient venueClient;    // SOA: kiểm tra phòng chiếu (sync)
@@ -93,7 +95,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<BookingResponse> getBookingsByUserId(Long requestedUserId, Long currentUserId, String role) {
-        Long targetUserId = ADMIN.equals(role) && requestedUserId != null
+        Long targetUserId = Roles.isAdmin(role) && requestedUserId != null
                 ? requestedUserId
                 : currentUserId;
         return bookingRepository.findByUserId(targetUserId).stream()
@@ -153,9 +155,6 @@ public class BookingServiceImpl implements BookingService {
         } catch (feign.FeignException.NotFound ex) {
             throw new NotFoundException("Không tìm thấy suất chiếu với showtimeId = " + request.showtimeId());
         }
-        if (showtime == null) {
-            throw new NotFoundException("Không tìm thấy suất chiếu với showtimeId = " + request.showtimeId());
-        }
 
         // 3. Kiểm tra phòng chiếu còn hợp lệ (venue-service)
         if (showtime.roomId() != null && venueClient.getRoom(showtime.roomId()) == null) {
@@ -163,16 +162,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // 4. Tính tiền ở server; client không gửi userId/totalAmount/holdBy.
-        if (request.seatIds() == null) {
-            throw new IllegalArgumentException("Danh sách ghế đặt không được để trống");
-        }
-        List<Long> seatIds = request.seatIds().stream()
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
-        if (seatIds.isEmpty()) {
-            throw new IllegalArgumentException("Danh sách ghế đặt không được để trống");
-        }
+        List<Long> seatIds = request.normalizedSeatIds();
         BigDecimal basePrice = showtime.basePrice();
         if (basePrice == null || basePrice.signum() <= 0) {
             throw new ConflictException("Suất chiếu chưa có giá vé hợp lệ");
@@ -239,39 +229,26 @@ public class BookingServiceImpl implements BookingService {
         }
         // PAID chỉ do payment listener đặt, không nhận từ API (kể cả ADMIN).
         if (target == BookingStatus.PAID) {
-            throw new IllegalStateException("PAID chỉ được đặt bởi payment listener");
+            throw new ConflictException("PAID chỉ được đặt bởi payment listener");
         }
         if (target == booking.getStatus()) {
             return convertToResponse(booking);
         }
         if (!API_TRANSITIONS.getOrDefault(booking.getStatus(), Set.of()).contains(target)) {
-            throw new IllegalStateException(
+            throw new ConflictException(
                     "Không thể chuyển booking từ " + booking.getStatus() + " sang " + target);
         }
-        if (!ADMIN.equals(role) && target != BookingStatus.CANCELLED) {
+        if (!Roles.isAdmin(role) && target != BookingStatus.CANCELLED) {
             throw new ForbiddenException("Bạn không có quyền thực hiện thao tác này");
         }
 
         booking.setStatus(target);
         if (target == BookingStatus.CANCELLED || target == BookingStatus.EXPIRED) {
-            releaseBookingSeats(id, booking.getShowtimeId());
+            seatReleaser.release(booking);
         }
 
         Booking updatedBooking = bookingRepository.save(booking);
         return convertToResponse(updatedBooking);
-    }
-
-    private void releaseBookingSeats(Long bookingId, Long showtimeId) {
-        List<Long> seatIds = bookingDetailRepository.findByBooking_BookingId(bookingId).stream()
-                .map(BookingDetail::getSeatId)
-                .toList();
-        try {
-            showtimeClient.releaseSeats(new SeatIdsRequest(showtimeId, seatIds, null));
-            log.info("[booking-service] Đã trả ghế về AVAILABLE cho booking {} (bù trừ)", bookingId);
-        } catch (RuntimeException ex) {
-            log.error("[booking-service] KHÔNG trả được ghế về AVAILABLE cho booking {}: {}",
-                    bookingId, ex.getMessage());
-        }
     }
 
     /**
@@ -299,7 +276,7 @@ public class BookingServiceImpl implements BookingService {
                         booking.getBookingId());
                 continue;
             }
-            releaseBookingSeats(booking.getBookingId(), booking.getShowtimeId());
+            seatReleaser.release(booking);
             expired++;
             log.info("[booking-service] Booking #{} quá hạn {} phút chưa thanh toán -> EXPIRED (đã nhả ghế)",
                     booking.getBookingId(), pendingExpiryMinutes);
@@ -314,7 +291,7 @@ public class BookingServiceImpl implements BookingService {
         // Chỉ booking PENDING còn giữ ghế BOOKED; PAID/CANCELLED/EXPIRED không được trả ghế
         // để tránh giải phóng nhầm ghế đã bán hoặc đã được người khác đặt lại.
         if (booking.getStatus() == BookingStatus.PENDING) {
-            releaseBookingSeats(id, booking.getShowtimeId());
+            seatReleaser.release(booking);
         }
         bookingRepository.delete(booking);
     }
@@ -334,7 +311,7 @@ public class BookingServiceImpl implements BookingService {
     private Booking findOwnedBooking(Long id, Long userId, String role) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new BookingNotFoundException(id));
-        if (!ADMIN.equals(role) && !Objects.equals(booking.getUserId(), userId)) {
+        if (!Roles.isAdmin(role) && !Objects.equals(booking.getUserId(), userId)) {
             // 404 để không lộ booking của người khác có tồn tại hay không.
             throw new BookingNotFoundException(id);
         }
@@ -342,7 +319,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private static void requireAdmin(String role) {
-        if (!ADMIN.equals(role)) {
+        if (!Roles.isAdmin(role)) {
             throw new ForbiddenException("Bạn không có quyền thực hiện thao tác này");
         }
     }

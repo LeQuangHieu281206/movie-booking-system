@@ -1,6 +1,8 @@
 // Quy tắc thuần cho Rạp / Lịch chiếu (Frontend 3).
 // Tách khỏi component để kiểm thử bằng `npm test` mà không cần trình duyệt.
-import { dayKey, isBookable } from "./domain.js";
+import { dayKey, isBookable, sameId } from "./domain.js";
+
+export { sameId };
 
 const TZ = "Asia/Ho_Chi_Minh";
 const weekdayFormat = new Intl.DateTimeFormat("vi-VN", {
@@ -14,12 +16,7 @@ const longDayFormat = new Intl.DateTimeFormat("vi-VN", {
   month: "2-digit",
 });
 
-// ID từ API có thể là number hoặc string; so sánh luôn qua String để không tráo ID.
-export const sameId = (a, b) =>
-  a !== undefined && a !== null && b !== undefined && b !== null
-    ? String(a) === String(b)
-    : false;
-
+// ID từ API có thể là number hoặc string; sameId dùng chung từ domain.js.
 export const weekdayLabel = (value) => weekdayFormat.format(new Date(value));
 export const longDayLabel = (value) => longDayFormat.format(new Date(value));
 
