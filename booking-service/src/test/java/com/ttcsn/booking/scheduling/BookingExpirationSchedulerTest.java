@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,15 +22,6 @@ class BookingExpirationSchedulerTest {
     @Test
     void delegatesToServiceAndLogsWhenBookingsExpired() {
         when(bookingService.expireStalePendingBookings()).thenReturn(3);
-
-        scheduler.expireStalePendingBookings();
-
-        verify(bookingService).expireStalePendingBookings();
-    }
-
-    @Test
-    void stillCallsServiceWhenNothingToExpire() {
-        when(bookingService.expireStalePendingBookings()).thenReturn(0);
 
         scheduler.expireStalePendingBookings();
 

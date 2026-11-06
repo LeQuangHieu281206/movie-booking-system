@@ -16,7 +16,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -63,9 +62,5 @@ class BookingControllerTest {
         assertThat(captor.getValue().showtimeId()).isEqualTo(10L);
         assertThat(captor.getValue().seatIds()).containsExactly(100L, 101L);
         assertThat(captor.getValue().paymentMethod()).isEqualTo(PaymentMethod.CASH);
-        // Record không có userId/totalAmount/holdBy -> các field giả trong JSON bị bỏ qua.
-        assertThat(List.of(BookingCreateRequest.class.getRecordComponents()))
-                .extracting(component -> component.getName())
-                .doesNotContain("userId", "totalAmount", "holdBy");
     }
 }

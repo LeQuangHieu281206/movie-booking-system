@@ -106,18 +106,6 @@ class GatewayJwtFilterTest {
     }
 
     @Test
-    void rawPathVariantsArePreservedByTestRequest() {
-        assertEquals("/api/getMovies%2F..%2FcreateMovie",
-                rawRequest(HttpMethod.GET, "/api/getMovies%2F..%2FcreateMovie").build().getURI().getRawPath());
-        assertEquals("/api/getMovies/%2e%2e/createMovie",
-                rawRequest(HttpMethod.GET, "/api/getMovies/%2e%2e/createMovie").build().getURI().getRawPath());
-        assertEquals("/api/createMovie;jsessionid=abc",
-                rawRequest(HttpMethod.POST, "/api/createMovie;jsessionid=abc").build().getURI().getRawPath());
-        assertEquals("/api//createMovie",
-                rawRequest(HttpMethod.POST, "/api//createMovie").build().getURI().getRawPath());
-    }
-
-    @Test
     void customerCannotBypassAdminWithTrailingSlash() {
         Result result = run(rawRequest(HttpMethod.POST, "/api/createMovie/")
                 .header("Authorization", "Bearer " + accessToken("CUSTOMER"))

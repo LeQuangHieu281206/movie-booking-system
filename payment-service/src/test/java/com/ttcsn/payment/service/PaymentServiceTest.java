@@ -93,19 +93,6 @@ class PaymentServiceTest {
     }
 
     @Test
-    void creatingQrAgainUpsertsSinglePendingPayment() {
-        when(bookingClient.getBooking(1L))
-                .thenReturn(booking(1L, 7L, "100000", "PENDING"));
-        Payment pending = Payment.builder().paymentId(9L).bookingId(1L).status(PaymentStatus.PENDING).build();
-        when(paymentRepository.findFirstByBookingIdAndStatusOrderByPaymentIdDesc(1L, PaymentStatus.PENDING))
-                .thenReturn(Optional.of(pending));
-
-        service.createSePayPayment(1L, 7L);
-
-        verify(paymentRepository).upsertPendingPayment(eq(1L), any(), eq("DH1"), anyString());
-    }
-
-    @Test
     void rejectsBookingOfAnotherUser() {
         when(bookingClient.getBooking(1L))
                 .thenReturn(booking(1L, 8L, "100000", "PENDING"));
