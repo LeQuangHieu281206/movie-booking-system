@@ -1,7 +1,12 @@
-import { bookingPayload, isBookable } from "../lib/domain.js";
+import {
+  bookingPayload,
+  isBookable,
+  normalizeText,
+  sameId,
+} from "../lib/domain.js";
 
-export const sameId = (a, b) =>
-  a != null && b != null && String(a) === String(b);
+export { sameId };
+
 export function reconcileSeats(ids, seats, showtimeId) {
   const available = new Set(
     seats
@@ -91,14 +96,12 @@ export async function prepareBooking(
   };
 }
 
-export function assertBooking(value, expected) {
+const BOOKING_STATUSES = ["PENDING", "PAID", "CANCELLED", "EXPIRED"];
+
+function assertBookingShape(value) {
   if (
     !value ||
-    !sameId(value.bookingId, expected.bookingId) ||
-    !sameId(value.userId, expected.userId) ||
-    !sameId(value.showtimeId, expected.showtimeId) ||
-    value.bookingCode !== expected.bookingCode ||
-    !["PENDING", "PAID", "CANCELLED", "EXPIRED"].includes(value.status) ||
+    !BOOKING_STATUSES.includes(value.status) ||
     !Number.isFinite(Number(value.totalAmount)) ||
     Number(value.totalAmount) <= 0
   ) {
@@ -106,20 +109,41 @@ export function assertBooking(value, expected) {
       "Thông tin booking trả về không khớp. Đã dừng thao tác để tránh tác động nhầm vé.",
     );
   }
+}
+
+/** expected chỉ kiểm tra các trường được truyền (undefined = bỏ qua). */
+const differs = (actual, expected) =>
+  expected !== undefined && expected !== null && !sameId(actual, expected);
+
+export function assertBooking(value, expected) {
+  assertBookingShape(value);
+  if (
+    differs(value.bookingId, expected.bookingId) ||
+    differs(value.userId, expected.userId) ||
+    differs(value.showtimeId, expected.showtimeId) ||
+    (expected.bookingCode !== undefined &&
+      value.bookingCode !== expected.bookingCode)
+  ) {
+    throw new Error(
+      "Thông tin booking trả về không khớp. Đã dừng thao tác để tránh tác động nhầm vé.",
+    );
+  }
   return value;
 }
+
 export function assertCreatedBooking(value, payload) {
+  assertBookingShape(value);
   if (
-    !Number.isSafeInteger(Number(value?.bookingId)) ||
+    !Number.isSafeInteger(Number(value.bookingId)) ||
     Number(value.bookingId) <= 0 ||
     !value.bookingCode ||
-    !sameId(value.userId, payload.userId) ||
-    !sameId(value.showtimeId, payload.showtimeId)
+    differs(value.userId, payload.userId) ||
+    differs(value.showtimeId, payload.showtimeId)
   )
     throw new Error(
       "Chưa xác nhận được phản hồi tạo booking. Hãy kiểm tra Vé của tôi trước khi thử lại.",
     );
-  return assertBooking(value, value);
+  return value;
 }
 export function assertUserBookings(items, userId) {
   if (
@@ -137,19 +161,12 @@ export function filterTickets(
   bookings,
   { query = "", status = "", order = "newest", titleFor = () => "" } = {},
 ) {
-  const normalize = (value) =>
-    String(value || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/đ/g, "d")
-      .replace(/Đ/g, "D")
-      .toLowerCase();
-  const keyword = normalize(query.trim());
+  const keyword = normalizeText(query.trim());
   return bookings
     .filter(
       (booking) =>
         (!status || booking.status === status) &&
-        normalize(
+        normalizeText(
           `${booking.bookingCode} ${booking.bookingId} ${titleFor(booking)}`,
         ).includes(keyword),
     )

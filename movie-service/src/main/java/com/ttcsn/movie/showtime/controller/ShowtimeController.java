@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import com.ttcsn.common.security.Roles;
 import com.ttcsn.movie.showtime.dto.request.ShowtimeRequest;
 import com.ttcsn.movie.showtime.dto.response.ShowtimeResponse;
 import com.ttcsn.movie.showtime.service.ShowtimeService;
@@ -61,7 +62,7 @@ public class ShowtimeController {
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Role") String role) {
         return ResponseEntity.ok(showtimeService.releaseShowtimeSeat(
-                request.showtimeId(), request.seatId(), userId, "ADMIN".equals(role)));
+                request.showtimeId(), request.seatId(), userId, Roles.isAdmin(role)));
     }
 
     @PostMapping("/createShowtime")

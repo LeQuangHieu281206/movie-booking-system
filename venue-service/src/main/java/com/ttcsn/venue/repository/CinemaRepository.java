@@ -18,8 +18,6 @@ import java.util.List;
 @Repository
 public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
-    boolean existsByNameAndAddress(String name, String address);
-
     @Query("SELECT DISTINCT c.city FROM Cinema c WHERE c.city IS NOT NULL AND c.city != '' ORDER BY c.city ASC")
     List<String> findDistinctCities();
 

@@ -1,27 +1,4 @@
-import { date, money, statusText, time } from "./domain.js";
-
-const labels = {
-  P: "P",
-  K: "K",
-  T13: "T13",
-  T16: "T16",
-  T18: "T18",
-  UPCOMING: "Sắp chiếu",
-  SHOWING: "Đang chiếu",
-  ENDED: "Đã kết thúc",
-  SCHEDULED: "Đã lên lịch",
-  ONGOING: "Đang chiếu",
-  CANCELLED: "Đã huỷ",
-  NORMAL: "Thường",
-  VIP: "VIP",
-  COUPLE: "Đôi",
-  CASH: "Tiền mặt",
-  BANK_TRANSFER: "Chuyển khoản",
-  ADMIN: "Quản trị viên",
-  CUSTOMER: "Khách hàng",
-};
-
-export const labelOf = (value) => statusText(value) === value ? labels[value] || value || "—" : statusText(value);
+import { ROLES, date, labelOf, money, time } from "./domain.js";
 
 const options = (values) => values.map((value) => ({ value, label: labelOf(value) }));
 
@@ -30,7 +7,7 @@ const AGE = options(["P", "K", "T13", "T16", "T18"]);
 const SHOWTIME_STATUS = options(["SCHEDULED", "ONGOING", "ENDED", "CANCELLED"]);
 const ROOM_TYPE = ["2D", "3D", "IMAX", "4DX"].map((value) => ({ value, label: value }));
 const SEAT_TYPE = options(["NORMAL", "VIP", "COUPLE"]);
-const ROLE = options(["CUSTOMER", "ADMIN"]);
+const ROLE = options(ROLES);
 
 const text = (value) => (value == null ? "" : String(value));
 const blankToNull = (value) => {

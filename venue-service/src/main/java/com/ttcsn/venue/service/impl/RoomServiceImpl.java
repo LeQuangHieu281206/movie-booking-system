@@ -68,7 +68,6 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponse updateRoom(Long roomId, RoomRequest request) {
         Room room = findRoomOrThrow(roomId);
         applyRequest(room, request);
-        room.setUpdatedAt(java.time.OffsetDateTime.now());
         return toResponse(roomRepository.save(room));
     }
 

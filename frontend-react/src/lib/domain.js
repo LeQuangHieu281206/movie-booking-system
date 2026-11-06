@@ -24,13 +24,58 @@ export const date = (value) =>
     day: "2-digit",
     month: "2-digit",
   }).format(new Date(value));
-export const statusText = (value) =>
-  ({
-    PENDING: "Chờ thanh toán",
-    PAID: "Đã thanh toán",
-    CANCELLED: "Đã hủy",
-    EXPIRED: "Đã hết hạn",
-  })[value] || value;
+// Nhãn hiển thị cho mọi enum nghiệp vụ. Một nguồn duy nhất để thêm giá trị mới.
+const LABELS = {
+  PENDING: "Chờ thanh toán",
+  PAID: "Đã thanh toán",
+  CANCELLED: "Đã hủy",
+  EXPIRED: "Đã hết hạn",
+  P: "P",
+  K: "K",
+  T13: "T13",
+  T16: "T16",
+  T18: "T18",
+  UPCOMING: "Sắp chiếu",
+  SHOWING: "Đang chiếu",
+  ENDED: "Đã kết thúc",
+  SCHEDULED: "Đã lên lịch",
+  ONGOING: "Đang chiếu",
+  NORMAL: "Thường",
+  VIP: "VIP",
+  COUPLE: "Đôi",
+  CASH: "Tiền mặt",
+  BANK_TRANSFER: "Chuyển khoản",
+  ADMIN: "Quản trị viên",
+  CUSTOMER: "Khách hàng",
+};
+
+export const labelOf = (value) => LABELS[value] || value || "—";
+
+/** Nhãn trạng thái booking; giữ tên cũ cho các component đang dùng. */
+export const statusText = labelOf;
+
+export const isAdmin = (role) => role === "ADMIN";
+export const ROLES = ["CUSTOMER", "ADMIN"];
+
+// ID từ API có thể là number hoặc string; so sánh luôn qua String để không tráo ID.
+export const sameId = (a, b) =>
+  a !== undefined && a !== null && b !== undefined && b !== null
+    ? String(a) === String(b)
+    : false;
+
+/** Bỏ dấu tiếng Việt để tìm kiếm không phân biệt dấu. */
+export const normalizeText = (value) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase();
+
+export const MAX_SEATS_PER_BOOKING = 8;
+export const PAYMENT_METHODS = ["CASH", "BANK_TRANSFER"];
+export const DEFAULT_PAYMENT_METHOD = "BANK_TRANSFER";
+
 export const isBookable = (show) =>
   show.status === "SCHEDULED" &&
   new Date(show.startTime).getTime() > Date.now();
@@ -65,12 +110,18 @@ export function bookingPayload(
   show,
   seats,
   ids,
-  paymentMethod = "BANK_TRANSFER",
+  paymentMethod = DEFAULT_PAYMENT_METHOD,
 ) {
   if (!show || !isBookable(show))
     throw new Error("Suất chiếu đã bắt đầu hoặc không còn nhận đặt vé.");
-  if (!ids.length || ids.length > 8 || new Set(ids).size !== ids.length)
-    throw new Error("Vui lòng chọn từ 1 đến 8 ghế khác nhau.");
+  if (
+    !ids.length ||
+    ids.length > MAX_SEATS_PER_BOOKING ||
+    new Set(ids).size !== ids.length
+  )
+    throw new Error(
+      `Vui lòng chọn từ 1 đến ${MAX_SEATS_PER_BOOKING} ghế khác nhau.`,
+    );
   const selected = ids.map((id) =>
     seats.find((seat) => seat.seatId === id),
   );
@@ -88,7 +139,7 @@ export function bookingPayload(
   const price = Number(show.basePrice);
   if (!Number.isFinite(price) || price <= 0)
     throw new Error("Suất chiếu chưa có giá vé hợp lệ.");
-  if (!["CASH", "BANK_TRANSFER"].includes(paymentMethod))
+  if (!PAYMENT_METHODS.includes(paymentMethod))
     throw new Error("Phương thức thanh toán không hợp lệ.");
   return {
     showtimeId: show.showtimeId,
@@ -109,18 +160,12 @@ export function filterMovies(
   movies,
   { query = "", status = "SHOWING", genre = "" } = {},
 ) {
-  const normalize = (value) =>
-    value
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/đ/g, "d")
-      .replace(/Đ/g, "D")
-      .toLowerCase();
+  const needle = normalizeText(query.trim());
   return movies.filter(
     (movie) =>
       (!status || movie.status === status) &&
       (!genre ||
         movie.genres?.some((g) => String(g.genreId) === String(genre))) &&
-      normalize(movie.title).includes(normalize(query.trim())),
+      normalizeText(movie.title).includes(needle),
   );
 }

@@ -50,10 +50,7 @@ public class SeatServiceImpl implements SeatService {
     @Override
     @Transactional
     public SeatResponse createSeat(SeatRequest request) {
-        if (seatRepository.existsByRoom_RoomIdAndSeatRowAndSeatNumber(
-                request.roomId(), request.seatRow(), request.seatNumber())) {
-            throw new IllegalArgumentException("Vị trí ghế (Hàng " + request.seatRow() + ", Số " + request.seatNumber() + ") đã tồn tại trong phòng này");
-        }
+        ensurePositionFree(request.roomId(), request.seatRow(), request.seatNumber(), null);
         Seat seat = new Seat();
         applyRequest(seat, request);
         return toResponse(seatRepository.save(seat));
@@ -63,14 +60,36 @@ public class SeatServiceImpl implements SeatService {
     @Transactional
     public SeatResponse updateSeat(Long seatId, SeatRequest request) {
         Seat seat = findSeatOrThrow(seatId);
-        boolean isLocationChanged = !seat.getSeatRow().equals(request.seatRow()) || !seat.getSeatNumber().equals(request.seatNumber());
-        if (isLocationChanged && seatRepository.existsByRoom_RoomIdAndSeatRowAndSeatNumber(
-                request.roomId(), request.seatRow(), request.seatNumber())) {
-            throw new IllegalArgumentException("Vị trí ghế đã tồn tại trong phòng này");
+        boolean moved = !java.util.Objects.equals(seat.getRoom().getRoomId(), request.roomId())
+                || !java.util.Objects.equals(seat.getSeatRow(), request.seatRow())
+                || !java.util.Objects.equals(seat.getSeatNumber(), request.seatNumber());
+        if (moved) {
+            ensurePositionFree(request.roomId(), request.seatRow(), request.seatNumber(), seatId);
         }
         applyRequest(seat, request);
-        seat.setUpdatedAt(java.time.OffsetDateTime.now());
         return toResponse(seatRepository.save(seat));
+    }
+
+    /**
+     * Một ghế chỉ có một vị trí trong mỗi phòng. Bỏ qua chính bản ghi đang sửa
+     * để đổi loại ghế không bị coi là trùng.
+     */
+    private void ensurePositionFree(Long roomId, String seatRow, Short seatNumber, Long excludingSeatId) {
+        if (!seatRepository.existsByRoom_RoomIdAndSeatRowAndSeatNumber(roomId, seatRow, seatNumber)) {
+            return;
+        }
+        if (excludingSeatId != null) {
+            boolean sameSeat = seatRepository.findById(excludingSeatId)
+                    .map(seat -> java.util.Objects.equals(seat.getRoom().getRoomId(), roomId)
+                            && java.util.Objects.equals(seat.getSeatRow(), seatRow)
+                            && java.util.Objects.equals(seat.getSeatNumber(), seatNumber))
+                    .orElse(false);
+            if (sameSeat) {
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Vị trí ghế (Hàng " + seatRow + ", Số " + seatNumber
+                + ") đã tồn tại trong phòng này");
     }
 
     @Override

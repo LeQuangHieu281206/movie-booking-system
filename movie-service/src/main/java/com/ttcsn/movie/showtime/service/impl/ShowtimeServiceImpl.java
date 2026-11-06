@@ -7,6 +7,8 @@ package com.ttcsn.movie.showtime.service.impl;
 import com.ttcsn.common.dto.RoomDto;
 import com.ttcsn.common.dto.SeatDto;
 import com.ttcsn.common.dto.SeatHoldResult;
+import com.ttcsn.common.dto.SeatIds;
+import com.ttcsn.common.exception.ConflictException;
 import com.ttcsn.common.exception.NotFoundException;
 import com.ttcsn.movie.client.VenueClient;
 import com.ttcsn.movie.entity.Movie;
@@ -53,6 +55,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
 
     private static final Duration HOLD_DURATION = Duration.ofMinutes(10);
     private static final long SEATS_CACHE_TTL_MS = 60_000;
+    private static final int SEATS_CACHE_MAX_ROOMS = 200;
 
     private static final String HOLD_SEAT_SQL = """
             WITH allowed_showtime AS (
@@ -124,6 +127,9 @@ public class ShowtimeServiceImpl implements ShowtimeService {
             return cached.seats();
         }
         List<SeatDto> fresh = venueClient.getSeatsByRoom(roomId);
+        if (seatsByRoomCache.size() >= SEATS_CACHE_MAX_ROOMS) {
+            seatsByRoomCache.clear();
+        }
         seatsByRoomCache.put(roomId, new RoomSeatsCache(fresh, now + SEATS_CACHE_TTL_MS));
         return fresh;
     }
@@ -154,7 +160,8 @@ public class ShowtimeServiceImpl implements ShowtimeService {
     @Override
     @Transactional(readOnly = true)
     public ShowtimeResponse getShowtimeById(Long showtimeId) {
-        return toResponse(findShowtimeOrThrow(showtimeId));
+        Showtime showtime = findShowtimeOrThrow(showtimeId);
+        return toResponse(showtime, venueClient.getRoom(showtime.getRoomId()));
     }
 
     @Override
@@ -207,29 +214,36 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                     null, null, null, SeatStatus.HOLDING.name(), holdUntil);
         }
         throwHoldRejection(showtimeId, seatId, holdBy);
-        throw new IllegalStateException("Ghế vừa được giữ bởi phiên khác. Chọn ghế khác.");
+        throw new ConflictException("Ghế vừa được giữ bởi phiên khác. Chọn ghế khác.");
     }
 
     private void throwHoldRejection(Long showtimeId, Long seatId, String holdBy) {
         Showtime showtime = showtimeRepository.findById(showtimeId).orElse(null);
         if (showtime == null) {
-            throw new IllegalStateException("Suất chiếu không tồn tại.");
+            throw new ConflictException("Suất chiếu không tồn tại.");
         }
         if (showtime.getStatus() != ShowtimeStatus.SCHEDULED) {
-            throw new IllegalStateException("Suất chiếu không còn nhận đặt vé (trạng thái " + showtime.getStatus() + ").");
+            throw new ConflictException("Suất chiếu không còn nhận đặt vé (trạng thái " + showtime.getStatus() + ").");
         }
         if (!showtime.getStartTime().isAfter(OffsetDateTime.now())) {
-            throw new IllegalStateException("Suất chiếu đã bắt đầu, không thể giữ ghế.");
+            throw new ConflictException("Suất chiếu đã bắt đầu, không thể giữ ghế.");
         }
         ShowtimeSeat row = showtimeSeatRepository.findByShowtime_ShowtimeIdAndSeatId(showtimeId, seatId).orElse(null);
         if (row == null) {
-            throw new IllegalStateException("Ghế không thuộc sơ đồ của phòng chiếu này.");
+            throw new ConflictException("Ghế không thuộc sơ đồ của phòng chiếu này.");
         }
         if (row.getStatus() == SeatStatus.BOOKED) {
-            throw new IllegalStateException("Ghế này đã được đặt thành công.");
+            throw new ConflictException("Ghế này đã được đặt thành công.");
         }
-        if (!isHoldExpired(row, OffsetDateTime.now()) && !Objects.equals(holdBy, row.getHoldBy())) {
-            throw new IllegalStateException("Ghế đang được khách khác giữ. Chọn ghế khác.");
+        ensureNotHeldByOther(row, holdBy);
+    }
+
+    /** Một chỗ duy nhất quyết định "ghế đang bị người khác giữ" cho cả hold và release. */
+    private void ensureNotHeldByOther(ShowtimeSeat row, String holdBy) {
+        if (row.getStatus() == SeatStatus.HOLDING
+                && !isHoldExpired(row, OffsetDateTime.now())
+                && !Objects.equals(holdBy, row.getHoldBy())) {
+            throw new ConflictException("Ghế đang được khách khác giữ. Chọn ghế khác.");
         }
     }
 
@@ -243,11 +257,8 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         if (!admin) {
             ShowtimeSeat current = showtimeSeatRepository
                     .findByShowtime_ShowtimeIdAndSeatId(showtimeId, seatId).orElse(null);
-            if (current != null
-                    && current.getStatus() == SeatStatus.HOLDING
-                    && !isHoldExpired(current, OffsetDateTime.now())
-                    && !Objects.equals(holdBy, current.getHoldBy())) {
-                throw new IllegalStateException("Giữ chỗ này không thuộc về bạn.");
+            if (current != null) {
+                ensureNotHeldByOther(current, holdBy);
             }
         }
 
@@ -267,11 +278,9 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                     null, null, null, SeatStatus.AVAILABLE.name(), null);
         }
         if (row.getStatus() == SeatStatus.BOOKED) {
-            throw new IllegalStateException("Ghế đã được đặt thành công, không thể bỏ giữ. Hủy vé để trả ghế.");
+            throw new ConflictException("Ghế đã được đặt thành công, không thể bỏ giữ. Hủy vé để trả ghế.");
         }
-        if (!isHoldExpired(row, OffsetDateTime.now()) && !Objects.equals(holdBy, row.getHoldBy())) {
-            throw new IllegalStateException("Giữ chỗ này không thuộc về bạn.");
-        }
+        ensureNotHeldByOther(row, holdBy);
         return new ShowtimeSeatView(null, showtimeId, seatId,
                 null, null, null, SeatStatus.AVAILABLE.name(), null);
     }
@@ -279,10 +288,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
     @Override
     @Transactional
     public SeatHoldResult bookSeats(Long showtimeId, List<Long> seatIds, String holdBy) {
-        if (seatIds == null || seatIds.isEmpty()) {
-            throw new IllegalArgumentException("Danh sách ghế đặt không được để trống");
-        }
-        List<Long> requested = List.copyOf(new LinkedHashSet<>(seatIds));
+        List<Long> requested = SeatIds.normalize(seatIds);
         String sql = BOOK_SEATS_SQL.replace(
                 "LITERAL_SEAT_IDS",
                 requested.stream().map(String::valueOf).collect(Collectors.joining(","))); // id đã là Long, an toàn
@@ -321,17 +327,17 @@ public class ShowtimeServiceImpl implements ShowtimeService {
     @Transactional
     public ShowtimeResponse createShowtime(ShowtimeRequest request) {
         Showtime showtime = new Showtime();
-        applyRequest(showtime, request, null);
+        RoomDto room = applyRequest(showtime, request, null);
         Showtime savedShowtime = showtimeRepository.save(showtime);
-        return toResponse(savedShowtime);
+        return toResponse(savedShowtime, room);
     }
 
     @Override
     @Transactional
     public ShowtimeResponse updateShowtime(Long showtimeId, ShowtimeRequest request) {
         Showtime showtime = findShowtimeOrThrow(showtimeId);
-        applyRequest(showtime, request, showtimeId);
-        return toResponse(showtimeRepository.save(showtime));
+        RoomDto room = applyRequest(showtime, request, showtimeId);
+        return toResponse(showtimeRepository.save(showtime), room);
     }
 
     @Override
@@ -375,7 +381,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                 .collect(Collectors.toMap(RoomDto::roomId, Function.identity()));
     }
 
-    private void applyRequest(Showtime showtime, ShowtimeRequest request, Long currentShowtimeId) {
+    private RoomDto applyRequest(Showtime showtime, ShowtimeRequest request, Long currentShowtimeId) {
         if (!request.endTime().isAfter(request.startTime())) {
             throw new IllegalArgumentException("endTime phải sau startTime");
         }
@@ -404,11 +410,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         showtime.setEndTime(request.endTime());
         showtime.setBasePrice(request.basePrice());
         showtime.setStatus(request.status());
-    }
-
-    private ShowtimeResponse toResponse(Showtime showtime) {
-        RoomDto room = venueClient.getRoom(showtime.getRoomId()); // SOA: data phòng qua venue-service
-        return toResponse(showtime, room);
+        return room;
     }
 
     private ShowtimeResponse toResponse(Showtime showtime, RoomDto room) {

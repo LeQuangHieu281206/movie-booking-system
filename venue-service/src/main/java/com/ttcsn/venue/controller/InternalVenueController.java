@@ -64,15 +64,16 @@ public class InternalVenueController {
     }
 
     private RoomDto toRoomDto(Room room) {
+        var cinema = room.getCinema();
         return new RoomDto(
                 room.getRoomId(),
                 room.getName(),
                 room.getRoomType() != null ? room.getRoomType().getValue() : null,
                 room.getTotalSeats() != null ? room.getTotalSeats().intValue() : null,
-                room.getCinema() != null ? room.getCinema().getCinemaId() : null,
-                room.getCinema() != null ? room.getCinema().getName() : null,
-                room.getCinema() != null ? room.getCinema().getAddress() : null,
-                room.getCinema() != null ? room.getCinema().getCity() : null
+                cinema != null ? cinema.getCinemaId() : null,
+                cinema != null ? cinema.getName() : null,
+                cinema != null ? cinema.getAddress() : null,
+                cinema != null ? cinema.getCity() : null
         );
     }
 }

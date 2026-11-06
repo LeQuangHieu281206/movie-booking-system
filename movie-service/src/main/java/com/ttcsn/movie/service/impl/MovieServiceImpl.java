@@ -68,7 +68,6 @@ public class MovieServiceImpl implements MovieService {
     public MovieResponse updateMovie(Long movieId, MovieRequest request) {
         Movie movie = findMovieOrThrow(movieId);
         applyRequest(movie, request);
-        movie.setUpdatedAt(java.time.OffsetDateTime.now());
         return toResponse(movieRepository.save(movie));
     }
 

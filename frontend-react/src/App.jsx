@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createApi, createHttpClient } from "./services/api.js";
 import { createAuthService } from "./services/auth.js";
 import { useLoad } from "./lib/useLoad.js";
+import { isAdmin as hasAdminRole } from "./lib/domain.js";
 import { ErrorBox, Icon } from "./components/UI.jsx";
 import { Catalog, Home, MovieDetail } from "./pages/Catalog.jsx";
 import { Cinemas, Showtimes } from "./pages/Venues.jsx";
@@ -58,7 +59,7 @@ function Workspace() {
     [api],
   );
   const movies = catalog.data?.movies || [];
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = hasAdminRole(user?.role);
   // Quản trị viên không đặt vé nên không có "Vé của tôi".
   const links = isAdmin
     ? [...nav.filter(([key]) => key !== "tickets"), adminLink]

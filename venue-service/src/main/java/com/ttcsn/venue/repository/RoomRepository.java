@@ -22,8 +22,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     List<Room> findByCinema_CinemaId(Long cinemaId);
 
-    boolean existsByCinema_CinemaIdAndName(Long cinemaId, String name);
-
     @Query("SELECT r FROM Room r JOIN FETCH r.cinema WHERE r.roomId IN :ids")
     List<Room> findAllWithCinemaByIds(@Param("ids") List<Long> ids);
 

@@ -6,7 +6,7 @@ import {
   columnText,
   filterRows,
 } from "../lib/admin.js";
-import { money } from "../lib/domain.js";
+import { dayKey, isAdmin, money } from "../lib/domain.js";
 import { Button, Empty, ErrorBox, Icon, Loading, Modal } from "../components/UI.jsx";
 
 function fieldOptions(field, ctx) {
@@ -470,15 +470,9 @@ function ResourcePanel({ api, resource, ctx, onRefsChanged }) {
 }
 
 const lastSevenDays = () => {
-  const format = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
   const now = Date.now();
   return Array.from({ length: 7 }, (_, index) => ({
-    date: format.format(new Date(now - (6 - index) * 86400000)),
+    date: dayKey(now - (6 - index) * 86400000),
     revenue: 0,
     paidBookings: 0,
   }));
@@ -716,7 +710,7 @@ export default function Admin({ api, user, onLogin, onHome }) {
         Quản trị sẽ xuất hiện trên thanh điều hướng.
       </AccessCard>
     );
-  if (user.role !== "ADMIN")
+  if (!isAdmin(user.role))
     return (
       <AccessCard
         title="Không có quyền truy cập"

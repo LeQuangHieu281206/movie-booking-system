@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Button, ErrorBox, Icon } from "../components/UI.jsx";
+import { labelOf } from "../lib/domain.js";
 
 function roleLabel(role) {
-  return role === "ADMIN" ? "Quản trị viên" : "Khách hàng";
+  return labelOf(role);
 }
 
 function initials(name = "") {

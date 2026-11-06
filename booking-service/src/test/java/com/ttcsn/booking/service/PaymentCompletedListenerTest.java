@@ -1,30 +1,25 @@
 package com.ttcsn.booking.service;
 
-import com.ttcsn.booking.client.ShowtimeClient;
 import com.ttcsn.booking.entity.Booking;
-import com.ttcsn.booking.entity.BookingDetail;
 import com.ttcsn.booking.entity.enums.BookingStatus;
 import com.ttcsn.booking.entity.enums.PaymentMethod;
-import com.ttcsn.booking.repository.BookingDetailRepository;
 import com.ttcsn.booking.repository.BookingRepository;
-import com.ttcsn.common.dto.SeatIdsRequest;
 import com.ttcsn.common.event.PaymentCompletedEvent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,9 +29,7 @@ class PaymentCompletedListenerTest {
     @Mock
     private BookingRepository bookingRepository;
     @Mock
-    private BookingDetailRepository bookingDetailRepository;
-    @Mock
-    private ShowtimeClient showtimeClient;
+    private BookingSeatReleaser seatReleaser;
 
     @InjectMocks
     private PaymentCompletedListener listener;
@@ -61,6 +54,7 @@ class PaymentCompletedListenerTest {
 
         assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELLED);
         verify(bookingRepository, never()).save(any(Booking.class));
+        verifyNoInteractions(seatReleaser);
     }
 
     @Test
@@ -76,16 +70,12 @@ class PaymentCompletedListenerTest {
     void failedPendingBookingIsCancelledAndSeatsReleased() {
         Booking booking = booking(BookingStatus.PENDING);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(bookingDetailRepository.findByBooking_BookingId(1L))
-                .thenReturn(List.of(BookingDetail.builder().booking(Booking.builder().bookingId(1L).build()).seatId(100L).build()));
 
         listener.onPaymentCompleted(event(PaymentCompletedEvent.STATUS_FAILED));
 
         assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELLED);
         verify(bookingRepository).save(booking);
-        ArgumentCaptor<SeatIdsRequest> captor = ArgumentCaptor.forClass(SeatIdsRequest.class);
-        verify(showtimeClient).releaseSeats(captor.capture());
-        assertThat(captor.getValue().seatIds()).containsExactly(100L);
+        verify(seatReleaser).release(booking);
     }
 
     private static Booking booking(BookingStatus status) {
