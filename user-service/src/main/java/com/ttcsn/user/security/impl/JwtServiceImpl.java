@@ -103,8 +103,6 @@ public class JwtServiceImpl implements JwtService {
         return claims.get(CLAIM_ROLE, String.class);
     }
 
-    // ---- helpers ----
-
     private SecretKey signingKey() {
         return Keys.hmacShaKeyFor(jwtProperties.secret().getBytes(StandardCharsets.UTF_8));
     }

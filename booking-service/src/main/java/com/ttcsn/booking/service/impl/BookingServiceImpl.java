@@ -143,12 +143,10 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingResponse createBooking(BookingCreateRequest request, Long userId) {
-        // 1. Kiểm tra user tồn tại (user-service)
         if (!userClient.userExists(userId)) {
             throw new NotFoundException("Không tìm thấy người dùng với userId = " + userId);
         }
 
-        // 2. Đọc thông tin Suất chiếu từ movie-service (OpenFeign sync)
         ShowtimeView showtime;
         try {
             showtime = movieClient.getShowtimeById(request.showtimeId());
@@ -156,12 +154,11 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Không tìm thấy suất chiếu với showtimeId = " + request.showtimeId());
         }
 
-        // 3. Kiểm tra phòng chiếu còn hợp lệ (venue-service)
         if (showtime.roomId() != null && venueClient.getRoom(showtime.roomId()) == null) {
             throw new NotFoundException("Không tìm thấy phòng chiếu với roomId = " + showtime.roomId());
         }
 
-        // 4. Tính tiền ở server; client không gửi userId/totalAmount/holdBy.
+        // Client không gửi userId/totalAmount/holdBy; server tự tính.
         List<Long> seatIds = request.normalizedSeatIds();
         BigDecimal basePrice = showtime.basePrice();
         if (basePrice == null || basePrice.signum() <= 0) {
@@ -179,7 +176,6 @@ public class BookingServiceImpl implements BookingService {
         }
 
         try {
-            // 6. Booking + BookingDetail (transaction cục bộ)
             String generatedBookingCode = "BK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             Booking booking = Booking.builder()
                     .bookingCode(generatedBookingCode)
@@ -213,7 +209,7 @@ public class BookingServiceImpl implements BookingService {
             return convertToResponse(savedBooking);
 
         } catch (RuntimeException ex) {
-            // 7. Bù trừ ghế ngay khi transaction cục bộ fail
+            // Bù trừ ngay khi transaction cục bộ fail, trước khi exception thoát ra.
             showtimeClient.releaseSeats(new SeatIdsRequest(request.showtimeId(), seatIds, holdBy));
             throw ex;
         }

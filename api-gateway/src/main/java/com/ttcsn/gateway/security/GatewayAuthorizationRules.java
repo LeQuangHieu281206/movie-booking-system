@@ -33,10 +33,8 @@ final class GatewayAuthorizationRules {
     private static final List<Rule> RULES = List.of(
             rule(HttpMethod.OPTIONS, "/**", Access.PUBLIC),
 
-            // Đăng nhập / đăng ký.
             rule(null, "/api/auth/**", Access.PUBLIC),
 
-            // GET công khai
             rule(HttpMethod.GET, "/api/getMovies", Access.PUBLIC),
             rule(HttpMethod.GET, "/api/searchMovies", Access.PUBLIC),
             rule(HttpMethod.GET, "/api/getMovieById", Access.PUBLIC),
@@ -46,7 +44,6 @@ final class GatewayAuthorizationRules {
             rule(HttpMethod.GET, "/api/getShowtimeById", Access.PUBLIC),
             rule(HttpMethod.GET, "/api/getShowtimeSeats", Access.PUBLIC),
 
-            // GET công khai
             rule(HttpMethod.GET, "/api/getCinemas", Access.PUBLIC),
             rule(HttpMethod.GET, "/api/getCinemaById", Access.PUBLIC),
             rule(HttpMethod.GET, "/api/getCities", Access.PUBLIC),
@@ -56,7 +53,6 @@ final class GatewayAuthorizationRules {
             rule(HttpMethod.GET, "/api/getSeatsByRoomId", Access.PUBLIC),
             rule(HttpMethod.GET, "/api/getSeatById", Access.PUBLIC),
 
-            // CRUD quản trị
             rule(HttpMethod.POST, "/api/createMovie", Access.ADMIN),
             rule(HttpMethod.PUT, "/api/updateMovie", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteMovie", Access.ADMIN),
@@ -67,7 +63,6 @@ final class GatewayAuthorizationRules {
             rule(HttpMethod.PUT, "/api/updateShowtime", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteShowtime", Access.ADMIN),
 
-            // CRUD quản trị
             rule(HttpMethod.POST, "/api/createCinema", Access.ADMIN),
             rule(HttpMethod.PUT, "/api/updateCinema", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteCinema", Access.ADMIN),
@@ -78,20 +73,17 @@ final class GatewayAuthorizationRules {
             rule(HttpMethod.PUT, "/api/updateSeat", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteSeat", Access.ADMIN),
 
-            // CRUD user
             rule(HttpMethod.GET, "/api/getUsers", Access.ADMIN),
             rule(HttpMethod.GET, "/api/getUserById", Access.ADMIN),
             rule(HttpMethod.POST, "/api/createUser", Access.ADMIN),
             rule(HttpMethod.PUT, "/api/updateUser", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteUser", Access.ADMIN),
 
-            // ho so nguoi dung
             rule(null, "/api/users/**", Access.CUSTOMER_OR_ADMIN),
 
             rule(HttpMethod.POST, "/api/holdShowtimeSeat", Access.CUSTOMER_OR_ADMIN),
             rule(HttpMethod.POST, "/api/releaseShowtimeSeat", Access.CUSTOMER_OR_ADMIN),
 
-            // Booking / payment
             rule(HttpMethod.GET, "/api/getBookings", Access.ADMIN),
             rule(HttpMethod.GET, "/api/getBookingStats", Access.ADMIN),
             rule(HttpMethod.GET, "/api/getBookingById", Access.CUSTOMER_OR_ADMIN),

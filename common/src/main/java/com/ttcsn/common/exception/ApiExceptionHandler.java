@@ -32,25 +32,21 @@ public class ApiExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
-    // ---- 404: mọi NotFoundException subclass ----
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException ex, HttpServletRequest request) {
         return ErrorResponseFactory.build(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
-    // ---- 401: mọi UnauthorizedException subclass (sai đăng nhập, token sai/hết hạn...) ----
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex, HttpServletRequest request) {
         return ErrorResponseFactory.build(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 
-    // ---- 403: đã xác thực nhưng không đủ quyền ----
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex, HttpServletRequest request) {
         return ErrorResponseFactory.build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
 
-    // ---- 409 ----
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex, HttpServletRequest request) {
         return ErrorResponseFactory.build(HttpStatus.CONFLICT, ex.getMessage(), request);
@@ -61,7 +57,6 @@ public class ApiExceptionHandler {
         return ErrorResponseFactory.build(HttpStatus.CONFLICT, "Dữ liệu vi phạm ràng buộc, vui lòng kiểm tra lại", request);
     }
 
-    // ---- 400 ----
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         Map<String, String> fieldErrors = new LinkedHashMap<>();
@@ -104,7 +99,6 @@ public class ApiExceptionHandler {
         return ErrorResponseFactory.build(HttpStatus.BAD_REQUEST, "Request body thiếu hoặc không đúng định dạng JSON", request);
     }
 
-    // ---- 500 ----
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest request) {
         log.error("Unhandled exception tại {}?{}", request.getRequestURI(), request.getQueryString(), ex);
