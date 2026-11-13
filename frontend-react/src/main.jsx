@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
+import ClickSpark from "./components/ClickSpark.jsx";
 import "./styles.css";
 
 class ErrorBoundary extends React.Component {
@@ -30,6 +31,7 @@ createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
       <App />
+      <ClickSpark />
     </ErrorBoundary>
   </React.StrictMode>,
 );

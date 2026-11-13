@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,7 +34,8 @@ class BookingControllerTest {
         BookingService service = mock(BookingService.class);
         BookingResponse response = new BookingResponse(
                 99L, 42L, 10L, "BK-TEST", new BigDecimal("100000"),
-                BookingStatus.PENDING, PaymentMethod.CASH, OffsetDateTime.now());
+                BookingStatus.PENDING, PaymentMethod.CASH, OffsetDateTime.now(),
+                List.of("H7"));
         when(service.createBooking(any(BookingCreateRequest.class), eq(42L))).thenReturn(response);
 
         ObjectMapper mapper = new ObjectMapper().findAndRegisterModules()

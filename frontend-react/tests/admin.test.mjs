@@ -4,6 +4,7 @@ import { createHttpClient, createLiveApi } from "../src/services/api.js";
 import {
   ADMIN_RESOURCES,
   fromDateTimeInput,
+  inDayRange,
   toDateTimeInput,
 } from "../src/lib/admin.js";
 
@@ -28,22 +29,24 @@ test("Admin CRUD gọi đúng path, method và id trên query", async () => {
 });
 
 test("Admin đọc thống kê qua ApiResponse wrapper", async () => {
-  const request = createHttpClient(
-    async () =>
-      new Response(
-        JSON.stringify({
-          success: true,
-          data: { revenue: 123000, paidBookings: 2, ticketsSold: 5 },
-        }),
-        { status: 200, headers: { "content-type": "application/json" } },
-      ),
-  );
-  const stats = await createLiveApi(request).admin.get("/getBookingStats");
-  assert.deepEqual(stats, {
+  const payload = {
     revenue: 123000,
     paidBookings: 2,
     ticketsSold: 5,
-  });
+    period: "day",
+    revenueSeries: [{ key: "2026-11-12", revenue: 123000, paidBookings: 2 }],
+  };
+  const request = createHttpClient(
+    async () =>
+      new Response(JSON.stringify({ success: true, data: payload }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+  );
+  const stats = await createLiveApi(request).admin.get(
+    "/getBookingStats?period=day",
+  );
+  assert.deepEqual(stats, payload);
 });
 
 test("Xoá trả text/plain vẫn được coi là thành công", async () => {
@@ -133,4 +136,14 @@ test("Ghế chuẩn hoá hàng ghế và số ghế", () => {
 test("Chuyển đổi datetime input qua lại không lệch phút", () => {
   const value = fromDateTimeInput("2026-11-04T19:30");
   assert.equal(toDateTimeInput(value), "2026-11-04T19:30");
+});
+
+test("Lọc suất chiếu theo khoảng ngày, tính theo giờ Việt Nam", () => {
+  assert.equal(inDayRange("2026-11-15T08:30:00Z", "2026-11-15", "2026-11-15"), true);
+  // 18:00Z là 01:00 ngày 16/11 ở Việt Nam.
+  assert.equal(inDayRange("2026-11-15T18:00:00Z", "2026-11-15", "2026-11-15"), false);
+  assert.equal(inDayRange("2026-11-15T18:00:00Z", "2026-11-16", "2026-11-16"), true);
+  assert.equal(inDayRange("2026-11-20T08:00:00Z", "", "2026-11-15"), false);
+  assert.equal(inDayRange("2026-11-01T08:00:00Z", "2026-11-15", ""), false);
+  assert.equal(inDayRange("2026-11-01T08:00:00Z", "", ""), true);
 });

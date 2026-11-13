@@ -5,11 +5,13 @@ import {
   Empty,
   ErrorBox,
   Icon,
-  Loading,
   Modal,
   Poster,
+  SearchSelect,
 } from "../components/UI.jsx";
+import { MovieGridSkeleton } from "../components/Skeleton.jsx";
 import ScheduleBoard from "../components/ScheduleBoard.jsx";
+import { DiscoverButton } from "../components/block/discover-button.jsx";
 
 export function MovieGrid({ movies, onMovie }) {
   return (
@@ -120,7 +122,7 @@ export function Catalog({
         <span className="result-count">{movies.length} bộ phim</span>
       </div>
       {loading ? (
-        <Loading />
+        <MovieGridSkeleton />
       ) : error ? (
         <ErrorBox message={error} onRetry={reload} />
       ) : movies.length ? (
@@ -175,23 +177,13 @@ export function Home({ catalog, onMovie, onNavigate, onSchedule }) {
               "Tìm bộ phim yêu thích, chọn một chỗ ngồi thật vừa ý và tận hưởng câu chuyện trên màn ảnh lớn."}
           </p>
           <div className="button-row">
-            <Button
-              primary
+            <DiscoverButton
+              label="Đặt vé ngay"
               onClick={() => (hero ? onMovie(hero) : onNavigate("movies"))}
-            >
-              <Icon name="ticket" size={18} />
-              Khám phá & đặt vé
-              <Icon name="arrow" size={18} />
-            </Button>
+            />
             {hero && (
               <Button onClick={() => onMovie(hero)}>Thông tin phim</Button>
             )}
-          </div>
-          <div className="hero-footnote">
-            <span className="hero-number">
-              01<span> / CINEROOM</span>
-            </span>
-            <span>Hẹn bạn ở rạp.</span>
           </div>
         </div>
       </section>
@@ -206,26 +198,22 @@ export function Home({ catalog, onMovie, onNavigate, onSchedule }) {
           <div className="quick-label">
             <Icon name="ticket" size={26} />
             <div>
-              <strong>Chọn phim. Chọn ghế.</strong>
-              <span>Cuộc hẹn điện ảnh bắt đầu từ đây</span>
+              <strong>Chọn phim</strong>
             </div>
           </div>
-          <label>
+          <div className="quick-field">
             <span>BẠN MUỐN XEM PHIM GÌ?</span>
-            <select
-              value={quickId}
-              onChange={(event) => setQuickId(event.target.value)}
-            >
-              <option value="">Chọn bộ phim của bạn</option>
-              {catalog.data?.movies
+            <SearchSelect
+              label="Chọn phim"
+              options={(catalog.data?.movies || [])
                 .filter((movie) => movie.status === "SHOWING")
-                .map((movie) => (
-                  <option key={movie.movieId} value={movie.movieId}>
-                    {movie.title}
-                  </option>
-                ))}
-            </select>
-          </label>
+                .map((movie) => ({ id: movie.movieId, label: movie.title }))}
+              value={quickId}
+              onChange={setQuickId}
+              placeholder="Tìm phim bạn muốn xem…"
+              emptyText="Không tìm thấy phim đang chiếu"
+            />
+          </div>
           <Button primary type="submit">
             Tìm suất chiếu
             <Icon name="arrow" size={17} />
@@ -240,17 +228,15 @@ export function Home({ catalog, onMovie, onNavigate, onSchedule }) {
               <br />
               Bước vào câu chuyện lớn.
             </h2>
-            <p>Chọn rạp gần bạn và tìm một suất chiếu phù hợp.</p>
-            <Button onClick={() => onNavigate("cinemas")}>
-              Khám phá hệ thống rạp
-              <Icon name="arrow" size={16} />
-            </Button>
+            <DiscoverButton
+              label="Khám phá hệ thống rạp"
+              onClick={() => onNavigate("cinemas")}
+            />
           </div>
           <div className="experience-art">
             <Icon name="seat" size={64} />
             <div>
               <strong>Chỗ ngồi dành riêng cho bạn</strong>
-              <p>Tự chọn vị trí trên sơ đồ phòng chiếu</p>
             </div>
             <span className="decorative-ticket">
               CINEROOM

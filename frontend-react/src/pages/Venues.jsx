@@ -1,7 +1,17 @@
 import React, { useState } from "react";
 import { useLoad } from "../lib/useLoad.js";
 import { cityList, movieOptions, sameId, telHref } from "../lib/venues.js";
-import { Button, Empty, ErrorBox, Icon, Loading } from "../components/UI.jsx";
+import {
+  Button,
+  Empty,
+  ErrorBox,
+  Icon,
+  SearchSelect,
+} from "../components/UI.jsx";
+import {
+  CinemaGridSkeleton,
+  ScheduleSkeleton,
+} from "../components/Skeleton.jsx";
 import ScheduleBoard from "../components/ScheduleBoard.jsx";
 
 export function Cinemas({ api, onSchedule }) {
@@ -34,7 +44,7 @@ export function Cinemas({ api, onSchedule }) {
         </label>
       </div>
       {result.loading ? (
-        <Loading />
+        <CinemaGridSkeleton />
       ) : result.error ? (
         <ErrorBox message={result.error} onRetry={result.reload} />
       ) : !cinemas.length ? (
@@ -126,19 +136,16 @@ export function Showtimes({
             Chọn giờ chiếu để tiếp tục chọn ghế. Giờ hiển thị theo Việt Nam.
           </p>
         </div>
-        <label>
-          <span className="sr-only">Chọn phim</span>
-          <select
-            value={movieId}
-            onChange={(event) => setMovieId(event.target.value)}
-          >
-            {movieOptions(movies, movieId).map((movie) => (
-              <option key={movie.id} value={movie.id}>
-                {movie.title}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SearchSelect
+          label="Tìm phim"
+          placeholder="Tìm phim đang chiếu…"
+          options={movieOptions(movies, movieId).map((movie) => ({
+            id: movie.id,
+            label: movie.title,
+          }))}
+          value={movieId}
+          onChange={setMovieId}
+        />
       </div>
       {cinemaId && (
         <p className="hint cinema-filter">
@@ -164,7 +171,7 @@ export function Showtimes({
           onClearCinema={() => setCinemaId("")}
         />
       ) : (
-        <Loading label="Đang tải danh sách phim…" />
+        <ScheduleSkeleton />
       )}
     </section>
   );

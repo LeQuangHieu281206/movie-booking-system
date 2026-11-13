@@ -1,0 +1,662 @@
+/* Bảng doanh số quản trị — lấy bố cục Overview từ Obsidian analytics-dashboard. */
+.sales-dashboard {
+  --sd-strong: #1d1d1f;
+  --sd-muted: #6e6e73;
+  --sd-faint: rgb(29 29 31 / 42%);
+  --sd-title: rgb(29 29 31 / 78%);
+  --sd-line: rgb(0 0 0 / 8%);
+  --sd-fill: rgb(0 0 0 / 4.5%);
+  --sd-hover: rgb(0 0 0 / 6.5%);
+  --sd-inset: rgb(0 0 0 / 3%);
+  --sd-grid: rgb(0 0 0 / 7%);
+  --sd-accent: var(--primary, #f5c518);
+  --sd-good: #16a34a;
+  --sd-good-bg: rgb(22 163 74 / 10%);
+  --sd-bad: #dc2626;
+  --sd-bad-bg: rgb(220 38 38 / 10%);
+  --sd-panel: linear-gradient(100deg, #ffffff 0%, #faf9f4 55%, #f6f4ee 100%);
+  --sd-shadow: 0 18px 40px rgba(0, 0, 0, 0.06);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 28px 28px;
+  border: 1px solid var(--sd-line);
+  border-radius: 18px;
+  background: var(--sd-panel);
+  box-shadow: var(--sd-shadow);
+  color: var(--sd-strong);
+  isolation: isolate;
+}
+
+:root[data-theme="dark"] .sales-dashboard {
+  --sd-strong: #f5f5f7;
+  --sd-muted: rgb(255 255 255 / 55%);
+  --sd-faint: rgb(255 255 255 / 38%);
+  --sd-title: rgb(255 255 255 / 78%);
+  --sd-line: rgb(255 255 255 / 8%);
+  --sd-fill: rgb(255 255 255 / 5.5%);
+  --sd-hover: rgb(255 255 255 / 7.5%);
+  --sd-inset: rgb(255 255 255 / 3%);
+  --sd-grid: rgb(255 255 255 / 8%);
+  --sd-good: #3ddc7a;
+  --sd-good-bg: rgb(61 220 122 / 12%);
+  --sd-bad: #f07a6a;
+  --sd-bad-bg: rgb(240 122 106 / 12%);
+  --sd-panel: linear-gradient(100deg, #1b1a17 0%, #181816 48%, #16181b 100%);
+  --sd-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+.sales-dashboard *,
+.sales-dashboard *::before,
+.sales-dashboard *::after {
+  box-sizing: border-box;
+}
+
+.sales-dashboard ul,
+.sales-dashboard ol,
+.sales-dashboard figure,
+.sales-dashboard h1,
+.sales-dashboard h2,
+.sales-dashboard p {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sd-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  row-gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* Bộ chọn kỳ (Ngày / Tháng / Năm) + nút tải lại */
+.sd-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.sd-range {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  flex: none;
+  padding: 3px;
+  border-radius: 11px;
+  background: var(--sd-fill);
+  box-shadow: inset 0 0 0 1px var(--sd-inset);
+}
+
+/* Nền trượt theo kỳ đang chọn: đổi Ngày/Tháng/Năm bằng hiệu ứng chuyển, không nhảy. */
+.sd-range::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: 8px;
+  background: var(--sd-accent);
+  transform: translateX(calc(var(--sd-index, 0) * 100%));
+  transition: transform 260ms cubic-bezier(0.34, 1.12, 0.64, 1);
+}
+
+.sd-range button {
+  position: relative;
+  z-index: 1;
+  height: 28px;
+  min-width: 52px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sd-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.sd-range button:hover {
+  color: var(--sd-strong);
+}
+
+.sd-range button[aria-pressed="true"] {
+  color: #1d1d1f;
+  font-weight: 600;
+}
+
+.sd-range button:focus-visible {
+  outline: 2px solid var(--sd-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-range::before {
+    transition: none;
+  }
+}
+
+.sd-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  color: var(--sd-muted);
+}
+
+.sd-eyebrow svg {
+  color: var(--sd-accent);
+}
+
+.sd-title {
+  margin-top: 6px;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.022em;
+  color: var(--sd-strong);
+}
+
+.sd-sub {
+  margin-top: 4px;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--sd-muted);
+}
+
+.sd-refresh {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 1px solid var(--sd-line);
+  border-radius: 10px;
+  background: var(--sd-fill);
+  color: var(--sd-muted);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.sd-refresh:hover:not(:disabled) {
+  border-color: var(--sd-line);
+  background: var(--sd-hover);
+  color: var(--sd-strong);
+}
+
+.sd-refresh:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sd-refresh.is-loading svg {
+    animation: sd-spin 900ms linear infinite;
+  }
+}
+
+.sd-refresh:focus-visible {
+  outline: 2px solid var(--sd-accent);
+  outline-offset: 2px;
+}
+
+.sd-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+/* Đang tải kỳ mới: giữ số liệu cũ nhưng làm mờ để biết đang cập nhật. */
+.sales-dashboard[aria-busy="true"] .sd-stats,
+.sales-dashboard[aria-busy="true"] .sd-card {
+  opacity: 0.55;
+  transition: opacity 150ms ease;
+}
+
+.sd-stat {
+  display: flex;
+  flex-direction: column;
+  padding: 13px 15px 12px;
+  border-radius: 12px;
+  background: var(--sd-fill);
+  box-shadow: inset 0 0 0 1px var(--sd-inset);
+  transition: background-color 150ms ease;
+}
+
+.sd-stat:hover {
+  background: var(--sd-hover);
+}
+
+.sd-stat:hover .sd-stat-label svg {
+  color: var(--sd-strong);
+}
+
+.sd-stat-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--sd-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sd-stat-label svg {
+  flex: none;
+  color: var(--sd-faint);
+  transition: color 150ms ease;
+}
+
+.sd-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 10px 0 8px;
+}
+
+.sd-stat-value {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 30px;
+  letter-spacing: -0.015em;
+  color: var(--sd-strong);
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 21px;
+  flex: none;
+  padding: 0 7px 0 5px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--sd-good);
+  background: var(--sd-good-bg);
+}
+
+.sd-delta[data-good="false"] {
+  color: var(--sd-bad);
+  background: var(--sd-bad-bg);
+}
+
+.sd-spark {
+  display: block;
+  width: 100%;
+  height: 34px;
+  color: var(--sd-accent);
+}
+
+.sd-spark[data-good="false"] {
+  color: var(--sd-bad);
+}
+
+.sd-stat-note {
+  display: flex;
+  align-items: center;
+  height: 34px;
+  font-size: 12px;
+  color: var(--sd-faint);
+}
+
+.sd-card {
+  margin-top: 8px;
+  padding: 15px 18px 14px;
+  border-radius: 14px;
+  background: var(--sd-fill);
+  box-shadow: inset 0 0 0 1px var(--sd-inset);
+}
+
+/* Bảng doanh số cao bằng menu quản trị: phần dư dồn vào biểu đồ. */
+.sales-dashboard > .sd-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.sd-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sd-card-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--sd-title);
+}
+
+.sd-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 12px;
+  font-size: 12.5px;
+  color: var(--sd-muted);
+}
+
+.sd-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sd-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2.5px;
+  background: var(--sd-accent);
+}
+
+/* Biểu đồ cột */
+.sd-chart {
+  position: relative;
+  flex: 1 1 auto;
+  height: 196px;
+  min-height: 196px;
+}
+
+.sd-grid {
+  position: absolute;
+  inset: 0 0 24px 34px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sd-grid span {
+  position: relative;
+  height: 0;
+  border-top: 1px dashed var(--sd-grid);
+}
+
+.sd-grid span::before {
+  content: attr(data-value);
+  position: absolute;
+  left: -34px;
+  top: 0;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--sd-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-cols {
+  position: absolute;
+  inset: 0 0 0 34px;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 7), minmax(0, 1fr));
+  /* Dải 24 giờ / 31 ngày cần khe hẹp hơn để cột còn chỗ vẽ. */
+  gap: clamp(2px, calc(140px / var(--cols, 7)), 12px);
+}
+
+.sd-col {
+  display: grid;
+  /* Cột tường minh để % của thanh tính theo đúng bề rộng cột, không theo nội dung. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) 24px;
+  min-width: 0;
+}
+
+.sd-bar-wrap {
+  position: relative;
+  grid-row: 1;
+  align-self: end;
+  justify-self: center;
+  width: min(46px, 100%);
+}
+
+.sd-bar {
+  display: flex;
+  flex-direction: column-reverse;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 7px 7px 3px 3px;
+  transform-origin: 50% 100%;
+  transition: opacity 150ms ease;
+}
+
+.sd-bar-seg {
+  flex: 1;
+  min-height: 3px;
+  background: var(--sd-accent);
+}
+
+.sd-col-label {
+  grid-row: 2;
+  align-self: end;
+  overflow: hidden;
+  font-size: 11.5px;
+  line-height: 18px;
+  color: var(--sd-faint);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Dải dày (24 giờ, 28-31 ngày): chỉ hiện nhãn cách quãng, cho nhãn tràn sang
+   cột trống bên cạnh thay vì bị cắt cụt. */
+.sd-cols.is-dense .sd-col-label {
+  overflow: visible;
+  text-align: center;
+  transform: none;
+}
+
+.sd-cols.is-dense .sd-col-label.is-alt {
+  visibility: hidden;
+}
+
+/* Dải dày thì thanh mảnh hơn để còn thấy khe giữa các cột. */
+.sd-cols.is-dense .sd-bar-wrap {
+  max-width: 26px;
+}
+
+@media (hover: hover) {
+  .sd-cols:hover .sd-col:not(:hover) .sd-bar {
+    opacity: 0.4;
+  }
+  .sd-bar-wrap.has-tip:hover::after {
+    opacity: 1;
+    transition-delay: 80ms;
+  }
+}
+
+/* Tooltip lấy từ data-tip để không lẫn vào nội dung đọc màn hình */
+.sd-bar-wrap.has-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 30;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  padding: 6px 9px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: rgb(255 255 255 / 92%);
+  background: rgb(30 32 38 / 97%);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 8%),
+    0 4px 14px rgb(0 0 0 / 35%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 0) scale(0.97);
+  transform-origin: 50% 100%;
+  transition:
+    opacity 50ms ease-out,
+    transform 50ms ease-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sd-enter {
+    animation: sd-enter 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+  .sd-bar {
+    animation: sd-bar-grow 650ms cubic-bezier(0.23, 1, 0.32, 1) both;
+    animation-delay: calc(220ms + var(--col, 0) * 60ms);
+  }
+  .sd-spark {
+    animation: sd-spark 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 420ms;
+  }
+}
+
+@keyframes sd-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes sd-bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes sd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sd-spark {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+/* Khối chờ giữ đúng bố cục của bảng doanh số */
+.sd-skel-eyebrow {
+  width: 150px;
+  height: 10px;
+  margin-bottom: 12px;
+}
+
+.sd-skel-title {
+  width: 180px;
+  height: 28px;
+  margin-bottom: 10px;
+}
+
+.sd-skel-sub {
+  width: 240px;
+  height: 12px;
+}
+
+.sd-skel-refresh {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.sd-skel-range {
+  width: 138px;
+  height: 34px;
+  border-radius: 11px;
+}
+
+.sd-skel-label {
+  width: 110px;
+  height: 10px;
+  margin-bottom: 16px;
+}
+
+.sd-skel-value {
+  width: 140px;
+  height: 24px;
+}
+
+.sd-skel-spark {
+  width: 100%;
+  height: 34px;
+  margin-top: 14px;
+  border-radius: 6px;
+}
+
+.sd-skel-card-title {
+  width: 210px;
+  height: 14px;
+}
+
+.sd-skel-legend {
+  width: 90px;
+  height: 10px;
+}
+
+.sd-skel-chart {
+  display: flex;
+  align-items: flex-end;
+  flex: 1 1 auto;
+  /* Khe co theo số cột, giống biểu đồ thật (24 giờ / 28-31 ngày / 12 tháng). */
+  gap: clamp(2px, calc(140px / var(--cols, 12)), 12px);
+  height: 196px;
+  min-height: 196px;
+  padding: 0 0 24px 34px;
+}
+
+.sd-skel-bar {
+  flex: 1;
+  border-radius: 7px 7px 3px 3px;
+}
+
+@media (max-width: 640px) {
+  .sales-dashboard {
+    padding: 20px 18px 22px;
+  }
+  .sd-title {
+    font-size: 25px;
+  }
+  .sd-chart {
+    height: 170px;
+    min-height: 170px;
+  }
+  .sd-range button {
+    padding: 0 9px;
+    font-size: 12px;
+  }
+  /* Nhãn mốc cách quãng (dải 12 tháng) chỉ hiện ở màn hình rộng. */
+  .sd-col-label.is-alt {
+    visibility: hidden;
+  }
+  /* Cột hẹp: cho nhãn tràn ra ngoài cột thay vì bị cắt cụt. */
+  .sd-col-label {
+    overflow: visible;
+    text-align: left;
+    transform: translateX(-50%);
+  }
+  /* Cảm ứng không hover được: bỏ tooltip để không tạo tràn ngang 6px. */
+  .sd-bar-wrap.has-tip::after {
+    content: none;
+  }
+  .sd-bar-wrap {
+    width: min(34px, 100%);
+  }
+}

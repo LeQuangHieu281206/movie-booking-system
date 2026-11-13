@@ -16,10 +16,10 @@ import {
   Empty,
   ErrorBox,
   Icon,
-  Loading,
   Modal,
   Poster,
 } from "../components/UI.jsx";
+import { SeatMapSkeleton } from "../components/Skeleton.jsx";
 import PaymentPanel from "../components/PaymentPanel.jsx";
 
 export default function Booking({
@@ -166,11 +166,11 @@ export default function Booking({
         )}
       </ol>
       {result.loading ? (
-        <Loading label="Đang tải sơ đồ ghế…" />
+        <SeatMapSkeleton />
       ) : result.error ? (
         <ErrorBox message={result.error} onRetry={reloadSeats} />
       ) : (
-        <div className="booking-layout">
+        <div className="booking-layout fade-in">
           <div className="booking-main">
             {step === 1 && (
               <>

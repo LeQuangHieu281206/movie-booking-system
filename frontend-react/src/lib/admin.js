@@ -1,4 +1,4 @@
-import { ROLES, date, labelOf, money, time } from "./domain.js";
+import { ROLES, date, dayKey, labelOf, money, time } from "./domain.js";
 
 const options = (values) => values.map((value) => ({ value, label: labelOf(value) }));
 
@@ -157,7 +157,13 @@ export const ADMIN_RESOURCES = [
     group: "Nội dung",
     title: "Quản lý suất chiếu",
     description: "Lên lịch chiếu, phòng chiếu, giá vé và trạng thái suất.",
-    listPath: "/getShowtimes",
+    requiresMovie: true,
+    filtersCinema: true,
+    filtersDate: true,
+    listPath: (state) =>
+      state.movieId && state.city && state.cinemaId
+        ? `/getShowtimes?movieId=${state.movieId}`
+        : null,
     createPath: "/createShowtime",
     updatePath: "/updateShowtime",
     removePath: "/deleteShowtime",
@@ -216,7 +222,7 @@ export const ADMIN_RESOURCES = [
       { name: "endTime", label: "Kết thúc", type: "datetime-local", required: true },
       { name: "basePrice", label: "Giá vé (VND)", type: "number", required: true, min: 0, step: 1000 },
     ],
-    toForm: (row) =>
+    toForm: (row, ctx, state) =>
       row
         ? {
             movieId: row.movieId,
@@ -227,7 +233,7 @@ export const ADMIN_RESOURCES = [
             status: row.status || "SCHEDULED",
           }
         : {
-            movieId: "",
+            movieId: state.movieId || "",
             roomId: "",
             startTime: "",
             endTime: "",
@@ -250,7 +256,11 @@ export const ADMIN_RESOURCES = [
     group: "Rạp chiếu",
     title: "Quản lý rạp",
     description: "Thông tin rạp, địa chỉ và số điện thoại liên hệ.",
-    listPath: "/getCinemas",
+    requiresCity: true,
+    listPath: (state) =>
+      state.city
+        ? `/getCinemasByCity?city=${encodeURIComponent(state.city)}`
+        : null,
     createPath: "/createCinema",
     updatePath: "/updateCinema",
     removePath: "/deleteCinema",
@@ -274,10 +284,10 @@ export const ADMIN_RESOURCES = [
         inputMode: "tel",
       },
     ],
-    toForm: (row) => ({
+    toForm: (row, ctx, state) => ({
       name: row?.name || "",
       address: row?.address || "",
-      city: row?.city || "",
+      city: row?.city || state.city || "",
       phoneNumber: row?.phoneNumber || "",
     }),
     toPayload: (values) => ({
@@ -294,7 +304,9 @@ export const ADMIN_RESOURCES = [
     group: "Rạp chiếu",
     title: "Quản lý phòng chiếu",
     description: "Phòng thuộc rạp, sức chứa và loại phòng.",
-    listPath: "/getRooms",
+    requiresCinema: true,
+    listPath: (state) =>
+      state.cinemaId ? `/getRooms?cinemaId=${state.cinemaId}` : null,
     createPath: "/createRoom",
     updatePath: "/updateRoom",
     removePath: "/deleteRoom",
@@ -329,10 +341,15 @@ export const ADMIN_RESOURCES = [
       },
       { name: "totalSeats", label: "Tổng số ghế", type: "number", required: true, min: 1, step: 1 },
     ],
-    toForm: (row) =>
+    toForm: (row, ctx, state) =>
       row
         ? { ...row, totalSeats: row.totalSeats ?? "" }
-        : { cinemaId: "", name: "", totalSeats: "", roomType: "2D" },
+        : {
+            cinemaId: state.cinemaId || "",
+            name: "",
+            totalSeats: "",
+            roomType: "2D",
+          },
     toPayload: (values) => ({
       cinemaId: Number(values.cinemaId),
       name: values.name.trim(),
@@ -470,6 +487,11 @@ export const ADMIN_RESOURCES = [
       { label: "Mã vé", value: (row) => row.bookingCode },
       { label: "Người dùng", value: (row) => `#${row.userId}` },
       { label: "Suất chiếu", value: (row) => `#${row.showtimeId}` },
+      {
+        label: "Ghế",
+        value: (row) =>
+          row.seatLabels?.length ? row.seatLabels.join(", ") : "—",
+      },
       { label: "Tổng tiền", value: (row) => money(row.totalAmount) },
       {
         label: "Thanh toán",
@@ -491,7 +513,7 @@ export const ADMIN_RESOURCES = [
       { label: "Hết hạn", status: "EXPIRED", when: (row) => row.status === "PENDING" },
     ],
     rowText: (row) =>
-      `${row.bookingCode} #${row.userId} #${row.showtimeId} ${row.status}`,
+      `${row.bookingCode} #${row.userId} #${row.showtimeId} ${(row.seatLabels || []).join(" ")} ${row.status}`,
   },
 ];
 
@@ -512,3 +534,9 @@ export const filterRows = (rows, query, resource, ctx) => {
 };
 
 export const columnText = (row, column, ctx) => text(column.value(row, ctx));
+
+/** Ngày chiếu (giờ VN) có nằm trong khoảng from–to không; from/to dạng YYYY-MM-DD. */
+export const inDayRange = (value, from, to) => {
+  const day = dayKey(value);
+  return (!from || day >= from) && (!to || day <= to);
+};

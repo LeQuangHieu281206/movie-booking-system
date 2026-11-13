@@ -4,6 +4,11 @@
 # Frontend
 frontend/node_modules/
 frontend/dist/
+frontend-react/node_modules/
+frontend-react/dist/
+
+# Graphify cache (sinh tự động)
+graphify-out/cache/
 
 # Logs & runtime
 logs/

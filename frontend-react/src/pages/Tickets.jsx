@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useLoad } from "../lib/useLoad.js";
 import { date, money, statusText, time } from "../lib/domain.js";
 import { filterTickets } from "../booking/flow.js";
-import { Button, Empty, ErrorBox, Icon, Loading } from "../components/UI.jsx";
+import { Button, Empty, ErrorBox, Icon } from "../components/UI.jsx";
+import { TicketListSkeleton } from "../components/Skeleton.jsx";
 import PaymentPanel from "../components/PaymentPanel.jsx";
 
 function TicketList({ api, user, movies, revision }) {
@@ -47,7 +48,7 @@ function TicketList({ api, user, movies, revision }) {
   }, [api, result.data]);
   const [updates, setUpdates] = useState({}),
     [expanded, setExpanded] = useState(null);
-  if (result.loading) return <Loading label="Đang tải vé của bạn…" />;
+  if (result.loading) return <TicketListSkeleton />;
   if (result.error)
     return <ErrorBox message={result.error} onRetry={result.reload} />;
   if (!result.data.length)
@@ -93,6 +94,11 @@ function TicketList({ api, user, movies, revision }) {
                         ? `${show.cinemaName} · ${show.roomName} · ${time(show.startTime)} ${date(show.startTime)}`
                         : `Booking #${booking.bookingId}`}
                     </p>
+                    {booking.seatLabels?.length > 0 && (
+                      <p className="ticket-seats">
+                        Ghế {booking.seatLabels.join(", ")}
+                      </p>
+                    )}
                     <small>
                       Đặt ngày {date(booking.bookingTime)} ·{" "}
                       {time(booking.bookingTime)}

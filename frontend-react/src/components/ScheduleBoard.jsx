@@ -11,7 +11,8 @@ import {
   showtimeDays,
   weekdayLabel,
 } from "../lib/venues.js";
-import { Button, Empty, ErrorBox, Loading, Icon } from "./UI.jsx";
+import { Button, Empty, ErrorBox, Icon } from "./UI.jsx";
+import { ScheduleSkeleton } from "./Skeleton.jsx";
 
 export default function ScheduleBoard({
   api,
@@ -34,7 +35,7 @@ export default function ScheduleBoard({
     () => bookableShowtimes(result.data, { cinemaId }),
     [result.data, cinemaId, tick],
   );
-  if (result.loading) return <Loading label="Đang tìm suất chiếu…" />;
+  if (result.loading) return <ScheduleSkeleton />;
   if (result.error)
     return <ErrorBox message={result.error} onRetry={result.reload} />;
 
@@ -69,7 +70,7 @@ export default function ScheduleBoard({
   );
   const groups = groupByCinema(shows);
   return (
-    <div className="schedule-board">
+    <div className="schedule-board fade-in">
       <div className="schedule-filter">
         <div className="date-tabs" role="group" aria-label="Chọn ngày chiếu">
           {days.map(({ key, value }) => (

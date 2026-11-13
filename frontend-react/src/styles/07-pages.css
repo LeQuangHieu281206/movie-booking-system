@@ -1,0 +1,124 @@
+.cinema-filter {
+  font-size: 12px;
+  margin: 0 0 14px;
+}
+.schedule-empty-action {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+.cinema-info a {
+  color: var(--gold-light);
+}
+.cinema-schedule h3,
+.cinema-label p {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 560px) {
+  .date-tabs {
+    scroll-snap-type: x proximity;
+  }
+  .date-tabs button {
+    scroll-snap-align: start;
+    min-height: 46px;
+  }
+  .showtime-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  }
+  .showtime-button {
+    max-width: none;
+    min-width: 0;
+  }
+}
+
+/* --- Trang Tài khoản (đăng nhập / đăng ký) --- */
+.auth-card {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: var(--space-5, 24px);
+  border: 1px solid var(--border, #e3e3e8);
+  border-radius: 14px;
+  background: var(--surface, #fff);
+  display: grid;
+  gap: 16px;
+}
+.auth-card .segmented {
+  width: 100%;
+}
+.auth-card form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.auth-card form label + label {
+  margin-top: 12px;
+}
+.auth-card input {
+  padding: 10px 12px;
+  border: 1px solid var(--border, #d8d8de);
+  border-radius: 9px;
+  font: inherit;
+  background: var(--bg, #fafafa);
+}
+.auth-card input:focus-visible {
+  outline: 2px solid var(--accent, #e11d48);
+  outline-offset: 1px;
+}
+.auth-card fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.auth-hint {
+  font-size: 0.88rem;
+  color: var(--muted, #6b6b76);
+  margin: 0;
+}
+
+/* --- QR thanh toán SePay --- */
+.qr-box {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.qr-box img {
+  width: 220px;
+  max-width: 100%;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+}
+@media (max-width: 640px) {
+  .auth-card {
+    padding: 18px 14px;
+  }
+}
+
+/* --- Trailer nhúng trong popup --- */
+.trailer-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.trailer-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* ============================================================
+   CineRoom yellow cinema theme
+   Apple-inspired light canvas, one yellow accent, quiet chrome.
+   ============================================================ */
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}

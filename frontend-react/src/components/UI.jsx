@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useId, useState } from "react";
+import { searchOptions } from "../lib/domain.js";
 
 export function Icon({ name, size = 20, ...props }) {
   const paths = {
@@ -177,6 +178,97 @@ export function Loading({ label = "Đang tải dữ liệu…" }) {
     </div>
   );
 }
+// Ô tìm kiếm có gợi ý: gõ để lọc theo nhãn, chọn một dòng để lấy id.
+export function SearchSelect({
+  label,
+  options = [],
+  value,
+  onChange,
+  placeholder = "Tìm…",
+  emptyText = "Không tìm thấy kết quả phù hợp",
+}) {
+  const listId = useId();
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const selected = options.find(
+    (option) => String(option.id) === String(value ?? ""),
+  );
+  const results = searchOptions(options, query);
+  const choose = (option) => {
+    onChange(String(option.id));
+    setOpen(false);
+    setQuery("");
+  };
+  return (
+    <div className="movie-search">
+      <label className="search-field">
+        <span className="sr-only">{label}</span>
+        <Icon name="search" size={18} />
+        <input
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listId}
+          aria-autocomplete="list"
+          aria-activedescendant={
+            active >= 0 && results[active]
+              ? `${listId}-${results[active].id}`
+              : undefined
+          }
+          placeholder={placeholder}
+          value={open ? query : selected?.label || ""}
+          onFocus={() => {
+            setQuery("");
+            setActive(-1);
+            setOpen(true);
+          }}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setActive(-1);
+            setOpen(true);
+          }}
+          onBlur={() => setOpen(false)}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setActive((index) => Math.min(index + 1, results.length - 1));
+            } else if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setActive((index) => Math.max(index - 1, 0));
+            } else if (event.key === "Enter" && open && results.length) {
+              event.preventDefault();
+              choose(results[active < 0 ? 0 : active]);
+            } else if (event.key === "Escape") {
+              setOpen(false);
+            }
+          }}
+        />
+      </label>
+      {open && (
+        <ul className="movie-suggestions" id={listId} role="listbox">
+          {results.length ? (
+            results.map((option, index) => (
+              <li
+                key={option.id}
+                id={`${listId}-${option.id}`}
+                role="option"
+                aria-selected={String(option.id) === String(value ?? "")}
+                className={index === active ? "active" : ""}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => choose(option)}
+              >
+                {option.label}
+              </li>
+            ))
+          ) : (
+            <li className="empty">{emptyText}</li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export function Poster({ movie, className = "" }) {
   return (
     <div className={`poster ${className}`}>

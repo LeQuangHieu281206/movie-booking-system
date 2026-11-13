@@ -1,0 +1,123 @@
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--distance-medium));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--distance-base)) scale(var(--scale-large));
+    filter: blur(var(--blur-small));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes modal-out {
+  to {
+    opacity: 0;
+    transform: translateY(var(--distance-micro)) scale(var(--scale-tiny));
+  }
+}
+@keyframes backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes badge-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.page-enter {
+  animation: page-in var(--duration-fast) var(--ease-smooth-out) both;
+}
+.fade-in {
+  animation: fade-in var(--duration-slow) var(--ease-in-out) both;
+}
+.movie-grid > *,
+.cinema-grid > *,
+.tickets-list > * {
+  animation: card-in var(--duration-slow) var(--ease-smooth-out) both;
+}
+.movie-grid > :nth-child(1),
+.cinema-grid > :nth-child(1),
+.tickets-list > :nth-child(1) {
+  animation-delay: 0ms;
+}
+.movie-grid > :nth-child(2),
+.cinema-grid > :nth-child(2),
+.tickets-list > :nth-child(2) {
+  animation-delay: var(--duration-stagger);
+}
+.movie-grid > :nth-child(3),
+.cinema-grid > :nth-child(3),
+.tickets-list > :nth-child(3) {
+  animation-delay: calc(var(--duration-stagger) * 2);
+}
+.movie-grid > :nth-child(4),
+.cinema-grid > :nth-child(4),
+.tickets-list > :nth-child(4) {
+  animation-delay: calc(var(--duration-stagger) * 3);
+}
+.movie-grid > :nth-child(5),
+.cinema-grid > :nth-child(5),
+.tickets-list > :nth-child(5) {
+  animation-delay: calc(var(--duration-stagger) * 4);
+}
+.movie-grid > :nth-child(6),
+.cinema-grid > :nth-child(6),
+.tickets-list > :nth-child(6) {
+  animation-delay: calc(var(--duration-stagger) * 5);
+}
+.movie-grid > :nth-child(n + 7),
+.cinema-grid > :nth-child(n + 7),
+.tickets-list > :nth-child(n + 7) {
+  animation-delay: calc(var(--duration-stagger) * 6);
+}
+.badge.paid {
+  animation: badge-pop var(--duration-very-slow) var(--ease-bounce) both;
+}
+
+/* ---------- Responsive overrides ---------- */
+@media (max-width: 1100px) {
+  .header-inner {
+    padding: 0 26px;
+    gap: 28px;
+  }
+  .hero-art {
+    width: 35%;
+    right: 4%;
+  }
+}

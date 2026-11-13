@@ -14,6 +14,10 @@ for var in JWT_SECRET INTERNAL_TOKEN; do
     fi
 done
 
+# Cài common vào ~/.m2 trước khi chạy: mỗi service chạy bằng `-pl <service>` chỉ resolve
+# common từ local repo, nên jar cũ sẽ gây NoClassDefFoundError khi common có class mới.
+mvn -q -pl common -DskipTests install || { echo "✗ Build common thất bại"; exit 1; }
+
 SERVICES=("venue-service" "user-service" "movie-service" "booking-service" "payment-service" "notification-service" "api-gateway")
 
 for s in "${SERVICES[@]}"; do

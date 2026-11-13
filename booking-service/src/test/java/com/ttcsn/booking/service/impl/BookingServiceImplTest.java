@@ -18,6 +18,7 @@ import com.ttcsn.booking.service.BookingSeatReleaser;
 import com.ttcsn.common.dto.BookingPaymentView;
 import com.ttcsn.common.dto.RoomDto;
 import com.ttcsn.common.dto.SeatHoldResult;
+import com.ttcsn.common.dto.SeatDto;
 import com.ttcsn.common.dto.SeatIdsRequest;
 import com.ttcsn.common.dto.ShowtimeView;
 import com.ttcsn.common.exception.ConflictException;
@@ -117,6 +118,22 @@ class BookingServiceImplTest {
         BookingResponse response = service.getBookingById(1L, 1L, "ADMIN");
 
         assertEquals(2L, response.userId());
+    }
+
+    @Test
+    void bookingResponseCarriesSeatLabelsFromVenue() {
+        Booking booking = booking(1L, 2L, BookingStatus.PAID);
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(bookingDetailRepository.findByBooking_BookingIdIn(List.of(1L))).thenReturn(List.of(
+                BookingDetail.builder().booking(booking).seatId(100L).showtimeSeatId(1000L).build(),
+                BookingDetail.builder().booking(booking).seatId(101L).showtimeSeatId(1001L).build()));
+        when(venueClient.getSeatsByIds(List.of(100L, 101L))).thenReturn(List.of(
+                new SeatDto(100L, 2L, "H", (short) 7, "NORMAL"),
+                new SeatDto(101L, 2L, "H", (short) 8, "NORMAL")));
+
+        BookingResponse response = service.getBookingById(1L, 1L, "ADMIN");
+
+        assertThat(response.seatLabels()).containsExactly("H7", "H8");
     }
 
     @Test
@@ -297,28 +314,74 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void statsFillSevenDaysAndIgnoreMissingDays() {
+    void statsCoverEveryHourOfToday() {
         java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
-        java.time.LocalDate yesterday = today.minusDays(1);
-        when(bookingRepository.sumPaidRevenueByDay(any()))
-                .thenReturn(List.<Object[]>of(new Object[]{
-                        java.sql.Date.valueOf(yesterday), new BigDecimal("250000"), 2L}));
-        when(bookingRepository.sumPaidRevenue()).thenReturn(new BigDecimal("250000"));
-        when(bookingRepository.countByStatus(BookingStatus.PAID)).thenReturn(2L);
-        when(bookingDetailRepository.countPaidSeats()).thenReturn(3L);
+        String at9 = today + " 09";
+        when(bookingRepository.sumPaidRevenueByHour(any()))
+                .thenReturn(List.<Object[]>of(new Object[]{at9, new BigDecimal("250000"), 2L}));
+        when(bookingDetailRepository.countPaidSeatsSince(any())).thenReturn(3L);
 
-        var stats = service.getBookingStats("ADMIN");
+        var stats = service.getBookingStats("ADMIN", "day");
 
-        assertThat(stats.dailyRevenue()).hasSize(7);
-        assertThat(stats.dailyRevenue().get(5).date()).isEqualTo(yesterday.toString());
-        assertThat(stats.dailyRevenue().get(5).revenue()).isEqualByComparingTo("250000");
-        assertThat(stats.dailyRevenue().get(6).revenue()).isEqualByComparingTo("0");
+        assertThat(stats.period()).isEqualTo("day");
+        assertThat(stats.revenueSeries()).hasSize(24);
+        assertThat(stats.revenueSeries().get(0).key()).isEqualTo(today + " 00");
+        assertThat(stats.revenueSeries().get(9).key()).isEqualTo(at9);
+        assertThat(stats.revenueSeries().get(9).revenue()).isEqualByComparingTo("250000");
+        assertThat(stats.revenueSeries().get(10).revenue()).isEqualByComparingTo("0");
+        // Tổng hợp tính trên đúng kỳ đang xem, khớp với chuỗi mốc.
+        assertThat(stats.revenue()).isEqualByComparingTo("250000");
+        assertThat(stats.paidBookings()).isEqualTo(2);
         assertThat(stats.ticketsSold()).isEqualTo(3);
     }
 
     @Test
+    void statsCoverEveryDayOfThisMonth() {
+        java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+        java.time.LocalDate firstDay = today.withDayOfMonth(1);
+        when(bookingRepository.sumPaidRevenueByDay(any()))
+                .thenReturn(List.<Object[]>of(new Object[]{
+                        firstDay.toString(), new BigDecimal("1200000"), 4L}));
+        when(bookingDetailRepository.countPaidSeatsSince(any())).thenReturn(9L);
+
+        var stats = service.getBookingStats("ADMIN", "month");
+
+        assertThat(stats.period()).isEqualTo("month");
+        assertThat(stats.revenueSeries()).hasSize(today.lengthOfMonth());
+        assertThat(stats.revenueSeries().get(0).key()).isEqualTo(firstDay.toString());
+        assertThat(stats.revenueSeries().get(0).paidBookings()).isEqualTo(4);
+        assertThat(stats.revenueSeries().get(1).revenue()).isEqualByComparingTo("0");
+        assertThat(stats.revenue()).isEqualByComparingTo("1200000");
+        assertThat(stats.paidBookings()).isEqualTo(4);
+    }
+
+    @Test
+    void statsCoverEveryMonthOfThisYear() {
+        int thisYear = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")).getYear();
+        when(bookingRepository.sumPaidRevenueByMonth(any()))
+                .thenReturn(List.<Object[]>of(new Object[]{
+                        thisYear + "-03", new BigDecimal("5000000"), 7L}));
+        when(bookingDetailRepository.countPaidSeatsSince(any())).thenReturn(12L);
+
+        var stats = service.getBookingStats("ADMIN", "year");
+
+        assertThat(stats.revenueSeries()).hasSize(12);
+        assertThat(stats.revenueSeries().get(0).key()).isEqualTo(thisYear + "-01");
+        assertThat(stats.revenueSeries().get(2).revenue()).isEqualByComparingTo("5000000");
+        assertThat(stats.revenueSeries().get(11).key()).isEqualTo(thisYear + "-12");
+        assertThat(stats.revenue()).isEqualByComparingTo("5000000");
+        assertThat(stats.paidBookings()).isEqualTo(7);
+    }
+
+    @Test
+    void statsRejectUnknownPeriod() {
+        assertThrows(IllegalArgumentException.class, () -> service.getBookingStats("ADMIN", "week"));
+        verifyNoInteractions(bookingRepository);
+    }
+
+    @Test
     void statsAreAdminOnly() {
-        assertThrows(ForbiddenException.class, () -> service.getBookingStats("CUSTOMER"));
+        assertThrows(ForbiddenException.class, () -> service.getBookingStats("CUSTOMER", "day"));
         verifyNoInteractions(bookingRepository);
     }
 

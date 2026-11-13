@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -32,24 +31,43 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             """)
     int expireIfPending(@Param("bookingId") Long bookingId);
 
-    /** Tổng doanh thu của các booking đã thanh toán. */
-    @Query("""
-            SELECT COALESCE(SUM(b.totalAmount), 0) FROM Booking b
-            WHERE b.status = com.ttcsn.booking.entity.enums.BookingStatus.PAID
-            """)
-    BigDecimal sumPaidRevenue();
-
-    long countByStatus(BookingStatus status);
-
-    /** Doanh thu theo ngày (giờ Việt Nam) của các booking đã thanh toán. */
+    /**
+     * Doanh thu theo mốc thời gian (giờ Việt Nam) của các booking đã thanh toán.
+     * Mốc trả về dạng text để service dùng thẳng làm key:
+     * YYYY-MM-DD HH (theo giờ) / YYYY-MM-DD (theo ngày) / YYYY-MM (theo tháng).
+     */
     @Query(value = """
-            SELECT CAST(booking_time AT TIME ZONE 'Asia/Ho_Chi_Minh' AS date) AS day,
+            SELECT to_char(booking_time AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD HH24') AS bucket,
                    COALESCE(SUM(total_amount), 0) AS revenue,
                    COUNT(*) AS bookings
             FROM bookings
             WHERE status = 'PAID' AND booking_time >= :from
-            GROUP BY day
-            ORDER BY day
+            GROUP BY bucket
+            ORDER BY bucket
+            """, nativeQuery = true)
+    List<Object[]> sumPaidRevenueByHour(@Param("from") OffsetDateTime from);
+
+    /** Như sumPaidRevenueByHour nhưng gom theo ngày. */
+    @Query(value = """
+            SELECT to_char(booking_time AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD') AS bucket,
+                   COALESCE(SUM(total_amount), 0) AS revenue,
+                   COUNT(*) AS bookings
+            FROM bookings
+            WHERE status = 'PAID' AND booking_time >= :from
+            GROUP BY bucket
+            ORDER BY bucket
             """, nativeQuery = true)
     List<Object[]> sumPaidRevenueByDay(@Param("from") OffsetDateTime from);
+
+    /** Như sumPaidRevenueByHour nhưng gom theo tháng. */
+    @Query(value = """
+            SELECT to_char(booking_time AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM') AS bucket,
+                   COALESCE(SUM(total_amount), 0) AS revenue,
+                   COUNT(*) AS bookings
+            FROM bookings
+            WHERE status = 'PAID' AND booking_time >= :from
+            GROUP BY bucket
+            ORDER BY bucket
+            """, nativeQuery = true)
+    List<Object[]> sumPaidRevenueByMonth(@Param("from") OffsetDateTime from);
 }
