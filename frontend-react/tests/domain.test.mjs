@@ -6,6 +6,7 @@ import {
   filterMovies,
   dayKey,
   youtubeEmbed,
+  searchOptions,
 } from "../src/lib/domain.js";
 const show = {
   showtimeId: 7,
@@ -91,3 +92,18 @@ test("Tìm phim không dấu, phối hợp thể loại và trạng thái", () =
 });
 test("Lịch chiếu lấy ngày Việt Nam kể cả qua nửa đêm UTC", () =>
   assert.equal(dayKey("2026-10-22T18:00:00Z"), "2026-10-23"));
+test("Gợi ý tìm kiếm bỏ dấu, không phân biệt hoa/thường; từ khóa rỗng trả tất cả", () => {
+  const options = [
+    { id: 1, label: "Dune: Hành Tinh Cát" },
+    { id: 2, label: "Mai" },
+  ];
+  assert.deepEqual(
+    searchOptions(options, "hanh tinh").map((option) => option.id),
+    [1],
+  );
+  assert.deepEqual(
+    searchOptions(options, "  ").map((option) => option.id),
+    [1, 2],
+  );
+  assert.deepEqual(searchOptions(options, "không có"), []);
+});

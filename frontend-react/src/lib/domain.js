@@ -156,6 +156,14 @@ export function youtubeEmbed(url) {
   return match ? `https://www.youtube.com/embed/${match[1]}` : "";
 }
 
+/** Lọc danh sách { id, label } theo nhãn: bỏ dấu, không phân biệt hoa/thường. */
+export const searchOptions = (options, query) => {
+  const needle = normalizeText(query).trim();
+  return needle
+    ? options.filter((option) => normalizeText(option.label).includes(needle))
+    : options;
+};
+
 export function filterMovies(
   movies,
   { query = "", status = "SHOWING", genre = "" } = {},

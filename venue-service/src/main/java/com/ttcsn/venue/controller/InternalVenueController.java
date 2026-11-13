@@ -7,6 +7,7 @@ package com.ttcsn.venue.controller;
 import com.ttcsn.common.dto.RoomDto;
 import com.ttcsn.common.dto.SeatDto;
 import com.ttcsn.venue.entity.Room;
+import com.ttcsn.venue.entity.Seat;
 import com.ttcsn.venue.repository.RoomRepository;
 import com.ttcsn.venue.repository.SeatRepository;
 
@@ -14,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,12 +46,19 @@ public class InternalVenueController {
     @Transactional(readOnly = true)
     public List<SeatDto> getSeatsByRoom(@PathVariable Long roomId) {
         return seatRepository.findByRoom_RoomId(roomId).stream()
-                .map(seat -> new SeatDto(
-                        seat.getSeatId(),
-                        seat.getRoom().getRoomId(),
-                        seat.getSeatRow(),
-                        seat.getSeatNumber(),
-                        seat.getSeatType() != null ? seat.getSeatType().name() : null))
+                .map(this::toSeatDto)
+                .toList();
+    }
+
+    /** Tra nhãn ghế hàng loạt cho booking-service (vé hiển thị vị trí ghế). */
+    @PostMapping("/seats/by-ids")
+    @Transactional(readOnly = true)
+    public List<SeatDto> getSeatsByIds(@RequestBody List<Long> seatIds) {
+        if (seatIds == null || seatIds.isEmpty()) {
+            return List.of();
+        }
+        return seatRepository.findAllWithRoomByIds(seatIds).stream()
+                .map(this::toSeatDto)
                 .toList();
     }
 
@@ -61,6 +71,15 @@ public class InternalVenueController {
         return roomRepository.findAllWithCinemaByIds(ids).stream()
                 .map(this::toRoomDto)
                 .toList();
+    }
+
+    private SeatDto toSeatDto(Seat seat) {
+        return new SeatDto(
+                seat.getSeatId(),
+                seat.getRoom().getRoomId(),
+                seat.getSeatRow(),
+                seat.getSeatNumber(),
+                seat.getSeatType() != null ? seat.getSeatType().name() : null);
     }
 
     private RoomDto toRoomDto(Room room) {

@@ -9,6 +9,7 @@ import com.ttcsn.booking.entity.enums.PaymentMethod;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 /**
  *
  * @author quanghieu
@@ -21,6 +22,8 @@ public record BookingResponse(
         BigDecimal totalAmount,
         BookingStatus status,
         PaymentMethod paymentMethod,
-        OffsetDateTime bookingTime
+        OffsetDateTime bookingTime,
+        /** Vị trí ghế đã đặt, ví dụ "H7"; rỗng nếu venue-service không trả được. */
+        List<String> seatLabels
 ) {
 }

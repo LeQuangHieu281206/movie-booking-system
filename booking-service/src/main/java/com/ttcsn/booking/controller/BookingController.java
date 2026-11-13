@@ -55,10 +55,12 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getBookingsByShowtimeId(showtimeId, role));
     }
 
+    /** period = day | month | year (mặc định day: doanh thu hôm nay, chia theo 24 giờ). */
     @GetMapping("/getBookingStats")
     public ResponseEntity<BookingStatsResponse> getBookingStats(
-            @RequestHeader("X-User-Role") String role) {
-        return ResponseEntity.ok(bookingService.getBookingStats(role));
+            @RequestHeader("X-User-Role") String role,
+            @RequestParam(defaultValue = "day") String period) {
+        return ResponseEntity.ok(bookingService.getBookingStats(role, period));
     }
 
     @PostMapping("/createBooking")

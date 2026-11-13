@@ -20,6 +20,7 @@ import com.ttcsn.booking.service.BookingService;
 import com.ttcsn.common.dto.BookingPaymentView;
 import com.ttcsn.common.dto.SeatHoldResult;
 import com.ttcsn.common.dto.SeatIdsRequest;
+import com.ttcsn.common.dto.SeatDto;
 import com.ttcsn.common.dto.ShowtimeView;
 import com.ttcsn.common.exception.ConflictException;
 import com.ttcsn.common.exception.ForbiddenException;
@@ -35,6 +36,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,7 +60,76 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingService {
 
     private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
-    private static final int REVENUE_DAYS = 7;
+
+    /**
+     * Kỳ xem doanh số: mỗi kỳ là MỘT đơn vị thời gian đang diễn ra
+     * (hôm nay / tháng này / năm nay). Biểu đồ chia nhỏ đơn vị đó thành các mốc:
+     * ngày -> 24 giờ, tháng -> từng ngày, năm -> 12 tháng (giờ Việt Nam).
+     */
+    private enum StatsPeriod {
+        DAY("day"),
+        MONTH("month"),
+        YEAR("year");
+
+        private final String value;
+
+        StatsPeriod(String value) {
+            this.value = value;
+        }
+
+        /** Không truyền period thì mặc định xem hôm nay. */
+        static StatsPeriod from(String raw) {
+            if (raw == null || raw.isBlank()) {
+                return DAY;
+            }
+            for (StatsPeriod period : values()) {
+                if (period.value.equalsIgnoreCase(raw.trim())) {
+                    return period;
+                }
+            }
+            throw new IllegalArgumentException("period chỉ nhận day, month hoặc year");
+        }
+
+        /** Mốc bắt đầu của kỳ, đã hạ về đầu ngày/tháng/năm. */
+        LocalDate windowStart(LocalDate today) {
+            return switch (this) {
+                case DAY -> today;
+                case MONTH -> today.withDayOfMonth(1);
+                case YEAR -> today.withDayOfYear(1);
+            };
+        }
+
+        /**
+         * Đủ mọi mốc của kỳ, kể cả mốc chưa phát sinh doanh thu, để biểu đồ
+         * không co giãn khi thiếu dữ liệu.
+         */
+        List<String> keys(LocalDate today) {
+            return switch (this) {
+                case DAY -> {
+                    String day = today.format(DateTimeFormatter.ISO_LOCAL_DATE);
+                    List<String> keys = new ArrayList<>(24);
+                    for (int hour = 0; hour < 24; hour++) {
+                        keys.add("%s %02d".formatted(day, hour));
+                    }
+                    yield keys;
+                }
+                case MONTH -> {
+                    List<String> keys = new ArrayList<>(today.lengthOfMonth());
+                    for (int day = 1; day <= today.lengthOfMonth(); day++) {
+                        keys.add(today.withDayOfMonth(day).format(DateTimeFormatter.ISO_LOCAL_DATE));
+                    }
+                    yield keys;
+                }
+                case YEAR -> {
+                    List<String> keys = new ArrayList<>(12);
+                    for (int month = 1; month <= 12; month++) {
+                        keys.add(today.withMonth(month).format(DateTimeFormatter.ofPattern("yyyy-MM")));
+                    }
+                    yield keys;
+                }
+            };
+        }
+    }
 
     /**
      * Chuyển trạng thái được phép qua API.
@@ -83,9 +154,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingResponse> getAllBookings(String role) {
         requireAdmin(role);
-        return bookingRepository.findAll().stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
+        return convertToResponses(bookingRepository.findAll());
     }
 
     @Override
@@ -98,45 +167,59 @@ public class BookingServiceImpl implements BookingService {
         Long targetUserId = Roles.isAdmin(role) && requestedUserId != null
                 ? requestedUserId
                 : currentUserId;
-        return bookingRepository.findByUserId(targetUserId).stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
+        return convertToResponses(bookingRepository.findByUserId(targetUserId));
     }
 
     @Override
     public List<BookingResponse> getBookingsByShowtimeId(Long showtimeId, String role) {
         requireAdmin(role);
-        return bookingRepository.findByShowtimeId(showtimeId).stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
+        return convertToResponses(bookingRepository.findByShowtimeId(showtimeId));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public BookingStatsResponse getBookingStats(String role) {
+    public BookingStatsResponse getBookingStats(String role, String period) {
         requireAdmin(role);
-        LocalDate firstDay = LocalDate.now(VN_ZONE).minusDays(REVENUE_DAYS - 1L);
-        Map<LocalDate, BookingStatsResponse.DailyRevenue> byDay = new HashMap<>();
-        for (Object[] row : bookingRepository.sumPaidRevenueByDay(
-                firstDay.atStartOfDay(VN_ZONE).toOffsetDateTime())) {
-            LocalDate day = LocalDate.parse(row[0].toString());
-            byDay.put(day, new BookingStatsResponse.DailyRevenue(
-                    day.toString(),
+        StatsPeriod statsPeriod = StatsPeriod.from(period);
+        LocalDate today = LocalDate.now(VN_ZONE);
+        OffsetDateTime from = statsPeriod.windowStart(today).atStartOfDay(VN_ZONE).toOffsetDateTime();
+
+        List<Object[]> rows = switch (statsPeriod) {
+            case DAY -> bookingRepository.sumPaidRevenueByHour(from);
+            case MONTH -> bookingRepository.sumPaidRevenueByDay(from);
+            case YEAR -> bookingRepository.sumPaidRevenueByMonth(from);
+        };
+
+        Map<String, BookingStatsResponse.RevenueBucket> byKey = new HashMap<>();
+        for (Object[] row : rows) {
+            String key = row[0].toString();
+            byKey.put(key, new BookingStatsResponse.RevenueBucket(
+                    key,
                     (BigDecimal) row[1],
                     ((Number) row[2]).longValue()
             ));
         }
-        List<BookingStatsResponse.DailyRevenue> dailyRevenue = new ArrayList<>();
-        for (int i = 0; i < REVENUE_DAYS; i++) {
-            LocalDate day = firstDay.plusDays(i);
-            dailyRevenue.add(byDay.getOrDefault(day,
-                    new BookingStatsResponse.DailyRevenue(day.toString(), BigDecimal.ZERO, 0)));
+
+        List<BookingStatsResponse.RevenueBucket> revenueSeries = new ArrayList<>();
+        for (String key : statsPeriod.keys(today)) {
+            revenueSeries.add(byKey.getOrDefault(key,
+                    new BookingStatsResponse.RevenueBucket(key, BigDecimal.ZERO, 0)));
         }
+
+        // Ba con số tổng hợp tính trên đúng kỳ đang xem để khớp với biểu đồ.
+        BigDecimal revenue = revenueSeries.stream()
+                .map(BookingStatsResponse.RevenueBucket::revenue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long paidBookings = revenueSeries.stream()
+                .mapToLong(BookingStatsResponse.RevenueBucket::paidBookings)
+                .sum();
+
         return new BookingStatsResponse(
-                bookingRepository.sumPaidRevenue(),
-                bookingRepository.countByStatus(BookingStatus.PAID),
-                bookingDetailRepository.countPaidSeats(),
-                dailyRevenue
+                revenue,
+                paidBookings,
+                bookingDetailRepository.countPaidSeatsSince(from),
+                statsPeriod.value,
+                revenueSeries
         );
     }
 
@@ -321,15 +404,60 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private BookingResponse convertToResponse(Booking booking) {
-        return new BookingResponse(
-                booking.getBookingId(),
-                booking.getUserId(),
-                booking.getShowtimeId(),
-                booking.getBookingCode(),
-                booking.getTotalAmount(),
-                booking.getStatus(),
-                booking.getPaymentMethod(),
-                booking.getBookingTime()
-        );
+        return convertToResponses(List.of(booking)).get(0);
+    }
+
+    /** Gắn vị trí ghế cho cả danh sách vé: 1 query booking_details + 1 lần gọi venue-service. */
+    private List<BookingResponse> convertToResponses(List<Booking> bookings) {
+        if (bookings.isEmpty()) {
+            return List.of();
+        }
+        List<Long> bookingIds = bookings.stream().map(Booking::getBookingId).toList();
+        Map<Long, List<Long>> seatIdsByBooking = bookingDetailRepository
+                .findByBooking_BookingIdIn(bookingIds).stream()
+                .collect(Collectors.groupingBy(
+                        detail -> detail.getBooking().getBookingId(),
+                        Collectors.mapping(BookingDetail::getSeatId, Collectors.toList())));
+        Map<Long, String> labelsById = seatLabels(seatIdsByBooking.values().stream()
+                .flatMap(List::stream)
+                .distinct()
+                .toList());
+        return bookings.stream()
+                .map(booking -> {
+                    List<String> labels = seatIdsByBooking
+                            .getOrDefault(booking.getBookingId(), List.of()).stream()
+                            .map(labelsById::get)
+                            .filter(Objects::nonNull)
+                            .toList();
+                    return new BookingResponse(
+                            booking.getBookingId(),
+                            booking.getUserId(),
+                            booking.getShowtimeId(),
+                            booking.getBookingCode(),
+                            booking.getTotalAmount(),
+                            booking.getStatus(),
+                            booking.getPaymentMethod(),
+                            booking.getBookingTime(),
+                            labels
+                    );
+                })
+                .toList();
+    }
+
+    /** venue-service có thể tạm lỗi; vé vẫn phải xem được, chỉ thiếu vị trí ghế. */
+    private Map<Long, String> seatLabels(List<Long> seatIds) {
+        if (seatIds.isEmpty()) {
+            return Map.of();
+        }
+        try {
+            return venueClient.getSeatsByIds(seatIds).stream()
+                    .collect(Collectors.toMap(
+                            SeatDto::seatId,
+                            seat -> seat.seatRow() + seat.seatNumber(),
+                            (first, second) -> first));
+        } catch (RuntimeException ex) {
+            log.warn("[booking-service] Không lấy được vị trí ghế từ venue-service: {}", ex.getMessage());
+            return Map.of();
+        }
     }
 }
