@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 /**
  * Gọi movie-service (suất chiếu + ghế) qua internal API.
  */
-@FeignClient(name = "showtime-internal-client", url = "${app.services.movie-url:http://localhost:8081}")
+@FeignClient(name = "movie-service", contextId = "showtimeClient")
 public interface ShowtimeClient {
 
     @PostMapping("/internal/showtime-seats/hold")

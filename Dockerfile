@@ -1,5 +1,5 @@
-# Một image chứa cả 7 service Java. Mỗi container chọn jar bằng `command`
-# trong docker-compose.yml (ENTRYPOINT luôn là `java -jar`).
+# Một image chứa cả 8 service Java (7 service + eureka-server). Mỗi container chọn jar
+# bằng `command` trong docker-compose.yml (ENTRYPOINT luôn là `java -jar`).
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /src
 COPY . .
@@ -10,6 +10,7 @@ WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app \
     && apk add --no-cache tzdata
 COPY --from=build /src/api-gateway/target/api-gateway-*.jar /app/api-gateway.jar
+COPY --from=build /src/eureka-server/target/eureka-server-*.jar /app/eureka-server.jar
 COPY --from=build /src/user-service/target/user-service-*.jar /app/user-service.jar
 COPY --from=build /src/movie-service/target/movie-service-*.jar /app/movie-service.jar
 COPY --from=build /src/venue-service/target/venue-service-*.jar /app/venue-service.jar

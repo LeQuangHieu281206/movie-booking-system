@@ -24,6 +24,7 @@
 
 	<modules>
 		<module>common</module>
+		<module>eureka-server</module>
 		<module>movie-service</module>
 		<module>booking-service</module>
 		<module>venue-service</module>

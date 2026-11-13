@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: eureka-server
+
+server:
+  address: 127.0.0.1
+  port: 8761
+
+eureka:
+  client:
+    # Registry không tự đăng ký / không đi tìm registry khác (chạy 1 node).
+    register-with-eureka: false
+    fetch-registry: false
