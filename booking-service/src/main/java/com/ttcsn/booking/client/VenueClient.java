@@ -14,7 +14,7 @@ import java.util.List;
  * SOA Step 2 — Gọi venue-serviceKiểm tra rạp/phòng (không có trạng thái ghế-suất;
  * trạng thái ghế-theo-suất nằm ở movie-service — gọi qua ShowtimeClient).
  */
-@FeignClient(name = "venue-service", url = "${app.services.venue-url:http://localhost:8083}")
+@FeignClient(name = "venue-service")
 public interface VenueClient {
 
     /** Kiểm tra tồn tại/đang hoạt động phòng chiếu trước khi hold ghế. */

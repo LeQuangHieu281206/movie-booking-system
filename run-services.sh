@@ -2,7 +2,7 @@
 cd "$(dirname "$0")"
 mkdir -p logs
 
-# Spring Boot không đọc .env → nạp vào môi trường cho cả 7 service.
+# Spring Boot không đọc .env → nạp vào môi trường cho cả 8 service.
 # Lần đầu chạy sẽ tự sinh secret dev vào .env (đã gitignore); production phải tự đặt.
 [ -f .env ] || cp .env.example .env
 set -a; . ./.env; set +a
@@ -18,6 +18,15 @@ done
 # common từ local repo, nên jar cũ sẽ gây NoClassDefFoundError khi common có class mới.
 mvn -q -pl common -DskipTests install || { echo "✗ Build common thất bại"; exit 1; }
 
+# Registry phải lên trước, nếu không gateway/Feign không tìm thấy instance (503).
+mvn -q -pl eureka-server -DskipTests spring-boot:run > "logs/eureka-server.log" 2>&1 &
+echo $! >> logs/pids.txt
+echo "  ▶ eureka-server  (pid $!, log: logs/eureka-server.log)"
+for _ in $(seq 1 60); do
+    ss -ltn 2>/dev/null | grep -q ":8761 " && break
+    sleep 1
+done
+
 SERVICES=("venue-service" "user-service" "movie-service" "booking-service" "payment-service" "notification-service" "api-gateway")
 
 for s in "${SERVICES[@]}"; do
@@ -28,7 +37,7 @@ done
 
 echo "Đợi service khởi động..."; sleep 45
 printf "PORT  SERVICE\n"
-for p in 8081:movie 8082:booking 8083:venue 8084:user 8086:payment 8087:notification 8080:gateway; do
+for p in 8761:eureka 8081:movie 8082:booking 8083:venue 8084:user 8086:payment 8087:notification 8080:gateway; do
     port="${p%%:*}"; name="${p##*:}"
     if ss -ltn 2>/dev/null | grep -q ":$port "; then
         printf "%s UP      %s\n" "$port" "$name"

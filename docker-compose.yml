@@ -1,12 +1,14 @@
 name: movie-booking
 
-# Chạy toàn bộ hệ thống: RabbitMQ + 7 service Java + frontend Nginx.
+# Chạy toàn bộ hệ thống: RabbitMQ + Eureka + 7 service Java + frontend Nginx.
 #   docker compose up -d --build
 # Đọc thêm README mục "Chạy nhanh bằng Docker".
 
 x-common-env: &common-env
   SERVER_ADDRESS: 0.0.0.0
   TZ: Asia/Ho_Chi_Minh
+  # Địa chỉ registry cho client (trong Docker là tên container).
+  EUREKA_URL: http://eureka-server:8761/eureka/
   # Chỉ dành cho dev local. Production: đặt JWT_SECRET/INTERNAL_TOKEN thật trong .env
   # (docker compose tự đọc .env) — gateway và user-service phải dùng cùng JWT_SECRET.
   JWT_SECRET: ${JWT_SECRET:-dev-only-jwt-secret-0123456789abcdef0123456789}
@@ -40,26 +42,55 @@ services:
     ports:
       - "16379:6379"   # dự phòng cho giữ ghế, hiện code chưa dùng
 
+  eureka-server:
+    <<: *backend
+    command: ["/app/eureka-server.jar"]
+    ports:
+      - "8761:8761"    # dashboard + registry API
+    healthcheck:
+      # Image JRE alpine có busybox wget; dashboard trả 200 khi registry sẵn sàng.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8761/"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   venue-service:
     <<: *backend
     command: ["/app/venue-service.jar"]
+    environment:
+      <<: *common-env
+      EUREKA_HOSTNAME: venue-service
+    depends_on:
+      eureka-server:
+        condition: service_healthy
 
   user-service:
     <<: *backend
     command: ["/app/user-service.jar"]
+    environment:
+      <<: *common-env
+      EUREKA_HOSTNAME: user-service
+    depends_on:
+      eureka-server:
+        condition: service_healthy
 
   movie-service:
     <<: *backend
     command: ["/app/movie-service.jar"]
     environment:
       <<: *common-env
-      APP_SERVICES_VENUE_URL: http://venue-service:8083
+      EUREKA_HOSTNAME: movie-service
+    depends_on:
+      eureka-server:
+        condition: service_healthy
 
   booking-service:
     <<: *backend
     command: ["/app/booking-service.jar"]
     depends_on:
       rabbitmq:
+        condition: service_healthy
+      eureka-server:
         condition: service_healthy
       user-service:
         condition: service_started
@@ -70,9 +101,7 @@ services:
     environment:
       <<: *common-env
       SPRING_RABBITMQ_HOST: rabbitmq
-      APP_SERVICES_USER_URL: http://user-service:8084
-      APP_SERVICES_MOVIE_URL: http://movie-service:8081
-      APP_SERVICES_VENUE_URL: http://venue-service:8083
+      EUREKA_HOSTNAME: booking-service
 
   payment-service:
     <<: *backend
@@ -80,12 +109,14 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      eureka-server:
+        condition: service_healthy
       booking-service:
         condition: service_started
     environment:
       <<: *common-env
       SPRING_RABBITMQ_HOST: rabbitmq
-      APP_SERVICES_BOOKING_URL: http://booking-service:8082
+      EUREKA_HOSTNAME: payment-service
 
   notification-service:
     <<: *backend
@@ -93,16 +124,24 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      eureka-server:
+        condition: service_healthy
     environment:
       <<: *common-env
       SPRING_RABBITMQ_HOST: rabbitmq
+      EUREKA_HOSTNAME: notification-service
 
   api-gateway:
     <<: *backend
     command: ["/app/api-gateway.jar"]
+    environment:
+      <<: *common-env
+      EUREKA_HOSTNAME: api-gateway
     ports:
       - "8080:8080"
     depends_on:
+      eureka-server:
+        condition: service_healthy
       user-service:
         condition: service_started
       movie-service:
@@ -113,13 +152,6 @@ services:
         condition: service_started
       payment-service:
         condition: service_started
-    environment:
-      <<: *common-env
-      USER_SERVICE_URL: http://user-service:8084
-      MOVIE_SERVICE_URL: http://movie-service:8081
-      VENUE_SERVICE_URL: http://venue-service:8083
-      BOOKING_SERVICE_URL: http://booking-service:8082
-      PAYMENT_SERVICE_URL: http://payment-service:8086
 
   frontend:
     image: movie-booking-frontend:latest

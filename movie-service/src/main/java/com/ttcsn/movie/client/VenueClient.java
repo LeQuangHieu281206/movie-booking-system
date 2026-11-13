@@ -17,7 +17,7 @@ import java.util.List;
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-@FeignClient(name = "venue-service", url = "${app.services.venue-url:http://localhost:8083}")
+@FeignClient(name = "venue-service")
 public interface VenueClient {
 
     @GetMapping("/internal/rooms/{roomId}")

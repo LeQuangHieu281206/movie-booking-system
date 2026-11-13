@@ -22,11 +22,14 @@ server:
   address: 127.0.0.1
   port: 8082
 
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:localhost}
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
 app:
-  services:
-    user-url: http://127.0.0.1:8084
-    movie-url: http://127.0.0.1:8081
-    venue-url: http://127.0.0.1:8083
   booking:
     # Booking PENDING quá hạn này (phút) -> EXPIRED + nhả ghế. Phải lớn hơn
     # thời gian giữ chỗ tạm (HOLD 10 phút ở movie-service).
