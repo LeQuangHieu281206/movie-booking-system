@@ -11,3 +11,8 @@ eureka:
     # Registry không tự đăng ký / không đi tìm registry khác (chạy 1 node).
     register-with-eureka: false
     fetch-registry: false
+  server:
+    # Cụm nhỏ (1 node): tắt self-preservation để instance chết được loại khỏi danh bạ,
+    # nếu bật, cụm 2 instance chết 1 (renewal < 85%) sẽ giữ instance chết mãi mãi.
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 5000
