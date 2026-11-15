@@ -76,6 +76,9 @@ function TicketList({ api, user, movies, revision }) {
       <div className="tickets-list">
         {filterTickets(result.data).map((original) => {
             const booking = updates[original.bookingId] || original;
+            const seatLabels = [booking.seatLabels, original.seatLabels].find(
+              (labels) => Array.isArray(labels) && labels.length > 0,
+            ) ?? [];
             const show = shows[booking.showtimeId],
               movie = movies.find((movie) => movie.movieId === show?.movieId);
             return (
@@ -94,9 +97,9 @@ function TicketList({ api, user, movies, revision }) {
                         ? `${show.cinemaName} · ${show.roomName} · ${time(show.startTime)} ${date(show.startTime)}`
                         : `Booking #${booking.bookingId}`}
                     </p>
-                    {booking.seatLabels?.length > 0 && (
+                    {seatLabels.length > 0 && (
                       <p className="ticket-seats">
-                        Ghế {booking.seatLabels.join(", ")}
+                        Ghế {seatLabels.join(", ")}
                       </p>
                     )}
                     <small>
@@ -126,17 +129,29 @@ function TicketList({ api, user, movies, revision }) {
                   </div>
                 </div>
                 {expanded === booking.bookingId && (
-                  <PaymentPanel
-                    key={booking.bookingId}
-                    api={api}
-                    booking={booking}
-                    onUpdate={(latest) =>
-                      setUpdates((current) => ({
-                        ...current,
-                        [latest.bookingId]: latest,
-                      }))
-                    }
-                  />
+                  <>
+                    <section className="payment-panel" aria-label="Ghế đã đặt">
+                      <div className="subheading">
+                        <h3>Ghế đã đặt</h3>
+                      </div>
+                      {seatLabels.length ? (
+                        <p><strong>{seatLabels.join(", ")}</strong></p>
+                      ) : (
+                        <p>Chưa tải được vị trí ghế của vé này.</p>
+                      )}
+                    </section>
+                    <PaymentPanel
+                      key={booking.bookingId}
+                      api={api}
+                      booking={booking}
+                      onUpdate={(latest) =>
+                        setUpdates((current) => ({
+                          ...current,
+                          [latest.bookingId]: latest,
+                        }))
+                      }
+                    />
+                  </>
                 )}
               </article>
             );

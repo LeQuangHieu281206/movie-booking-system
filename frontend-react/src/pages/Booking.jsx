@@ -118,6 +118,7 @@ export default function Booking({
       setFreshSeats(prepared.inventory.seats);
       setSelected(prepared.ids);
       if (!prepared.payload) {
+        setAgreed(false);
         setError(prepared.message);
         return;
       }
@@ -322,7 +323,10 @@ export default function Booking({
                 <Button
                   primary
                   disabled={!selected.length || !seats.length}
-                  onClick={() => setStep(2)}
+                  onClick={() => {
+                    setAgreed(false);
+                    setStep(2);
+                  }}
                 >
                   Tiếp tục
                   <Icon name="arrow" size={16} />
