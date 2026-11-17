@@ -115,9 +115,13 @@ export function createLiveApi(request = createHttpClient()) {
         method: "PUT",
         body: { status: "CANCELLED" },
       }),
-    // Trả { qrUrl, message } của SePay; booking chỉ PAID sau khi webhook chuyển khoản về.
+    // Trả { qrUrl, message, bookingId, referenceCode, bankName, accountNumber, accountName } của SePay;
+    // booking chỉ PAID sau khi webhook chuyển khoản về.
     createPayment: (bookingId) =>
       request("/createPayment", { method: "POST", body: { bookingId } }),
+    // Lịch sử các lần giao dịch thanh toán của một booking (/api/getPayments/booking/{bookingId}).
+    payments: (bookingId, options) =>
+      list(`/getPayments/booking/${id(bookingId)}`, options),
   };
 }
 

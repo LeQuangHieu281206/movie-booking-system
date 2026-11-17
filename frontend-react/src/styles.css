@@ -3522,6 +3522,98 @@ footer .brand svg {
 .qr-box img {
   border-radius: 14px;
 }
+.sepay-checkout-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: stretch;
+  margin: 12px 0;
+}
+.sepay-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold-deep);
+  background: var(--primary-soft);
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+.sepay-transfer-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+.sepay-transfer-head .eyebrow {
+  margin-bottom: 4px;
+}
+.sepay-transfer-head .hint {
+  margin: 0;
+  font-size: 12px;
+}
+.sepay-transfer-rows {
+  display: grid;
+  gap: 10px;
+}
+.sepay-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+  font-size: 12px;
+}
+.sepay-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.sepay-row > span {
+  color: var(--muted);
+}
+.sepay-copy-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.sepay-highlight {
+  color: var(--gold-deep);
+  font-size: 14px;
+}
+.sepay-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--primary-soft);
+  color: var(--gold-deep);
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+}
+.sepay-copy-btn {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  transition:
+    background var(--duration-quick) var(--ease-smooth-out),
+    border-color var(--duration-quick) var(--ease-smooth-out);
+}
+.sepay-copy-btn:hover {
+  border-color: var(--primary-strong);
+  background: var(--surface-2);
+}
+@media (max-width: 680px) {
+  .sepay-checkout-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* ---------- Motion ---------- */
 @keyframes page-in {

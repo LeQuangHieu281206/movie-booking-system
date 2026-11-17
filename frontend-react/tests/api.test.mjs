@@ -71,11 +71,12 @@ test("Booking, thanh toán và hủy dùng đúng DTO của backend", async () =
   const calls = [];
   const api = createLiveApi(async (path, options) => {
     calls.push({ path, ...options });
-    return {};
+    return path.startsWith("/getPayments") ? [] : {};
   });
   const body = { showtimeId: 7, seatIds: [91], paymentMethod: "CASH" };
   await api.createBooking(body);
   await api.createPayment(4);
+  await api.payments(4);
   await api.me();
   await api.cancel(4);
   assert.deepEqual(calls[0], { path: "/createBooking", method: "POST", body });
@@ -84,9 +85,10 @@ test("Booking, thanh toán và hủy dùng đúng DTO của backend", async () =
     method: "POST",
     body: { bookingId: 4 },
   });
-  assert.equal(calls[2].path, "/users/me");
-  assert.equal(calls[3].path, "/updateBooking?id=4");
-  assert.deepEqual(calls[3].body, { status: "CANCELLED" });
+  assert.equal(calls[2].path, "/getPayments/booking/4");
+  assert.equal(calls[3].path, "/users/me");
+  assert.equal(calls[4].path, "/updateBooking?id=4");
+  assert.deepEqual(calls[4].body, { status: "CANCELLED" });
 });
 test("Mọi request gắn Bearer token của phiên đăng nhập", () =>
   withStorage(
