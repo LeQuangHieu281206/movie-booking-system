@@ -32,7 +32,8 @@ final class GatewayAuthorizationRules {
     private static final List<Rule> RULES = List.of(
             rule(HttpMethod.OPTIONS, "/**", Access.PUBLIC),
 
-            // Đăng nhập / đăng ký.
+            // Đăng nhập / đăng ký (bao gồm đăng nhập bằng Google OAuth2).
+            rule(HttpMethod.POST, "/api/auth/google", Access.PUBLIC),
             rule(null, "/api/auth/**", Access.PUBLIC),
 
             // GET công khai

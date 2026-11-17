@@ -55,6 +55,7 @@ public class UserServiceImpl implements UserService {
                 .fullName(request.fullName())
                 .email(request.email())
                 .passwordHash(request.password())
+                .authProvider("LOCAL")
                 .phoneNumber(request.phoneNumber())
                 .role(request.role())
                 .build();

@@ -56,6 +56,38 @@ test("login thành công trả session có user profile dạng userId", () =>
     assert.equal(auth.restore().accessToken, "at");
   }));
 
+test("googleLogin gửi idToken tới /auth/google và lưu session", () =>
+  withStorage(async () => {
+    const calls = [];
+    const auth = createAuthService(async (path, options) => {
+      calls.push({ path, options });
+      return {
+        accessToken: "google-at",
+        refreshToken: "google-rt",
+        tokenType: "Bearer",
+        expiresIn: 7200,
+        user: {
+          id: 15,
+          email: "google@example.com",
+          fullName: "Google User",
+          role: "CUSTOMER",
+        },
+      };
+    });
+    const session = await auth.googleLogin("mock-google-id-token");
+    assert.equal(calls[0].path, "/auth/google");
+    assert.deepEqual(calls[0].options.body, {
+      idToken: "mock-google-id-token",
+    });
+    assert.deepEqual(session.user, {
+      userId: 15,
+      email: "google@example.com",
+      fullName: "Google User",
+      role: "CUSTOMER",
+    });
+    assert.equal(auth.restore().accessToken, "google-at");
+  }));
+
 test("register gửi đúng payload rồi tự đăng nhập", () =>
   withStorage(async () => {
     const calls = [];

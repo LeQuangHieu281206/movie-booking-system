@@ -42,6 +42,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/google").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/internal/**").permitAll()
                         .requestMatchers("/error").permitAll()

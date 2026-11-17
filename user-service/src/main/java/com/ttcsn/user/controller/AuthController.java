@@ -1,5 +1,6 @@
 package com.ttcsn.user.controller;
 
+import com.ttcsn.user.dto.request.GoogleLoginRequest;
 import com.ttcsn.user.dto.request.LoginRequest;
 import com.ttcsn.user.dto.request.RefreshTokenRequest;
 import com.ttcsn.user.dto.request.RegisterRequest;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Auth công khai (permitAll trong SecurityConfig): register + login.
+ * Auth công khai (permitAll trong SecurityConfig): register + login + google + refresh.
  *
  * @author quanghieu
  */
@@ -38,6 +39,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    /** Đăng nhập bằng Google OAuth2 ID Token: tự động đăng ký nếu email chưa tồn tại, trả 200 + AuthResponse. */
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        return ResponseEntity.ok(authService.googleLogin(request));
     }
 
     /** Đổi refresh token lấy cặp token mới. Token sai/hết hạn/sai loại -> 401 (InvalidTokenException). */

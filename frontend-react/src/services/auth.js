@@ -27,6 +27,16 @@ export function createAuthService(request) {
       writeSession(session);
       return session;
     },
+    async googleLogin(idToken) {
+      const session = sessionFromAuthResponse(
+        await request("/auth/google", {
+          method: "POST",
+          body: { idToken },
+        }),
+      );
+      writeSession(session);
+      return session;
+    },
     async register(fields) {
       await request("/auth/register", {
         method: "POST",
