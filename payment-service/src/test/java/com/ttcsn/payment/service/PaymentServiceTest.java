@@ -265,4 +265,48 @@ class PaymentServiceTest {
         verifyNoInteractions(rabbitTemplate);
         verifyNoInteractions(bookingClient);
     }
+
+    @Test
+    void webhookExtractsBookingIdWithHyphenOrSpaceAfterPrefix() {
+        SePayWebhookDto dto = webhook(9010L, "Chuyen khoan DH-15 thanh toan ve", "120000");
+        when(bookingClient.getBooking(15L))
+                .thenReturn(booking(15L, 7L, "120000", "PENDING"));
+        Payment pending = Payment.builder()
+                .paymentId(12L)
+                .bookingId(15L)
+                .status(PaymentStatus.PENDING)
+                .build();
+        when(paymentRepository.findFirstByBookingIdAndStatusOrderByPaymentIdDesc(15L, PaymentStatus.PENDING))
+                .thenReturn(Optional.of(pending));
+
+        service.processSePayWebhook(dto);
+
+        verify(rabbitTemplate).convertAndSend(
+                eq(RabbitMQConfig.EXCHANGE), eq(Topics.PAYMENT_COMPLETED), any(PaymentCompletedEvent.class));
+        assertThat(pending.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+    }
+
+    @Test
+    void getPaymentsByBookingIdReturnsHistoryForOwnerAndRejectsOtherCustomer() {
+        when(bookingClient.getBooking(1L))
+                .thenReturn(booking(1L, 7L, "100000", "PENDING"));
+        Payment p = Payment.builder()
+                .paymentId(21L)
+                .bookingId(1L)
+                .amount(new BigDecimal("100000"))
+                .currency("VND")
+                .status(PaymentStatus.PENDING)
+                .provider("SEPAY")
+                .referenceCode("DH1")
+                .build();
+        when(paymentRepository.findByBookingIdOrderByPaymentIdDesc(1L))
+                .thenReturn(java.util.List.of(p));
+
+        var result = service.getPaymentsByBookingId(1L, 7L, "CUSTOMER");
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).paymentId()).isEqualTo(21L);
+
+        assertThrows(NotFoundException.class,
+                () -> service.getPaymentsByBookingId(1L, 99L, "CUSTOMER"));
+    }
 }

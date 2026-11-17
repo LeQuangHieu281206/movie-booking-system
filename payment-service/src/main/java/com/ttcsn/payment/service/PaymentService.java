@@ -9,6 +9,7 @@ import com.ttcsn.common.exception.NotFoundException;
 import com.ttcsn.payment.client.BookingClient;
 import com.ttcsn.payment.config.RabbitMQConfig;
 import com.ttcsn.payment.dto.request.SePayWebhookDto;
+import com.ttcsn.payment.dto.response.PaymentHistoryResponse;
 import com.ttcsn.payment.entity.Payment;
 import com.ttcsn.payment.entity.PaymentStatus;
 import com.ttcsn.payment.repository.PaymentRepository;
@@ -16,11 +17,13 @@ import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,9 +49,18 @@ public class PaymentService {
 
     private static final String PROVIDER_SEPAY = "SEPAY";
     private static final String CURRENCY_VND = "VND";
-    private static final String BANK_NAME = "MBBank";
-    private static final String ACCOUNT_NUMBER = "1234567890";
-    private static final String BOOKING_PREFIX = "DH";
+
+    @Value("${app.sepay.bank-name:MBBank}")
+    private String bankName = "MBBank";
+
+    @Value("${app.sepay.account-number:1234567890}")
+    private String accountNumber = "1234567890";
+
+    @Value("${app.sepay.account-name:CINEROOM CINEMA}")
+    private String accountName = "CINEROOM CINEMA";
+
+    @Value("${app.sepay.booking-prefix:DH}")
+    private String bookingPrefix = "DH";
 
     private final BookingClient bookingClient;
     private final RabbitTemplate rabbitTemplate;
@@ -69,9 +81,9 @@ public class PaymentService {
 
         BookingPaymentView booking = loadOwnedPendingBooking(bookingId, userId);
         BigDecimal amount = booking.totalAmount();
-        String referenceCode = BOOKING_PREFIX + bookingId;
+        String referenceCode = bookingPrefix + bookingId;
         String qrUrl = String.format("https://qr.sepay.vn/img?acc=%s&bank=%s&amount=%s&des=%s",
-                ACCOUNT_NUMBER, BANK_NAME, amount.toPlainString(), referenceCode);
+                accountNumber, bankName, amount.toPlainString(), referenceCode);
 
         paymentRepository.upsertPendingPayment(bookingId, amount, referenceCode, qrUrl);
         Long paymentId = paymentRepository
@@ -82,6 +94,53 @@ public class PaymentService {
         log.info("[payment-service] Đã tạo QR cho bookingId={}, paymentId={}, amount={}",
                 bookingId, paymentId, amount);
         return qrUrl;
+    }
+
+    /**
+     * Truy vấn lịch sử giao dịch thanh toán của một booking.
+     * Chỉ chủ sở hữu booking hoặc ADMIN mới được phép xem (trả 404 nếu không thuộc user).
+     */
+    @Transactional(readOnly = true)
+    public List<PaymentHistoryResponse> getPaymentsByBookingId(Long bookingId, Long userId, String userRole) {
+        if (bookingId == null) {
+            throw new IllegalArgumentException("bookingId không được để trống");
+        }
+        if (userId == null) {
+            throw new IllegalArgumentException("Thiếu X-User-Id");
+        }
+
+        BookingPaymentView booking;
+        try {
+            booking = bookingClient.getBooking(bookingId);
+        } catch (FeignException.NotFound ex) {
+            throw new NotFoundException("Không tìm thấy đơn đặt vé với bookingId = " + bookingId);
+        }
+
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(userRole);
+        if (booking == null || (!isAdmin && !Objects.equals(booking.userId(), userId))) {
+            throw new NotFoundException("Không tìm thấy đơn đặt vé với bookingId = " + bookingId);
+        }
+
+        return paymentRepository.findByBookingIdOrderByPaymentIdDesc(bookingId)
+                .stream()
+                .map(PaymentHistoryResponse::from)
+                .toList();
+    }
+
+    public String getBankName() {
+        return bankName;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public String getReferenceCode(Long bookingId) {
+        return bookingId == null ? null : bookingPrefix + bookingId;
     }
 
     /**
@@ -102,10 +161,10 @@ public class PaymentService {
             return;
         }
 
-        Long bookingId = extractBookingIdFromContent(content.toUpperCase(), BOOKING_PREFIX);
+        Long bookingId = extractBookingIdFromContent(content.toUpperCase(), bookingPrefix.toUpperCase());
         if (bookingId == null) {
             log.warn("[payment-service] Không tìm thấy mã đối soát (prefix {}) trong nội dung: {}",
-                    BOOKING_PREFIX, content);
+                    bookingPrefix, content);
             return;
         }
 
@@ -151,7 +210,7 @@ public class PaymentService {
             return;
         }
 
-        String referenceCode = BOOKING_PREFIX + bookingId;
+        String referenceCode = bookingPrefix + bookingId;
         String rawPayload = objectMapper.valueToTree(request).toString();
         OffsetDateTime paidAt = OffsetDateTime.now();
         Long savedPaymentId;
@@ -200,7 +259,7 @@ public class PaymentService {
                 bookingId,
                 request.getTransferAmount() == null ? BigDecimal.ZERO : request.getTransferAmount(),
                 providerTxnId,
-                BOOKING_PREFIX + bookingId,
+                bookingPrefix + bookingId,
                 objectMapper.valueToTree(request).toString(),
                 reason);
         if (inserted > 0) {
@@ -234,12 +293,20 @@ public class PaymentService {
         return booking;
     }
 
+    /**
+     * Trích xuất bookingId từ nội dung chuyển khoản (hỗ trợ cả "DH123", "DH-123", "DH 123").
+     */
     private Long extractBookingIdFromContent(String content, String prefix) {
         try {
-            if (content.contains(prefix)) {
-                int startIndex = content.indexOf(prefix) + prefix.length();
+            int idx = content.indexOf(prefix);
+            while (idx >= 0) {
+                int cursor = idx + prefix.length();
+                while (cursor < content.length()
+                        && (content.charAt(cursor) == ' ' || content.charAt(cursor) == '-' || content.charAt(cursor) == '_')) {
+                    cursor++;
+                }
                 StringBuilder idStr = new StringBuilder();
-                for (int i = startIndex; i < content.length(); i++) {
+                for (int i = cursor; i < content.length(); i++) {
                     char c = content.charAt(i);
                     if (Character.isDigit(c)) {
                         idStr.append(c);
@@ -250,6 +317,7 @@ public class PaymentService {
                 if (!idStr.isEmpty()) {
                     return Long.parseLong(idStr.toString());
                 }
+                idx = content.indexOf(prefix, idx + prefix.length());
             }
         } catch (Exception e) {
             log.error("[payment-service] Lỗi trích xuất Booking ID từ nội dung Webhook: {}", content, e);
