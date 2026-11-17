@@ -39,8 +39,15 @@ public class User {
     @Column(nullable = false, unique = true, columnDefinition = "text")
     private String email;
 
-    @Column(name = "password_hash", nullable = false, columnDefinition = "text")
+    @Column(name = "password_hash", columnDefinition = "text")
     private String passwordHash;
+
+    @Builder.Default
+    @Column(name = "auth_provider", nullable = false, length = 20)
+    private String authProvider = "LOCAL";
+
+    @Column(name = "google_id", unique = true, length = 255)
+    private String googleId;
 
     @Column(name = "phone_number", columnDefinition = "varchar(12)")
     private String phoneNumber;

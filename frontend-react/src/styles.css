@@ -3372,6 +3372,61 @@ footer .brand svg {
 .auth-card .error-box {
   margin: 0;
 }
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.google-auth-section {
+  display: grid;
+  gap: 10px;
+}
+.google-auth-button {
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 10px;
+  transition:
+    background var(--duration-quick) var(--ease-smooth-out),
+    border-color var(--duration-quick) var(--ease-smooth-out),
+    transform var(--duration-fast) var(--ease-smooth-out);
+}
+.google-auth-button:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--primary-strong);
+}
+.google-auth-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.google-oauth-widget {
+  display: flex;
+  justify-content: center;
+}
+[data-theme="dark"] .google-auth-button {
+  background: #141518;
+  border-color: var(--line);
+  color: var(--ink);
+}
+[data-theme="dark"] .google-auth-button:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--gold-deep);
+}
 .profile-card {
   max-width: 760px;
   margin: 0 auto;

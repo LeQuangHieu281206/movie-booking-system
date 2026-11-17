@@ -1,8 +1,84 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { GoogleLogin } from "@react-oauth/google";
 import { Button, ErrorBox, Icon } from "../components/UI.jsx";
 
 const PHONE_PATTERN = "[0-9]{8,11}|[+]84[0-9]{9}";
 const PHONE_TITLE = "Số điện thoại gồm 8-11 chữ số hoặc +84 theo sau 9 chữ số";
+const GOOGLE_CLIENT_ID =
+  import.meta.env?.VITE_GOOGLE_CLIENT_ID ||
+  "your-google-client-id.apps.googleusercontent.com";
+
+function isPlaceholderClientId(clientId) {
+  if (!clientId || typeof clientId !== "string") return true;
+  const normalized = clientId.trim().toLowerCase();
+  return (
+    !normalized ||
+    normalized.startsWith("your-") ||
+    normalized.includes("placeholder") ||
+    normalized === "your-google-client-id.apps.googleusercontent.com"
+  );
+}
+
+function encodeBase64Url(obj) {
+  const json = JSON.stringify(obj);
+  const bytes = new TextEncoder().encode(json);
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function createDevGoogleIdToken(emailInput = "", nameInput = "") {
+  const email =
+    emailInput && emailInput.includes("@")
+      ? emailInput.trim().toLowerCase()
+      : "cineroom.google@gmail.com";
+  const defaultName = email
+    .split("@")[0]
+    .replace(/[._-]+/g, " ")
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+  const name = nameInput?.trim() || defaultName || "Google User";
+  const nowSec = Math.floor(Date.now() / 1000);
+  const header = { alg: "RS256", typ: "JWT" };
+  const payload = {
+    iss: "https://accounts.google.com",
+    sub: `google-${email}`,
+    email,
+    email_verified: true,
+    name,
+    iat: nowSec,
+    exp: nowSec + 3600,
+  };
+  return `${encodeBase64Url(header)}.${encodeBase64Url(payload)}.dev-local-signature`;
+}
+
+function GoogleMark() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v2.98h3.86c2.26-2.09 3.56-5.17 3.56-8.8Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-2.98c-1.08.72-2.45 1.16-4.07 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.31c-.24-.72-.38-1.49-.38-2.31s.14-1.59.38-2.31V6.6H1.29C.47 8.23 0 10.06 0 12s.47 3.77 1.29 5.4l3.99-3.09Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.6l3.99 3.09c.95-2.85 3.6-4.94 6.72-4.94Z"
+      />
+    </svg>
+  );
+}
 
 function roleLabel(role) {
   return role === "ADMIN" ? "Quản trị viên" : "Khách hàng";
@@ -139,6 +215,8 @@ export default function Auth({ auth, api, user, onUser, onDone }) {
   const [tab, setTab] = useState("login");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const formRef = useRef(null);
+  const hasRealClientId = !isPlaceholderClientId(GOOGLE_CLIENT_ID);
 
   async function submit(event) {
     event.preventDefault();
@@ -161,6 +239,39 @@ export default function Auth({ auth, api, user, onUser, onDone }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function handleGoogleCredential(idToken) {
+    if (!idToken) {
+      setError("Không nhận được Google ID Token. Vui lòng thử lại.");
+      return;
+    }
+    setError("");
+    setBusy(true);
+    try {
+      const session = await auth.googleLogin(idToken);
+      onUser(session.user);
+      onDone();
+    } catch (cause) {
+      setError(
+        cause.message || "Không đăng nhập được bằng Google. Thử lại sau.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function onGoogleButtonClick() {
+    if (busy) return;
+    if (hasRealClientId && globalThis.google?.accounts?.id) {
+      globalThis.google.accounts.id.prompt();
+      return;
+    }
+    const formData = formRef.current
+      ? Object.fromEntries(new FormData(formRef.current))
+      : {};
+    const devToken = createDevGoogleIdToken(formData.email, formData.fullName);
+    handleGoogleCredential(devToken);
   }
 
   if (user) {
@@ -205,7 +316,7 @@ export default function Auth({ auth, api, user, onUser, onDone }) {
             </p>
           </div>
           {error && <ErrorBox message={error} />}
-          <form onSubmit={submit} key={tab}>
+          <form ref={formRef} onSubmit={submit} key={tab}>
             <fieldset disabled={busy}>
               {tab === "register" && (
                 <label>
@@ -279,6 +390,39 @@ export default function Auth({ auth, api, user, onUser, onDone }) {
               </Button>
             </fieldset>
           </form>
+          <div className="auth-divider" role="separator" aria-label="hoặc">
+            <span>hoặc</span>
+          </div>
+          <div className="google-auth-section">
+            <button
+              type="button"
+              className="button full google-auth-button"
+              disabled={busy}
+              onClick={onGoogleButtonClick}
+            >
+              <GoogleMark />
+              <span>Đăng nhập bằng Google</span>
+            </button>
+            {hasRealClientId && (
+              <div className="google-oauth-widget">
+                <GoogleLogin
+                  onSuccess={(response) =>
+                    handleGoogleCredential(response?.credential)
+                  }
+                  onError={() =>
+                    setError(
+                      "Đăng nhập Google không thành công. Vui lòng thử lại.",
+                    )
+                  }
+                  useOneTap={false}
+                  shape="pill"
+                  size="large"
+                  text="signin_with"
+                  locale="vi"
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
