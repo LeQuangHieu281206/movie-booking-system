@@ -154,7 +154,7 @@ export function Empty({ title = "Chưa có dữ liệu", children }) {
     <div className="empty">
       <Icon name="ticket" size={36} />
       <h3>{title}</h3>
-      <p>{children}</p>
+      {children && <p>{children}</p>}
     </div>
   );
 }

@@ -173,7 +173,6 @@ export default function ResourcePanel({ api, resource, ctx, onRefsChanged }) {
       <header className="admin-panel-head">
         <div>
           <h1 id="admin-title">{resource.title}</h1>
-          <p>{resource.description}</p>
         </div>
         <div className="admin-panel-actions">
           <Button className="small" onClick={() => result.reload()} disabled={result.loading}>
@@ -351,11 +350,7 @@ export default function ResourcePanel({ api, resource, ctx, onRefsChanged }) {
       )}
 
       {pending.length ? (
-        <Empty title={`Chọn ${pending[0]}`}>
-          {pending.length > 1
-            ? `Chọn ${pending.join(" → ")} để xem danh sách.`
-            : `Chọn ${pending[0]} để xem ${resource.label.toLowerCase()}.`}
-        </Empty>
+        <Empty title={`Chọn ${pending[0]}`} />
       ) : result.loading ? (
         <TableSkeleton columns={resource.columns.length + 1} />
       ) : result.error ? (

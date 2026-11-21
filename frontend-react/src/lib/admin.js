@@ -43,7 +43,6 @@ export const ADMIN_RESOURCES = [
     icon: "film",
     group: "Nội dung",
     title: "Quản lý phim",
-    description: "Thông tin phim, thể loại, độ tuổi và trạng thái phát hành.",
     listPath: "/getMovies",
     createPath: "/createMovie",
     updatePath: "/updateMovie",
@@ -134,7 +133,6 @@ export const ADMIN_RESOURCES = [
     icon: "tag",
     group: "Nội dung",
     title: "Quản lý thể loại",
-    description: "Danh mục thể loại dùng khi tạo và lọc phim.",
     listPath: "/getGenres",
     createPath: "/createGenre",
     updatePath: "/updateGenre",
@@ -156,7 +154,6 @@ export const ADMIN_RESOURCES = [
     icon: "calendar",
     group: "Nội dung",
     title: "Quản lý suất chiếu",
-    description: "Lên lịch chiếu, phòng chiếu, giá vé và trạng thái suất.",
     requiresMovie: true,
     filtersCinema: true,
     filtersDate: true,
@@ -255,7 +252,6 @@ export const ADMIN_RESOURCES = [
     icon: "building",
     group: "Rạp chiếu",
     title: "Quản lý rạp",
-    description: "Thông tin rạp, địa chỉ và số điện thoại liên hệ.",
     requiresCity: true,
     listPath: (state) =>
       state.city
@@ -303,7 +299,6 @@ export const ADMIN_RESOURCES = [
     icon: "room",
     group: "Rạp chiếu",
     title: "Quản lý phòng chiếu",
-    description: "Phòng thuộc rạp, sức chứa và loại phòng.",
     requiresCinema: true,
     listPath: (state) =>
       state.cinemaId ? `/getRooms?cinemaId=${state.cinemaId}` : null,
@@ -363,7 +358,6 @@ export const ADMIN_RESOURCES = [
     icon: "seat",
     group: "Rạp chiếu",
     title: "Quản lý ghế",
-    description: "Ghế vật lý của từng phòng chiếu. Chọn phòng để xem danh sách.",
     listPath: (state) =>
       state.roomId ? `/getSeatsByRoomId?roomId=${state.roomId}` : null,
     createPath: "/createSeat",
@@ -416,7 +410,6 @@ export const ADMIN_RESOURCES = [
     icon: "user",
     group: "Vận hành",
     title: "Quản lý người dùng",
-    description: "Tài khoản khách hàng và quản trị viên, gán vai trò truy cập.",
     listPath: "/getUsers",
     createPath: "/createUser",
     updatePath: "/updateUser",
@@ -476,7 +469,6 @@ export const ADMIN_RESOURCES = [
     icon: "ticket",
     group: "Vận hành",
     title: "Quản lý đặt vé",
-    description: "Theo dõi giao dịch, huỷ hoặc đánh dấu hết hạn vé chờ thanh toán.",
     listPath: "/getBookings",
     updatePath: "/updateBooking",
     removePath: "/deleteBooking",
