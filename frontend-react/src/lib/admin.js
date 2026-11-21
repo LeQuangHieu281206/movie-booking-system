@@ -509,6 +509,14 @@ export const ADMIN_RESOURCES = [
     toForm: (row) => row || {},
     toPayload: (values) => ({ status: values.status }),
     quickActions: [
+      {
+        label: "Xác nhận tiền mặt",
+        status: "PAID",
+        path: "/confirmCashPayment",
+        note: (row) =>
+          `Xác nhận đã thu tiền mặt cho vé ${row.bookingCode}? Vé chuyển sang Đã thanh toán và giữ nguyên ghế.`,
+        when: (row) => row.status === "PENDING" && row.paymentMethod === "CASH",
+      },
       { label: "Huỷ vé", status: "CANCELLED", when: (row) => row.status === "PENDING" },
       { label: "Hết hạn", status: "EXPIRED", when: (row) => row.status === "PENDING" },
     ],

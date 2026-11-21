@@ -284,3 +284,7 @@ footer .brand svg {
     transform: translateY(0);
   }
 }
+.google-auth-hint {
+  margin: 0;
+  text-align: center;
+}

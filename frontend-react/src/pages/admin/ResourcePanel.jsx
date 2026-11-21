@@ -146,12 +146,22 @@ export default function ResourcePanel({ api, resource, ctx, onRefsChanged }) {
   function quick(row, action) {
     setConfirm({
       title: `${action.label}?`,
-      message: `Chuyển vé ${row.bookingCode} sang trạng thái ${action.status}.`,
+      message: action.note
+        ? action.note(row)
+        : `Chuyển vé ${row.bookingCode} sang trạng thái ${action.status}.`,
       confirmLabel: action.label,
       run: async () => {
-        await api.admin.update(resource.updatePath, row[resource.idKey], {
-          status: action.status,
-        });
+        // Một số thao tác (xác nhận tiền mặt) dùng endpoint riêng thay vì
+        // /updateBooking, vì PAID không được đặt qua API cập nhật thường.
+        if (action.path)
+          await api.admin.create(
+            `${action.path}?id=${row[resource.idKey]}`,
+            {},
+          );
+        else
+          await api.admin.update(resource.updatePath, row[resource.idKey], {
+            status: action.status,
+          });
         setConfirm(null);
         changed(`Đã cập nhật vé ${row.bookingCode}.`);
       },

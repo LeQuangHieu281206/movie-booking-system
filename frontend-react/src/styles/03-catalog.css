@@ -238,7 +238,6 @@
 .page-section {
   padding-top: 50px;
   padding-bottom: 70px;
-  min-height: calc(100vh - 340px);
 }
 .page-section > h1 {
   margin-bottom: 14px;

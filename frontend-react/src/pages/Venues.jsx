@@ -1,18 +1,13 @@
 import React, { useState } from "react";
 import { useLoad } from "../lib/useLoad.js";
-import { cityList, movieOptions, sameId, telHref } from "../lib/venues.js";
-import {
-  Button,
-  Empty,
-  ErrorBox,
-  Icon,
-  SearchSelect,
-} from "../components/UI.jsx";
+import { cityList, sameId, telHref } from "../lib/venues.js";
+import { Button, Empty, ErrorBox, Icon } from "../components/UI.jsx";
 import {
   CinemaGridSkeleton,
   ScheduleSkeleton,
 } from "../components/Skeleton.jsx";
 import ScheduleBoard from "../components/ScheduleBoard.jsx";
+import Select from "../components/Select.jsx";
 
 export function Cinemas({ api, onSchedule }) {
   const result = useLoad((options) => api.cinemas(options), [api]);
@@ -24,24 +19,19 @@ export function Cinemas({ api, onSchedule }) {
   const cinemas = all.filter((cinema) => !city || cinema.city === city);
   return (
     <section className="container page-section">
-      <span className="eyebrow">MỘT ĐIỂM HẸN. NHIỀU TRẢI NGHIỆM.</span>
       <div className="section-heading">
         <div>
           <h1>Hệ thống rạp</h1>
-          <p>Tìm nơi bắt đầu cuộc hẹn điện ảnh của bạn.</p>
         </div>
-        <label>
-          <span className="sr-only">Lọc thành phố</span>
-          <select
-            value={city}
-            onChange={(event) => setCity(event.target.value)}
-          >
-            <option value="">Tất cả thành phố</option>
-            {cities.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
+        <Select
+          label="Lọc thành phố"
+          value={city}
+          onChange={setCity}
+          options={[
+            { value: "", label: "Tất cả thành phố" },
+            ...cities.map((value) => ({ value, label: value })),
+          ]}
+        />
       </div>
       {result.loading ? (
         <CinemaGridSkeleton />
@@ -128,24 +118,10 @@ export function Showtimes({
   )?.name;
   return (
     <section className="container page-section">
-      <span className="eyebrow">CHỌN MỘT THỜI ĐIỂM DÀNH CHO BẠN</span>
       <div className="section-heading">
         <div>
           <h1>Lịch chiếu</h1>
-          <p>
-            Chọn giờ chiếu để tiếp tục chọn ghế. Giờ hiển thị theo Việt Nam.
-          </p>
         </div>
-        <SearchSelect
-          label="Tìm phim"
-          placeholder="Tìm phim đang chiếu…"
-          options={movieOptions(movies, movieId).map((movie) => ({
-            id: movie.id,
-            label: movie.title,
-          }))}
-          value={movieId}
-          onChange={setMovieId}
-        />
       </div>
       {cinemaId && (
         <p className="hint cinema-filter">
@@ -167,6 +143,8 @@ export function Showtimes({
           cinemaId={cinemaId}
           cinemaName={cinemaName}
           movies={movies}
+          moviePicker
+          onMovieChange={setMovieId}
           onSelect={onSelect}
           onClearCinema={() => setCinemaId("")}
         />

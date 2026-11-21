@@ -21,6 +21,7 @@ import {
 } from "../components/UI.jsx";
 import { SeatMapSkeleton } from "../components/Skeleton.jsx";
 import PaymentPanel from "../components/PaymentPanel.jsx";
+import Select from "../components/Select.jsx";
 
 export default function Booking({
   api,
@@ -127,6 +128,12 @@ export default function Booking({
         { ...prepared.payload, userId: user.userId },
       );
       setBooking(saved);
+      // Vé tiền mặt không có bước QR: về ngay Vé của tôi, vé ở trạng thái
+      // Chờ thanh toán cho tới khi quản trị viên xác nhận đã thu tiền.
+      if (saved.paymentMethod === "CASH") {
+        onTickets();
+        return;
+      }
       setStep(3);
     } catch (error) {
       if (posted && (!error.status || error.status >= 500)) {
@@ -172,6 +179,7 @@ export default function Booking({
       ) : (
         <div className="booking-layout fade-in">
           <div className="booking-main">
+            <div className="step-in" key={booking ? "ticket" : step}>
             {step === 1 && (
               <>
                 <div className="subheading">
@@ -181,10 +189,6 @@ export default function Booking({
                     Tải lại ghế
                   </Button>
                 </div>
-                <p className="hint">
-                  Ghế được giữ sau khi bạn xác nhận đặt vé. Tối đa{" "}
-                  {MAX_SEATS_PER_BOOKING} ghế mỗi lần đặt.
-                </p>
                 {!seats.length ? (
                   <Empty title="Suất chiếu chưa có ghế">
                     Suất chiếu này chưa có sơ đồ ghế. Vui lòng chọn suất khác.
@@ -243,9 +247,6 @@ export default function Booking({
                         Đã đặt / đang giữ
                       </span>
                     </div>
-                    <p className="hint">
-                      Giá áp dụng cho mỗi ghế theo suất chiếu.
-                    </p>
                   </>
                 )}
               </>
@@ -265,24 +266,26 @@ export default function Booking({
                     </small>
                   </div>
                 </div>
-                <label className="payment-method">
-                  Phương thức ghi nhận
-                  <select
+                <div className="payment-method">
+                  <span>Phương thức thanh toán</span>
+                  <Select
+                    label="Phương thức thanh toán"
                     value={method}
                     disabled={busy}
-                    onChange={(event) => setMethod(event.target.value)}
-                  >
-                    {PAYMENT_METHODS.map((value) => (
-                      <option key={value} value={value}>
-                        {labelOf(value)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="notice">
-                  Bước này tạo booking chờ thanh toán. Phần thanh toán tiếp theo
-                  là mô phỏng, không thu tiền thật.
+                    onChange={setMethod}
+                    options={PAYMENT_METHODS.map((value) => ({
+                      value,
+                      label: labelOf(value),
+                    }))}
+                  />
                 </div>
+                {method === "CASH" && (
+                  <p className="hint">
+                    Vé tiền mặt được giữ ở trạng thái Chờ thanh toán. Bạn trả
+                    tiền tại quầy, nhân viên rạp xác nhận để vé chuyển sang Đã
+                    thanh toán.
+                  </p>
+                )}
                 <label className="checkbox-label">
                   <input
                     type="checkbox"
@@ -339,7 +342,11 @@ export default function Booking({
                     disabled={!user || !agreed || busy || uncertain}
                     onClick={submit}
                   >
-                    {busy ? "Đang xác nhận…" : "Xác nhận đặt vé"}
+                    {busy
+                      ? "Đang xác nhận…"
+                      : method === "CASH"
+                        ? "Đặt vé và trả tiền tại quầy"
+                        : "Xác nhận đặt vé"}
                   </Button>
                 </>
               )}
@@ -350,13 +357,13 @@ export default function Booking({
                 </Button>
               )}
             </div>
+            </div>
           </div>
           <aside className="booking-summary">
             {movie && (
               <div className="summary-movie">
                 <Poster movie={movie} />
                 <div>
-                  <span className="eyebrow">BỘ PHIM CỦA BẠN</span>
                   <h3>{movie.title}</h3>
                   <p>
                     {movie.ageRestriction} · {movie.durationMinutes} phút

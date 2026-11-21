@@ -1,9 +1,9 @@
 {
   "api-gateway/pom.xml": {
-    "mtime": 1793522064.036973,
-    "seen": 1793693519.3100834,
-    "ast_hash": "4303737574cfc53e973c4671ff1c6ea2",
-    "semantic_hash": "4303737574cfc53e973c4671ff1c6ea2"
+    "mtime": 1795236609.2028186,
+    "seen": 1795236777.16377,
+    "ast_hash": "c08702455e65417918ae4742c11888b5",
+    "semantic_hash": ""
   },
   "api-gateway/src/main/java/com/ttcsn/gateway/ApiGatewayApplication.java": {
     "mtime": 1793522064.0379732,
@@ -18,9 +18,9 @@
     "semantic_hash": "f9372b98ab9fa84f1e0c8d8cc7e49658"
   },
   "api-gateway/src/main/java/com/ttcsn/gateway/security/GatewayAuthorizationRules.java": {
-    "mtime": 1793935386.7193756,
-    "seen": 1793935446.8112118,
-    "ast_hash": "41ca922a255f467064489a674e25c0c3",
+    "mtime": 1795251451.5032663,
+    "seen": 1795252072.7115405,
+    "ast_hash": "3bcc1a826fa7488baa98b3846206e00b",
     "semantic_hash": ""
   },
   "api-gateway/src/main/java/com/ttcsn/gateway/security/GatewayJwtFilter.java": {
@@ -36,22 +36,22 @@
     "semantic_hash": "2198c2da1c9c3df68e31ee7befa583e8"
   },
   "api-gateway/src/main/resources/application.yml": {
-    "mtime": 1793764034.694243,
-    "seen": 1793764080.1300561,
-    "ast_hash": "1ae95da1f4deb9d99d86ee85fc361300",
+    "mtime": 1795252035.8197858,
+    "seen": 1795252072.7115474,
+    "ast_hash": "e8b9f54136d1459aac8049ec5553a202",
     "semantic_hash": ""
   },
   "api-gateway/src/test/java/com/ttcsn/gateway/security/GatewayJwtFilterTest.java": {
-    "mtime": 1793935401.2606657,
-    "seen": 1793935446.8112192,
-    "ast_hash": "e4fab1539d318a6676d35f2fd63af9d8",
+    "mtime": 1795236613.3249364,
+    "seen": 1795236777.1637907,
+    "ast_hash": "41a5ff98083e0f459545aeaeafc7f3ad",
     "semantic_hash": ""
   },
   "booking-service/pom.xml": {
-    "mtime": 1793522064.0399733,
-    "seen": 1793693519.310765,
-    "ast_hash": "8836c735a79aa69a2c38bf6f23cac0f0",
-    "semantic_hash": "8836c735a79aa69a2c38bf6f23cac0f0"
+    "mtime": 1795236609.2028186,
+    "seen": 1795236777.163792,
+    "ast_hash": "50193bf4761bb294d25bf2e2d516ca9a",
+    "semantic_hash": ""
   },
   "booking-service/src/main/java/com/ttcsn/booking/BookingServiceApplication.java": {
     "mtime": 1793522064.0399733,
@@ -60,27 +60,27 @@
     "semantic_hash": "e37cf4601e7630ffd8875eb7f34a6fdf"
   },
   "booking-service/src/main/java/com/ttcsn/booking/client/MovieClient.java": {
-    "mtime": 1792404052.9448686,
-    "seen": 1793693519.3109238,
-    "ast_hash": "d2043e9b30be548918582664d6c7bc6d",
-    "semantic_hash": "d2043e9b30be548918582664d6c7bc6d"
+    "mtime": 1795236609.2028186,
+    "seen": 1795236777.1637945,
+    "ast_hash": "bb147218dc0d34e9066c6212d2f34a34",
+    "semantic_hash": ""
   },
   "booking-service/src/main/java/com/ttcsn/booking/client/ShowtimeClient.java": {
-    "mtime": 1793934858.3644958,
-    "seen": 1793935134.5009637,
-    "ast_hash": "747789a4e0b8b7ed7bc5088a36f1e667",
+    "mtime": 1795236609.2028186,
+    "seen": 1795236777.1637957,
+    "ast_hash": "3251118e67cac384817242d71541842b",
     "semantic_hash": ""
   },
   "booking-service/src/main/java/com/ttcsn/booking/client/UserClient.java": {
-    "mtime": 1792402232.0965252,
-    "seen": 1793693519.3110929,
-    "ast_hash": "e1b086fc850f291da402f9d82da2ba08",
-    "semantic_hash": "e1b086fc850f291da402f9d82da2ba08"
+    "mtime": 1795236609.2028186,
+    "seen": 1795236777.1637967,
+    "ast_hash": "e023b44f03be985bbf59606077170baa",
+    "semantic_hash": ""
   },
   "booking-service/src/main/java/com/ttcsn/booking/client/VenueClient.java": {
-    "mtime": 1794372281.7924953,
-    "seen": 1794372729.980124,
-    "ast_hash": "c8950a7df6998243483e8f74af95d626",
+    "mtime": 1795236609.2028186,
+    "seen": 1795236777.1637983,
+    "ast_hash": "a21a0e57d52fa23bc204d9568a6e6745",
     "semantic_hash": ""
   },
   "booking-service/src/main/java/com/ttcsn/booking/config/RabbitMQConfig.java": {
@@ -90,9 +90,9 @@
     "semantic_hash": "cc54e507d9dccb257b28a02be033f146"
   },
   "booking-service/src/main/java/com/ttcsn/booking/controller/BookingController.java": {
-    "mtime": 1794483328.29159,
-    "seen": 1794491819.3586197,
-    "ast_hash": "4459c6eea43800c81373ff629d48ce21",
+    "mtime": 1795251451.5032663,
+    "seen": 1795252072.7115614,
+    "ast_hash": "eb7cad658f103f997d906710eca2446a",
     "semantic_hash": ""
   },
   "booking-service/src/main/java/com/ttcsn/booking/controller/InternalBookingController.java": {
@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "booking-service/src/main/java/com/ttcsn/booking/entity/Booking.java": {
-    "mtime": 1793762554.10372,
-    "seen": 1793762812.4945538,
-    "ast_hash": "74759b1c296fdb865272772dbe8ae758",
+    "mtime": 1795236613.3249364,
+    "seen": 1795236777.1638103,
+    "ast_hash": "8e8db78cd7ddb85bc22c8af00cd00b54",
     "semantic_hash": ""
   },
   "booking-service/src/main/java/com/ttcsn/booking/entity/BookingDetail.java": {
@@ -180,9 +180,9 @@
     "semantic_hash": "61b42f3dd6993e22f85f32674a319309"
   },
   "booking-service/src/main/java/com/ttcsn/booking/service/BookingService.java": {
-    "mtime": 1794481069.3644032,
-    "seen": 1794491819.3586786,
-    "ast_hash": "db87a6051b14e76f4f427597d32d2f9f",
+    "mtime": 1795251424.1189163,
+    "seen": 1795252072.7115908,
+    "ast_hash": "3213a4f241fd594bd66b1492cb900d27",
     "semantic_hash": ""
   },
   "booking-service/src/main/java/com/ttcsn/booking/service/PaymentCompletedListener.java": {
@@ -192,15 +192,15 @@
     "semantic_hash": ""
   },
   "booking-service/src/main/java/com/ttcsn/booking/service/impl/BookingServiceImpl.java": {
-    "mtime": 1794482888.1362956,
-    "seen": 1794491819.358685,
-    "ast_hash": "ecb3b4dd715b23d5b3b1f035a7b4a585",
+    "mtime": 1795251503.2779307,
+    "seen": 1795252072.7115934,
+    "ast_hash": "63f639abf47dc37cb4d10083225d5ef1",
     "semantic_hash": ""
   },
   "booking-service/src/main/resources/application.yml": {
-    "mtime": 1794367654.3783283,
-    "seen": 1794372729.9801674,
-    "ast_hash": "79f6508bb34ec58495fbd44e3382d04a",
+    "mtime": 1795236609.2028186,
+    "seen": 1795236777.1638298,
+    "ast_hash": "3da7472ac916486255a29e474f4ef92c",
     "semantic_hash": ""
   },
   "booking-service/src/test/java/com/ttcsn/booking/controller/BookingControllerTest.java": {
@@ -222,9 +222,9 @@
     "semantic_hash": ""
   },
   "booking-service/src/test/java/com/ttcsn/booking/service/impl/BookingServiceImplTest.java": {
-    "mtime": 1794482905.6825175,
-    "seen": 1794491819.3586993,
-    "ast_hash": "672379191d0fecef754a0cb409318b89",
+    "mtime": 1795251517.8406713,
+    "seen": 1795252072.7116015,
+    "ast_hash": "6069cab2fa6567c77efaa0f3d6987f22",
     "semantic_hash": ""
   },
   "common/pom.xml": {
@@ -324,27 +324,27 @@
     "semantic_hash": "fae60d2781089593bcacfcf42e18df0c"
   },
   "database/migrations/001_payments_and_hardening.sql": {
-    "mtime": 1793762554.10372,
-    "seen": 1793762812.4946046,
-    "ast_hash": "b6ff7fd375b83c33f983343892f78944",
+    "mtime": 1795236613.3249364,
+    "seen": 1795236777.1638613,
+    "ast_hash": "acd331fb4434f2b6c664fb1b98162acb",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
-    "mtime": 1793522064.044237,
-    "seen": 1793693519.3151596,
-    "ast_hash": "e5e114dcbf675acec7ed93e2c5d0e463",
-    "semantic_hash": "e5e114dcbf675acec7ed93e2c5d0e463"
+    "mtime": 1795236613.3259366,
+    "seen": 1795236777.1638699,
+    "ast_hash": "9a808ae44bedd298feae6d07992ff5e7",
+    "semantic_hash": ""
   },
   "frontend-react/package.json": {
-    "mtime": 1792979074.5630724,
-    "seen": 1793693519.3151991,
-    "ast_hash": "87c74c9b1e8ad46c2f4b20b0bd755471",
-    "semantic_hash": "87c74c9b1e8ad46c2f4b20b0bd755471"
+    "mtime": 1795236613.3259366,
+    "seen": 1795236777.163875,
+    "ast_hash": "7db1702d62a6987fd0f8e07c93e6fefc",
+    "semantic_hash": ""
   },
   "frontend-react/src/App.jsx": {
-    "mtime": 1793935118.1533551,
-    "seen": 1793935134.5010452,
-    "ast_hash": "12eddc53e77dac63c950c321b7a89398",
+    "mtime": 1795252983.366546,
+    "seen": 1795254186.6075807,
+    "ast_hash": "ee7d2d880522ed9517b32f382d830084",
     "semantic_hash": ""
   },
   "frontend-react/src/booking/flow.js": {
@@ -354,27 +354,27 @@
     "semantic_hash": ""
   },
   "frontend-react/src/components/PaymentPanel.jsx": {
-    "mtime": 1793522079.9652236,
-    "seen": 1793693519.3153918,
-    "ast_hash": "64e76b03a163fa0e9e47b6d77f2ccaf1",
-    "semantic_hash": "64e76b03a163fa0e9e47b6d77f2ccaf1"
+    "mtime": 1795252983.366712,
+    "seen": 1795254186.6075854,
+    "ast_hash": "7415bfc84fbf0a566e4710624f249033",
+    "semantic_hash": ""
   },
   "frontend-react/src/components/ScheduleBoard.jsx": {
-    "mtime": 1794479456.459745,
-    "seen": 1794491819.3587792,
-    "ast_hash": "c6982924e2675b081591f0b73935bdf6",
+    "mtime": 1795252923.0768802,
+    "seen": 1795252956.316392,
+    "ast_hash": "8e59d4176130f8ab09f10cba5de41507",
     "semantic_hash": ""
   },
   "frontend-react/src/components/UI.jsx": {
-    "mtime": 1794369595.1920316,
-    "seen": 1794372729.980225,
-    "ast_hash": "d3fdcab1d9bbe84f8e90507084e94e0b",
+    "mtime": 1795252432.3098028,
+    "seen": 1795252764.3783119,
+    "ast_hash": "baee0fc397214984ae287b2d4294b074",
     "semantic_hash": ""
   },
   "frontend-react/src/lib/domain.js": {
-    "mtime": 1794369594.8380256,
-    "seen": 1794372729.980229,
-    "ast_hash": "52f77fb9e24863189f39dbf541ef3a90",
+    "mtime": 1795248971.5010166,
+    "seen": 1795249102.8776555,
+    "ast_hash": "3bbff6904f155203c30c49eb7320567d",
     "semantic_hash": ""
   },
   "frontend-react/src/lib/useLoad.js": {
@@ -390,58 +390,58 @@
     "semantic_hash": "5720aae05686d954a5c34640f833498f"
   },
   "frontend-react/src/lib/venues.js": {
-    "mtime": 1794369632.9116783,
-    "seen": 1794372729.9802344,
-    "ast_hash": "2c71bcb9425ff6618683fa249e088b75",
+    "mtime": 1795250209.1070745,
+    "seen": 1795250517.7780485,
+    "ast_hash": "732d7e535e784b3b7a57895da6410c5b",
     "semantic_hash": ""
   },
   "frontend-react/src/main.jsx": {
-    "mtime": 1794491682.833201,
-    "seen": 1794491819.3588157,
-    "ast_hash": "23fdbfb3334e7261f3fad613dfba4d9d",
+    "mtime": 1795236641.5527349,
+    "seen": 1795236777.1638987,
+    "ast_hash": "927ae8a37f245396a22458d9005b22dc",
     "semantic_hash": ""
   },
   "frontend-react/src/pages/Auth.jsx": {
-    "mtime": 1793935103.0278032,
-    "seen": 1793935134.5010643,
-    "ast_hash": "39891a52953dfe277f929032a2350693",
+    "mtime": 1795254362.670386,
+    "seen": 1795254398.169414,
+    "ast_hash": "f441a3c627c471a4a6837eb371d0dfa1",
     "semantic_hash": ""
   },
   "frontend-react/src/pages/Booking.jsx": {
-    "mtime": 1794479445.9900985,
-    "seen": 1794491819.358824,
-    "ast_hash": "4f50e0a2210ab61d255dda7ef5ce81d1",
+    "mtime": 1795252923.0770886,
+    "seen": 1795252956.3164153,
+    "ast_hash": "18e75f79ebfe6b537de5e409e047b42e",
     "semantic_hash": ""
   },
   "frontend-react/src/pages/Catalog.jsx": {
-    "mtime": 1794479423.4778876,
-    "seen": 1794491819.3588274,
-    "ast_hash": "9a1352b9cb339efd977c864d986bf3f0",
+    "mtime": 1795252923.0766234,
+    "seen": 1795252956.3164167,
+    "ast_hash": "2aee6f3aabe158019823dbc5856854e3",
     "semantic_hash": ""
   },
   "frontend-react/src/pages/Tickets.jsx": {
-    "mtime": 1794479434.5184958,
-    "seen": 1794491819.35883,
-    "ast_hash": "1b4c0da450129ac7727564d46000dc06",
+    "mtime": 1795251872.2613258,
+    "seen": 1795252072.7116816,
+    "ast_hash": "57762b0c2ddc9e4e4187e83fcaf10f53",
     "semantic_hash": ""
   },
   "frontend-react/src/pages/Venues.jsx": {
-    "mtime": 1794479429.7946622,
-    "seen": 1794491819.3588326,
-    "ast_hash": "0727a080a4d6668855a92ffad62b98cc",
+    "mtime": 1795252478.5073621,
+    "seen": 1795252764.3783343,
+    "ast_hash": "2b9dc275f8920788866ef189063825ad",
     "semantic_hash": ""
   },
   "frontend-react/src/services/api.js": {
-    "mtime": 1793763625.8165312,
-    "seen": 1793763680.105615,
-    "ast_hash": "f68ad43bbee21c2d9895c4e2c82e0e8e",
+    "mtime": 1795248989.9533927,
+    "seen": 1795249102.8776793,
+    "ast_hash": "cbb287e0dfe11a3f83f5404b138248b4",
     "semantic_hash": ""
   },
   "frontend-react/src/services/auth.js": {
-    "mtime": 1793531290.0260053,
-    "seen": 1793693519.3161016,
-    "ast_hash": "071195d0d626fad4b1ce4e83cb507f40",
-    "semantic_hash": "071195d0d626fad4b1ce4e83cb507f40"
+    "mtime": 1795236613.3269365,
+    "seen": 1795236777.1639144,
+    "ast_hash": "7b13c54ac083066101cdaea320291809",
+    "semantic_hash": ""
   },
   "frontend-react/src/services/session.js": {
     "mtime": 1793531290.0260053,
@@ -450,21 +450,21 @@
     "semantic_hash": "bdf64398188b199612f432ec358408f1"
   },
   "frontend-react/tests/api.test.mjs": {
-    "mtime": 1793522064.046974,
-    "seen": 1793693519.3162262,
-    "ast_hash": "ce76315d7c8c5030e1eca8c6a6677718",
-    "semantic_hash": "ce76315d7c8c5030e1eca8c6a6677718"
+    "mtime": 1795248972.2930326,
+    "seen": 1795249102.8776848,
+    "ast_hash": "ef2323bf36c9bb90360a997c9999ac89",
+    "semantic_hash": ""
   },
   "frontend-react/tests/auth.test.mjs": {
-    "mtime": 1793522079.9662235,
-    "seen": 1793693519.3162737,
-    "ast_hash": "c42d42cf1db81f7f6a118cfdc6eaccdd",
-    "semantic_hash": "c42d42cf1db81f7f6a118cfdc6eaccdd"
+    "mtime": 1795236613.3269365,
+    "seen": 1795236777.16392,
+    "ast_hash": "1a3a98eb96c7cb56ef042f1b88ae79b9",
+    "semantic_hash": ""
   },
   "frontend-react/tests/domain.test.mjs": {
-    "mtime": 1794369715.0341065,
-    "seen": 1794372729.98027,
-    "ast_hash": "5ed9aa00b1395a5f1762fb29530b63f9",
+    "mtime": 1795249009.9777977,
+    "seen": 1795249102.8776875,
+    "ast_hash": "c847761e82fffa2447bde757372e0639",
     "semantic_hash": ""
   },
   "frontend-react/tests/pvt-booking.test.mjs": {
@@ -474,22 +474,22 @@
     "semantic_hash": "eaeeb736fcb19c47606ad538cb3e951c"
   },
   "frontend-react/tests/venues.test.mjs": {
-    "mtime": 1794369708.967,
-    "seen": 1794372729.9802735,
-    "ast_hash": "f60de2ee7a2bada9918a8fa1932aea86",
-    "semantic_hash": "f60de2ee7a2bada9918a8fa1932aea86"
+    "mtime": 1795250279.5303476,
+    "seen": 1795250517.778074,
+    "ast_hash": "cb4dfd0677cdd76bfb24b18ec619b6b9",
+    "semantic_hash": ""
   },
   "frontend-react/vite.config.js": {
-    "mtime": 1792979074.5664492,
-    "seen": 1793693519.3164558,
-    "ast_hash": "e6a551ea4cbfcf45c854f3290ee666ca",
-    "semantic_hash": "e6a551ea4cbfcf45c854f3290ee666ca"
+    "mtime": 1795236613.3269365,
+    "seen": 1795236777.1639266,
+    "ast_hash": "b81329d0bf0377a12ea0ba7958efcb90",
+    "semantic_hash": ""
   },
   "movie-service/pom.xml": {
-    "mtime": 1793522064.046974,
-    "seen": 1793693519.3164983,
-    "ast_hash": "c52132aff65d3a201b9eaa3b24f78338",
-    "semantic_hash": "c52132aff65d3a201b9eaa3b24f78338"
+    "mtime": 1795236609.2043283,
+    "seen": 1795236777.1639278,
+    "ast_hash": "8a1a1ff8e1dde1b62c44c73a672f803c",
+    "semantic_hash": ""
   },
   "movie-service/src/main/java/com/ttcsn/movie/MovieServiceApplication.java": {
     "mtime": 1793522064.0479739,
@@ -498,10 +498,10 @@
     "semantic_hash": "364b8ad39559a5d1ab2cd9fb4c4e7cec"
   },
   "movie-service/src/main/java/com/ttcsn/movie/client/VenueClient.java": {
-    "mtime": 1793522064.0479739,
-    "seen": 1793693519.3166094,
-    "ast_hash": "6185d8e583dfc66a02217dd2e2975e8d",
-    "semantic_hash": "6185d8e583dfc66a02217dd2e2975e8d"
+    "mtime": 1795236609.2043283,
+    "seen": 1795236777.1639304,
+    "ast_hash": "e099b78fc541f7b6aadac30cd94772da",
+    "semantic_hash": ""
   },
   "movie-service/src/main/java/com/ttcsn/movie/controller/GenreController.java": {
     "mtime": 1793522064.0479739,
@@ -540,15 +540,15 @@
     "semantic_hash": "08e8b0ee99afb0dc4f70d824f8048fd3"
   },
   "movie-service/src/main/java/com/ttcsn/movie/entity/Genre.java": {
-    "mtime": 1793762554.389721,
-    "seen": 1793762812.4946578,
-    "ast_hash": "2025fa355088d2eb637b9b9f0db1fc35",
+    "mtime": 1795236613.3279364,
+    "seen": 1795236777.1639395,
+    "ast_hash": "c97cac3bb58223e71ed0be9ca3e495c8",
     "semantic_hash": ""
   },
   "movie-service/src/main/java/com/ttcsn/movie/entity/Movie.java": {
-    "mtime": 1793762554.389721,
-    "seen": 1793762812.4946592,
-    "ast_hash": "6f822c66894fa79163ee87a53ef15f2f",
+    "mtime": 1795236613.3279364,
+    "seen": 1795236777.1639407,
+    "ast_hash": "00f4460abb03c6324d322602282f2085",
     "semantic_hash": ""
   },
   "movie-service/src/main/java/com/ttcsn/movie/entity/enums/AgeRestriction.java": {
@@ -648,15 +648,15 @@
     "semantic_hash": "98b7deb05f2ae6293957bf34d4c9a23a"
   },
   "movie-service/src/main/java/com/ttcsn/movie/showtime/entity/Showtime.java": {
-    "mtime": 1793762554.389721,
-    "seen": 1793762812.4946828,
-    "ast_hash": "054d05b5d639b247ba3f594231bc19d8",
+    "mtime": 1795236613.3279364,
+    "seen": 1795236777.1639674,
+    "ast_hash": "0178d9f1efcb7c953f81895bb45685f3",
     "semantic_hash": ""
   },
   "movie-service/src/main/java/com/ttcsn/movie/showtime/entity/ShowtimeSeat.java": {
-    "mtime": 1793762554.389721,
-    "seen": 1793762812.494684,
-    "ast_hash": "1979ba71d793431ca7a5344951896c2a",
+    "mtime": 1795236613.3279364,
+    "seen": 1795236777.1639686,
+    "ast_hash": "0eb2f628648701d7858641719d706a04",
     "semantic_hash": ""
   },
   "movie-service/src/main/java/com/ttcsn/movie/showtime/entity/enums/SeatStatus.java": {
@@ -720,10 +720,10 @@
     "semantic_hash": ""
   },
   "notification-service/pom.xml": {
-    "mtime": 1793522064.0519743,
-    "seen": 1793693519.3194847,
-    "ast_hash": "fc85133b992feb85a6b7c6b1a29ad9a6",
-    "semantic_hash": "fc85133b992feb85a6b7c6b1a29ad9a6"
+    "mtime": 1795236609.2043283,
+    "seen": 1795236777.163983,
+    "ast_hash": "c2b650adf97b6354ca5f40b312de53be",
+    "semantic_hash": ""
   },
   "notification-service/src/main/java/com/ttcsn/notification/NotificationServiceApplication.java": {
     "mtime": 1793522064.0519743,
@@ -744,16 +744,16 @@
     "semantic_hash": "63fa4453dc16ec4014c7987e253833ea"
   },
   "notification-service/src/main/resources/application.yml": {
-    "mtime": 1793522064.0519743,
-    "seen": 1793693519.3197346,
-    "ast_hash": "fc9dc0f777490cb95665c6149cf1840f",
-    "semantic_hash": "fc9dc0f777490cb95665c6149cf1840f"
+    "mtime": 1795236609.2043283,
+    "seen": 1795236777.1639886,
+    "ast_hash": "090322bbf41104c37c104725787d7409",
+    "semantic_hash": ""
   },
   "payment-service/pom.xml": {
-    "mtime": 1793522064.0519743,
-    "seen": 1793693519.31979,
-    "ast_hash": "7a463b1eb2d9c78f87ec88f50031b5fa",
-    "semantic_hash": "7a463b1eb2d9c78f87ec88f50031b5fa"
+    "mtime": 1795236609.2043283,
+    "seen": 1795236777.1639895,
+    "ast_hash": "7d51bf596c364a0f698bcdc1adef3606",
+    "semantic_hash": ""
   },
   "payment-service/src/main/java/com/ttcsn/payment/PaymentServiceApplication.java": {
     "mtime": 1793934876.6554668,
@@ -762,10 +762,10 @@
     "semantic_hash": ""
   },
   "payment-service/src/main/java/com/ttcsn/payment/client/BookingClient.java": {
-    "mtime": 1792979074.568574,
-    "seen": 1793693519.3199017,
-    "ast_hash": "6a2dcac57a2829b6746f9e6eba3cc0f8",
-    "semantic_hash": "6a2dcac57a2829b6746f9e6eba3cc0f8"
+    "mtime": 1795236609.2043283,
+    "seen": 1795236777.1639924,
+    "ast_hash": "df84e15b88b9069e8bbf31373b1e2367",
+    "semantic_hash": ""
   },
   "payment-service/src/main/java/com/ttcsn/payment/config/RabbitMQConfig.java": {
     "mtime": 1792404118.670023,
@@ -792,9 +792,9 @@
     "semantic_hash": "7f6ee65d3c6a23603713701d06437733"
   },
   "payment-service/src/main/java/com/ttcsn/payment/entity/Payment.java": {
-    "mtime": 1793762554.3907208,
-    "seen": 1793762812.494715,
-    "ast_hash": "2325acab21549f212c0706a961e62e75",
+    "mtime": 1795236613.3279364,
+    "seen": 1795236777.1640005,
+    "ast_hash": "c562bc97358b2ae100548cb531020e8a",
     "semantic_hash": ""
   },
   "payment-service/src/main/java/com/ttcsn/payment/entity/PaymentStatus.java": {
@@ -816,9 +816,9 @@
     "semantic_hash": ""
   },
   "payment-service/src/main/resources/application.yml": {
-    "mtime": 1793934898.7780724,
-    "seen": 1793935134.501176,
-    "ast_hash": "39a61eed95308e8b01058d180ca4f13d",
+    "mtime": 1795236609.2048187,
+    "seen": 1795236777.164006,
+    "ast_hash": "e5e7b9c8e2b5ae7a203186c84e30e5bd",
     "semantic_hash": ""
   },
   "payment-service/src/test/java/com/ttcsn/payment/controller/PaymentControllerTest.java": {
@@ -834,10 +834,10 @@
     "semantic_hash": ""
   },
   "pom.xml": {
-    "mtime": 1792466161.0787687,
-    "seen": 1793693519.3207462,
-    "ast_hash": "6d3e8f2c943bf0792161aceb6f4dda2c",
-    "semantic_hash": "6d3e8f2c943bf0792161aceb6f4dda2c"
+    "mtime": 1795236609.2048187,
+    "seen": 1795236777.16401,
+    "ast_hash": "a2701c5c6cbf61179ee011c0b88bc240",
+    "semantic_hash": ""
   },
   "postman_collection_v3.json": {
     "mtime": 1793786666.9556897,
@@ -846,22 +846,22 @@
     "semantic_hash": ""
   },
   "run-services.sh": {
-    "mtime": 1794368399.4740179,
-    "seen": 1794372729.9803925,
-    "ast_hash": "66654aa0d1062f80489c77f68fd903b1",
+    "mtime": 1795236609.2048187,
+    "seen": 1795236777.164013,
+    "ast_hash": "3658d18d31cadf52adf8633c70176862",
     "semantic_hash": ""
   },
   "stop-services.sh": {
-    "mtime": 1792466203.7406268,
-    "seen": 1793693519.3208282,
-    "ast_hash": "e1d7d429d9e0d8b679b053223ff8eb52",
-    "semantic_hash": "e1d7d429d9e0d8b679b053223ff8eb52"
+    "mtime": 1795236609.2048187,
+    "seen": 1795236777.1640139,
+    "ast_hash": "52967400df1b9a405d94fa50a573dc96",
+    "semantic_hash": ""
   },
   "user-service/pom.xml": {
-    "mtime": 1792979074.569396,
-    "seen": 1793693519.3208656,
-    "ast_hash": "ab228593786c6d9a06a33bba6af1b149",
-    "semantic_hash": "ab228593786c6d9a06a33bba6af1b149"
+    "mtime": 1795236613.3279364,
+    "seen": 1795236777.164015,
+    "ast_hash": "2b577936078c8da9b918eee699860f40",
+    "semantic_hash": ""
   },
   "user-service/src/main/java/com/ttcsn/user/UserServiceApplication.java": {
     "mtime": 1792979074.569396,
@@ -876,16 +876,16 @@
     "semantic_hash": "3e4027ec5cd46c2e60bc24bcff681e45"
   },
   "user-service/src/main/java/com/ttcsn/user/config/SecurityConfig.java": {
-    "mtime": 1792979074.56942,
-    "seen": 1793693519.321059,
-    "ast_hash": "8e598406882f769e9823b25909b92fa7",
-    "semantic_hash": "8e598406882f769e9823b25909b92fa7"
+    "mtime": 1795236613.3289366,
+    "seen": 1795236777.1640189,
+    "ast_hash": "62c4566c7166eb88f0559b5521d5ed29",
+    "semantic_hash": ""
   },
   "user-service/src/main/java/com/ttcsn/user/controller/AuthController.java": {
-    "mtime": 1792979074.56942,
-    "seen": 1793693519.3211298,
-    "ast_hash": "f570b09e1e8dcad19ddf08521a2dae9f",
-    "semantic_hash": "f570b09e1e8dcad19ddf08521a2dae9f"
+    "mtime": 1795236613.3289366,
+    "seen": 1795236777.1640203,
+    "ast_hash": "1d33b6b5e6bdeaf291d4dd408feeedf8",
+    "semantic_hash": ""
   },
   "user-service/src/main/java/com/ttcsn/user/controller/InternalUserController.java": {
     "mtime": 1792402279.6915598,
@@ -906,9 +906,9 @@
     "semantic_hash": "2653f4a8c3f09bf8a173cedd8347653c"
   },
   "user-service/src/main/java/com/ttcsn/user/dto/request/ProfileUpdateRequest.java": {
-    "mtime": 1793762554.3907208,
-    "seen": 1793762812.4947407,
-    "ast_hash": "9bc17fd02dd443591cff779293bf830e",
+    "mtime": 1795236613.3289366,
+    "seen": 1795236777.164027,
+    "ast_hash": "b5fdc8f32bdb4d2059bf6d3aee4715c1",
     "semantic_hash": ""
   },
   "user-service/src/main/java/com/ttcsn/user/dto/request/RefreshTokenRequest.java": {
@@ -918,21 +918,21 @@
     "semantic_hash": "096a1071da4bcf56a4926d7e868138c2"
   },
   "user-service/src/main/java/com/ttcsn/user/dto/request/RegisterRequest.java": {
-    "mtime": 1793762554.3907208,
-    "seen": 1793762812.4947433,
-    "ast_hash": "2b3950052095a7d24422c398e2188d7d",
+    "mtime": 1795236613.3289366,
+    "seen": 1795236777.1640346,
+    "ast_hash": "2140e7d7f7908fb41e3870bb3bff9274",
     "semantic_hash": ""
   },
   "user-service/src/main/java/com/ttcsn/user/dto/request/UserCreateRequest.java": {
-    "mtime": 1793762554.3907208,
-    "seen": 1793762812.4947448,
-    "ast_hash": "d9cedb84c3a3114317e8d2c34076c380",
+    "mtime": 1795236613.3289366,
+    "seen": 1795236777.1640358,
+    "ast_hash": "2cf6fcf36bbc0467f7bbf51f243a01d8",
     "semantic_hash": ""
   },
   "user-service/src/main/java/com/ttcsn/user/dto/request/UserUpdateRequest.java": {
-    "mtime": 1793762554.3907208,
-    "seen": 1793762812.494746,
-    "ast_hash": "7ca39de16239aaacee5f38a6813a95b7",
+    "mtime": 1795236613.3289366,
+    "seen": 1795236777.1640372,
+    "ast_hash": "55b35f589326d85e55dbe7eed360201f",
     "semantic_hash": ""
   },
   "user-service/src/main/java/com/ttcsn/user/dto/response/AuthResponse.java": {
@@ -954,9 +954,9 @@
     "semantic_hash": "ba0fe572d60a336fbfbfd6b95b840262"
   },
   "user-service/src/main/java/com/ttcsn/user/entity/User.java": {
-    "mtime": 1793762554.3907208,
-    "seen": 1793762812.4947512,
-    "ast_hash": "1da018bf8572ab298443c7363088dad7",
+    "mtime": 1795236613.3289366,
+    "seen": 1795236777.1640422,
+    "ast_hash": "148d17380e24507692fa00bf7555decf",
     "semantic_hash": ""
   },
   "user-service/src/main/java/com/ttcsn/user/entity/enums/UserRole.java": {
@@ -990,10 +990,10 @@
     "semantic_hash": "cecb53634ff32edbc8c374f26f4a97ce"
   },
   "user-service/src/main/java/com/ttcsn/user/repository/UserRepository.java": {
-    "mtime": 1792402030.233641,
-    "seen": 1793693519.322418,
-    "ast_hash": "35a6260e4f57457d67ed224830747482",
-    "semantic_hash": "35a6260e4f57457d67ed224830747482"
+    "mtime": 1795236613.3289366,
+    "seen": 1795236777.1640506,
+    "ast_hash": "6cdcacd6c39a9cca2f9b7ffdc03b4b84",
+    "semantic_hash": ""
   },
   "user-service/src/main/java/com/ttcsn/user/security/AuthenticatedUser.java": {
     "mtime": 1792979074.56942,
@@ -1020,10 +1020,10 @@
     "semantic_hash": ""
   },
   "user-service/src/main/java/com/ttcsn/user/service/AuthService.java": {
-    "mtime": 1792979074.5709271,
-    "seen": 1793693519.3228247,
-    "ast_hash": "e9a390961ebd282ae9c8ed763324c2be",
-    "semantic_hash": "e9a390961ebd282ae9c8ed763324c2be"
+    "mtime": 1795236613.3289366,
+    "seen": 1795236777.164057,
+    "ast_hash": "1739eaeec15059c0ce1b7a4ba7887c2b",
+    "semantic_hash": ""
   },
   "user-service/src/main/java/com/ttcsn/user/service/UserService.java": {
     "mtime": 1793531290.027611,
@@ -1032,15 +1032,15 @@
     "semantic_hash": "8fea5099ff7b595bb2b993d07fb4e2db"
   },
   "user-service/src/main/java/com/ttcsn/user/service/impl/AuthServiceImpl.java": {
-    "mtime": 1792979074.5709271,
-    "seen": 1793693519.3229604,
-    "ast_hash": "7c843acc225b889fb1161db53dd5a822",
-    "semantic_hash": "7c843acc225b889fb1161db53dd5a822"
+    "mtime": 1795236613.3289366,
+    "seen": 1795236777.1640599,
+    "ast_hash": "9952944f262f2c8cb65fbaeb6631a053",
+    "semantic_hash": ""
   },
   "user-service/src/main/java/com/ttcsn/user/service/impl/UserServiceImpl.java": {
-    "mtime": 1793762687.743922,
-    "seen": 1793762812.494776,
-    "ast_hash": "67cb56afa854ff53272da418f8fc276e",
+    "mtime": 1795236631.3074467,
+    "seen": 1795236777.164061,
+    "ast_hash": "c69ca87a9de4a4024a14fe6ae410935b",
     "semantic_hash": ""
   },
   "user-service/src/test/java/com/ttcsn/user/security/impl/JwtServiceTest.java": {
@@ -1050,10 +1050,10 @@
     "semantic_hash": "d4cfeaf45470f532a4197b6eb93bd330"
   },
   "venue-service/pom.xml": {
-    "mtime": 1793522064.0539744,
-    "seen": 1793693519.3231812,
-    "ast_hash": "d37dbb7e0e1addfd8124f1654195cf87",
-    "semantic_hash": "d37dbb7e0e1addfd8124f1654195cf87"
+    "mtime": 1795236609.2048187,
+    "seen": 1795236777.164065,
+    "ast_hash": "750f07faee2f6d90ee1cb229fd365070",
+    "semantic_hash": ""
   },
   "venue-service/src/main/java/com/ttcsn/venue/VenueServiceApplication.java": {
     "mtime": 1793522064.0539744,
@@ -1086,9 +1086,9 @@
     "semantic_hash": "e6ada5159abb7d8b50e8c2638ad68851"
   },
   "venue-service/src/main/java/com/ttcsn/venue/dto/request/CinemaRequest.java": {
-    "mtime": 1793762554.3907208,
-    "seen": 1793762812.4947891,
-    "ast_hash": "4497dcb06dab4c0e84ff1452d1c289e6",
+    "mtime": 1795236613.330248,
+    "seen": 1795236777.1640728,
+    "ast_hash": "f72f36854ab4291e37c566de7774b6de",
     "semantic_hash": ""
   },
   "venue-service/src/main/java/com/ttcsn/venue/dto/request/RoomRequest.java": {
@@ -1122,21 +1122,21 @@
     "semantic_hash": "44e405f358b6eb0142aad5cb761860ce"
   },
   "venue-service/src/main/java/com/ttcsn/venue/entity/Cinema.java": {
-    "mtime": 1793762554.3907208,
-    "seen": 1793762812.4947972,
-    "ast_hash": "676be2e3e7930118667390c516ae451d",
+    "mtime": 1795236613.330248,
+    "seen": 1795236777.1640804,
+    "ast_hash": "81bfb9a35dcb22257e519e5c32ef7412",
     "semantic_hash": ""
   },
   "venue-service/src/main/java/com/ttcsn/venue/entity/Room.java": {
-    "mtime": 1793762554.3907208,
-    "seen": 1793762812.4947987,
-    "ast_hash": "8bb3e72b1673751e091dad6bd591ab49",
+    "mtime": 1795236613.330248,
+    "seen": 1795236777.1640816,
+    "ast_hash": "fc2b50c6164c9bf13534ab68f0b0a199",
     "semantic_hash": ""
   },
   "venue-service/src/main/java/com/ttcsn/venue/entity/Seat.java": {
-    "mtime": 1793762554.3907208,
-    "seen": 1793762812.4947999,
-    "ast_hash": "190a90e75648bd4c87b25f16a2a4e418",
+    "mtime": 1795236613.330248,
+    "seen": 1795236777.164083,
+    "ast_hash": "e5dd7e184aaaf4eb42603a6656659908",
     "semantic_hash": ""
   },
   "venue-service/src/main/java/com/ttcsn/venue/entity/enums/RoomType.java": {
@@ -1230,9 +1230,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793762554.10372,
-    "seen": 1793762812.494821,
-    "ast_hash": "4a00e7aebdb18e155c25454dd4067a21",
+    "mtime": 1795236613.3239365,
+    "seen": 1795236777.1641078,
+    "ast_hash": "8e818f24b57403129c5e6b7f6e7233e7",
     "semantic_hash": ""
   },
   "frontend-react/BAT-DAU.txt": {
@@ -1320,15 +1320,15 @@
     "semantic_hash": ""
   },
   "frontend-react/src/lib/admin.js": {
-    "mtime": 1794372444.5577571,
-    "seen": 1794372729.980227,
-    "ast_hash": "4323768ac7df8470ee9c404b86fbdd83",
+    "mtime": 1795251488.7205637,
+    "seen": 1795252072.7116628,
+    "ast_hash": "984d7e90f6133fd4bd0bf1d60b9d6c81",
     "semantic_hash": ""
   },
   "frontend-react/src/pages/Admin.jsx": {
-    "mtime": 1794483384.5721495,
-    "seen": 1794491819.3588185,
-    "ast_hash": "fdb4efea89614485042db490944b3ffc",
+    "mtime": 1795251107.8610945,
+    "seen": 1795251112.09764,
+    "ast_hash": "df36b7ffd3ca64251357d1162557c786",
     "semantic_hash": ""
   },
   "frontend-react/tests/admin.test.mjs": {
@@ -1404,9 +1404,9 @@
     "semantic_hash": ""
   },
   "frontend-react/src/pages/admin/ResourcePanel.jsx": {
-    "mtime": 1794479484.2448456,
-    "seen": 1794491819.3588424,
-    "ast_hash": "805dd8c47a72fd0e0020d1ed9106d9c4",
+    "mtime": 1795251488.7205637,
+    "seen": 1795252072.711687,
+    "ast_hash": "c3ba530159ef0dc6c15d6d7ed0d91272",
     "semantic_hash": ""
   },
   "frontend-react/src/pages/admin/dayText.js": {
@@ -1451,10 +1451,88 @@
     "ast_hash": "39282ec2ccdd60f5ac704fa8aefcdbdd",
     "semantic_hash": ""
   },
+  "database/migrations/002_enums_and_text.sql": {
+    "mtime": 1795236613.3249364,
+    "seen": 1795236777.1638637,
+    "ast_hash": "b7afd6995c689b9c23744c2a1f27070d",
+    "semantic_hash": ""
+  },
+  "database/migrations/003_phone_varchar12.sql": {
+    "mtime": 1795236613.3249364,
+    "seen": 1795236777.1638665,
+    "ast_hash": "da9243037d1ef49768c9190ae8fca836",
+    "semantic_hash": ""
+  },
+  "database/migrations/004_google_oauth_support.sql": {
+    "mtime": 1795236613.3259366,
+    "seen": 1795236777.1638684,
+    "ast_hash": "1405f8d5d0e001a47c07f291a5f07f4e",
+    "semantic_hash": ""
+  },
+  "eureka-server/pom.xml": {
+    "mtime": 1795236609.2038186,
+    "seen": 1795236777.1638713,
+    "ast_hash": "19cd6d6a1c63c800a6ff72f21fbc7cd3",
+    "semantic_hash": ""
+  },
+  "eureka-server/src/main/java/com/ttcsn/eureka/EurekaServerApplication.java": {
+    "mtime": 1795236609.2043283,
+    "seen": 1795236777.1638725,
+    "ast_hash": "4d8270d5b39bd60200d6bac95e6c507d",
+    "semantic_hash": ""
+  },
+  "eureka-server/src/main/resources/application.yml": {
+    "mtime": 1795236609.2043283,
+    "seen": 1795236777.163874,
+    "ast_hash": "6d2054b508d4e25b3140ceec40e97b16",
+    "semantic_hash": ""
+  },
+  "user-service/src/main/java/com/ttcsn/user/dto/request/GoogleLoginRequest.java": {
+    "mtime": 1795236613.3289366,
+    "seen": 1795236777.164024,
+    "ast_hash": "60aeea0c84fd2700e3706674a2c37a0b",
+    "semantic_hash": ""
+  },
+  "user-service/src/test/java/com/ttcsn/user/service/impl/AuthServiceImplTest.java": {
+    "mtime": 1795236613.330248,
+    "seen": 1795236777.1640637,
+    "ast_hash": "db18abb35e7305c3e4447be737d8ecb6",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1794837640.541012,
+    "seen": 1795236777.1641052,
+    "ast_hash": "d55b83d84d33765f108934c29b1fdbe0",
+    "semantic_hash": ""
+  },
+  "DESIGN.md": {
+    "mtime": 1795236613.3239365,
+    "seen": 1795236777.1641066,
+    "ast_hash": "9b1bde505a01daafb7e07263fe388bbe",
+    "semantic_hash": ""
+  },
+  "frontend-react/src/lib/useHorizontalWheel.js": {
+    "mtime": 1795250725.499561,
+    "seen": 1795250958.1168327,
+    "ast_hash": "430e3ddd0c0b30dbee1d4c0c22cad025",
+    "semantic_hash": ""
+  },
+  "frontend-react/src/components/Select.jsx": {
+    "mtime": 1795252754.8366675,
+    "seen": 1795252764.3783085,
+    "ast_hash": "b6e6e55289ea19b397c3eef88d2e2d5b",
+    "semantic_hash": ""
+  },
+  "frontend-react/ft.png": {
+    "mtime": 1795252996.5985737,
+    "seen": 1795254186.6078525,
+    "ast_hash": "a84380ea12563dd96ce5b25f37070d03",
+    "semantic_hash": ""
+  },
   "frontend-react/package-lock.json": {
-    "mtime": 1792979074.5619068,
-    "seen": 1793693661.881552,
-    "ast_hash": "89e77a45b4ab3ab39e045929ce363614",
+    "mtime": 1795236703.5724437,
+    "seen": 1795236777.1641324,
+    "ast_hash": "a42be8e71b04552f654fcc3581afb2c4",
     "semantic_hash": ""
   }
 }

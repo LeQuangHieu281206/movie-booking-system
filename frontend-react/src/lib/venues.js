@@ -76,6 +76,18 @@ export function groupByCinema(shows) {
   return [...groups.values()];
 }
 
+// Rạp có suất chiếu trong danh sách, kèm thành phố và các suất của rạp đó.
+// Dùng cho bước "chọn rạp" trong luồng đặt vé.
+export function cinemaList(shows) {
+  return groupByCinema(shows)
+    .map((group) => ({
+      ...group,
+      city:
+        group.shows.find((show) => show.cinemaCity)?.cinemaCity || "",
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, "vi"));
+}
+
 // Tùy chọn phim cho ô chọn: phim đang chiếu + phim đang được chọn (kể cả sắp chiếu
 // hoặc danh mục chưa tải xong) để <select> không bị trống sai.
 export function movieOptions(movies, selectedId) {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLoad } from "../lib/useLoad.js";
-import { date, money, statusText, time } from "../lib/domain.js";
+import { date, labelOf, money, statusText, time } from "../lib/domain.js";
 import { filterTickets } from "../booking/flow.js";
 import { Button, Empty, ErrorBox, Icon } from "../components/UI.jsx";
 import { TicketListSkeleton } from "../components/Skeleton.jsx";
@@ -101,7 +101,8 @@ function TicketList({ api, user, movies, revision }) {
                     )}
                     <small>
                       Đặt ngày {date(booking.bookingTime)} ·{" "}
-                      {time(booking.bookingTime)}
+                      {time(booking.bookingTime)} · Thanh toán:{" "}
+                      {labelOf(booking.paymentMethod)}
                     </small>
                   </div>
                   <div className="ticket-card-side">
@@ -149,9 +150,7 @@ function TicketList({ api, user, movies, revision }) {
 export default function Tickets({ api, user, onLogin, movies, revision }) {
   return (
     <section className="container page-section">
-      <span className="eyebrow">NHỮNG CUỘC HẸN TRÊN MÀN ẢNH LỚN</span>
       <h1>Vé của tôi</h1>
-      <p>Tra cứu và theo dõi trạng thái vé của tài khoản đang đăng nhập.</p>
       {user ? (
         <TicketList
           key={user.userId}

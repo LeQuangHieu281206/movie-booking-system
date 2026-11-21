@@ -200,15 +200,6 @@ nav a.active:after {
 .hero-content > .eyebrow {
   font-size: 10px;
 }
-.gold-line {
-  background: var(--primary);
-}
-.hero-kicker {
-  color: var(--muted);
-  font-size: 22px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
 .hero h1 {
   color: var(--ink);
   letter-spacing: -0.035em;
@@ -243,8 +234,7 @@ nav a.active:after {
 .quick-label > svg {
   color: var(--gold-deep);
 }
-.quick-label span,
-.quick-book > .quick-field > span {
+.quick-label span {
   color: var(--muted);
 }
 .quick-book > .quick-field {

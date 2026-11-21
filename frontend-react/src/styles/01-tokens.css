@@ -3,7 +3,7 @@
     "SF Pro Text", "SF Pro Display", system-ui, -apple-system, "Segoe UI",
     sans-serif;
   color: #1d1d1f;
-  background: #fbfaf7;
+  background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -15,10 +15,10 @@
   --surface-2: #f5f3ee;
   --ink: #1d1d1f;
   --text: #1d1d1f;
-  --muted: #6e6e73;
-  --line: #e6e2d8;
-  --border: #e6e2d8;
-  --hairline: #ece9e1;
+  --muted: #55555a;
+  --line: #cfc9ba;
+  --border: #cfc9ba;
+  --hairline: #e3dfd4;
 
   /* Yellow brand */
   --primary: #f5c518;

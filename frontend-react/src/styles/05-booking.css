@@ -363,10 +363,10 @@ footer {
   margin-top: 10px;
 }
 .footer-inner {
-  padding: 38px 0 28px;
+  padding: 24px 0 18px;
   display: flex;
   align-items: center;
-  gap: 50px;
+  gap: 40px;
 }
 .footer-inner p {
   font-size: 11px;
@@ -399,7 +399,12 @@ footer {
   justify-content: space-between;
   gap: 20px;
   border-top: 1px solid #252d39;
-  padding: 17px 0;
+  padding: 12px 0;
   font-size: 9px;
   color: #7d8898;
+}
+.payment-method .select {
+  display: block;
+  margin-top: 8px;
+  min-width: 0;
 }

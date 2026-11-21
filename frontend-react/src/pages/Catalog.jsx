@@ -10,6 +10,7 @@ import {
   SearchSelect,
 } from "../components/UI.jsx";
 import { MovieGridSkeleton } from "../components/Skeleton.jsx";
+import Select from "../components/Select.jsx";
 import ScheduleBoard from "../components/ScheduleBoard.jsx";
 import { DiscoverButton } from "../components/block/discover-button.jsx";
 
@@ -86,7 +87,6 @@ export function Catalog({
     >
       <div className="section-heading">
         <div>
-          <span className="eyebrow">CÂU CHUYỆN TIẾP THEO CỦA BẠN</span>
           <h2>{home ? "Hôm nay xem gì?" : "Khám phá điện ảnh"}</h2>
         </div>
         <div className="segmented">
@@ -114,20 +114,18 @@ export function Catalog({
             aria-label="Tìm phim"
           />
         </label>
-        <label>
-          <span className="sr-only">Thể loại</span>
-          <select
-            value={genre}
-            onChange={(event) => setGenre(event.target.value)}
-          >
-            <option value="">Tất cả thể loại</option>
-            {data?.genres.map((genre) => (
-              <option key={genre.genreId} value={genre.genreId}>
-                {genre.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Select
+          label="Thể loại"
+          value={genre}
+          onChange={setGenre}
+          options={[
+            { value: "", label: "Tất cả thể loại" },
+            ...(data?.genres || []).map((genre) => ({
+              value: genre.genreId,
+              label: genre.name,
+            })),
+          ]}
+        />
         <span className="result-count">{movies.length} bộ phim</span>
       </div>
       {loading ? (
@@ -157,11 +155,6 @@ export function Home({ catalog, onMovie, onNavigate, onSchedule }) {
         )}
         <div className="hero-shade" />
         <div className="container hero-content">
-          <span className="eyebrow">
-            <span className="gold-line" />
-            MÀN ẢNH LỚN. CẢM XÚC TRỌN VẸN.
-          </span>
-          <p className="hero-kicker">Một chiếc vé nhỏ.</p>
           <h1>{hero ? hero.title : "Một thế giới cảm xúc."}</h1>
           <div className="hero-meta">
             <span className="outline-tag">
@@ -185,7 +178,7 @@ export function Home({ catalog, onMovie, onNavigate, onSchedule }) {
           <div className="button-row">
             <DiscoverButton
               label="Đặt vé ngay"
-              onClick={() => (hero ? onMovie(hero) : onNavigate("movies"))}
+              onClick={() => (hero ? onMovie(hero) : onNavigate("showtimes"))}
             />
             {hero && (
               <Button onClick={() => onMovie(hero)}>Thông tin phim</Button>
@@ -208,7 +201,6 @@ export function Home({ catalog, onMovie, onNavigate, onSchedule }) {
             </div>
           </div>
           <div className="quick-field">
-            <span>BẠN MUỐN XEM PHIM GÌ?</span>
             <SearchSelect
               label="Chọn phim"
               options={(catalog.data?.movies || [])
@@ -228,7 +220,6 @@ export function Home({ catalog, onMovie, onNavigate, onSchedule }) {
         <Catalog {...catalog} home onMovie={onMovie} />
         <section className="experience">
           <div>
-            <span className="eyebrow">DÀNH THỜI GIAN CHO ĐIỀU BẠN THÍCH</span>
             <h2>
               Rời màn hình nhỏ.
               <br />
@@ -293,12 +284,11 @@ export function MovieDetail({ movie, api, onClose, onSelect }) {
       </div>
       <div className="subheading">
         <h3>Lịch chiếu & đặt vé</h3>
-        <span>Giờ Việt Nam (GMT+7)</span>
       </div>
       {movie.status === "UPCOMING" ? (
         <Empty title="Phim sắp ra mắt">Lịch chiếu sẽ được cập nhật sau.</Empty>
       ) : (
-        <ScheduleBoard api={api} movieId={movie.movieId} onSelect={onSelect} />
+        <ScheduleBoard api={api} movieId={movie.movieId} movieTitle={movie.title} movies={[movie]} onSelect={onSelect} />
       )}
       {trailerOpen && (
         <Modal

@@ -4,7 +4,7 @@ import { createAuthService } from "./services/auth.js";
 import { useLoad } from "./lib/useLoad.js";
 import { isAdmin as hasAdminRole } from "./lib/domain.js";
 import { ErrorBox, Icon } from "./components/UI.jsx";
-import { Catalog, Home, MovieDetail } from "./pages/Catalog.jsx";
+import { Home, MovieDetail } from "./pages/Catalog.jsx";
 import { Cinemas, Showtimes } from "./pages/Venues.jsx";
 import Booking from "./pages/Booking.jsx";
 import Tickets from "./pages/Tickets.jsx";
@@ -13,7 +13,6 @@ import Admin from "./pages/Admin.jsx";
 
 const nav = [
   ["home", "Trang chủ"],
-  ["movies", "Phim"],
   ["showtimes", "Lịch chiếu"],
   ["cinemas", "Rạp chiếu"],
   ["tickets", "Vé của tôi"],
@@ -238,11 +237,6 @@ function Workspace() {
             onSchedule={openSchedule}
           />
         )}
-        {route === "movies" && (
-          <div className="container">
-            <Catalog {...catalog} onMovie={setMovie} />
-          </div>
-        )}
         {route === "showtimes" && (
           <Showtimes
             key={schedule.key}
@@ -288,10 +282,9 @@ function Workspace() {
               CINE<span>ROOM</span>
               <Icon name="ticket" size={22} />
             </a>
-            <p>Hẹn bạn ở rạp.</p>
           </div>
           <div className="footer-links">
-            <a href="#movies">Khám phá phim</a>
+            <a href="#home">Khám phá phim</a>
             <a href="#cinemas">Hệ thống rạp</a>
             {!isAdmin && <a href="#tickets">Vé của tôi</a>}
           </div>

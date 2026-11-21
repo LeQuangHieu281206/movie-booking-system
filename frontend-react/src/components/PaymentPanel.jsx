@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button, ErrorBox, Icon } from "./UI.jsx";
-import { statusText, money } from "../lib/domain.js";
+import { statusText, money, labelOf } from "../lib/domain.js";
 
 // SePay: tạo QR chuyển khoản, booking chỉ PAID sau khi webhook báo tiền về.
 export default function PaymentPanel({
@@ -41,7 +41,6 @@ export default function PaymentPanel({
       if (latest.status !== "PENDING") return;
       const payment = await api.createPayment(latest.bookingId);
       setQr(payment.qrUrl);
-      setNotice(payment.message || "Quét mã QR để hoàn tất thanh toán.");
     });
   }
   function refresh() {
@@ -99,34 +98,45 @@ export default function PaymentPanel({
           {statusText(booking.status)}
         </span>
       </div>
+      <p className="hint">
+        Phương thức thanh toán: {labelOf(booking.paymentMethod)}
+      </p>
       {booking.status === "PAID" ? (
         <div className="success-note">
           <Icon name="check" />
-          Booking đã xác nhận thanh toán. Hẹn bạn tại rạp!
+          Booking đã xác nhận thanh toán.
         </div>
       ) : booking.status === "PENDING" ? (
-        <>
-          <p>
-            Số tiền cần chuyển: <strong>{money(booking.totalAmount)}</strong> ·
-            thanh toán qua SePay (chuyển khoản ngân hàng).
-          </p>
-          {qr ? (
-            <div className="qr-box">
-              <img src={qr} alt="Mã QR chuyển khoản SePay" />
-              <p className="hint">
-                Mở ứng dụng ngân hàng và quét mã. Số tiền và nội dung chuyển
-                khoản đã có trong mã; vé tự xác nhận sau khi webhook báo tiền
-                về.
-              </p>
+        booking.paymentMethod === "CASH" ? (
+          <>
+            <p>
+              Số tiền cần trả: <strong>{money(booking.totalAmount)}</strong> ·
+              thanh toán tiền mặt tại quầy.
+            </p>
+            <div className="notice">
+              Vé đang ở trạng thái Chờ thanh toán. Sau khi bạn trả tiền mặt tại
+              quầy, nhân viên rạp xác nhận và vé chuyển sang Đã thanh toán.
             </div>
-          ) : (
-            <div className="button-row">
-              <Button primary disabled={busy} onClick={createQr}>
-                {busy ? "Đang tạo mã…" : "Tạo mã QR thanh toán"}
-              </Button>
-            </div>
-          )}
-        </>
+          </>
+        ) : (
+          <>
+            <p>
+              Số tiền cần chuyển: <strong>{money(booking.totalAmount)}</strong> ·
+              thanh toán qua SePay (chuyển khoản ngân hàng).
+            </p>
+            {qr ? (
+              <div className="qr-box">
+                <img src={qr} alt="Mã QR chuyển khoản SePay" />
+              </div>
+            ) : (
+              <div className="button-row">
+                <Button primary disabled={busy} onClick={createQr}>
+                  {busy ? "Đang tạo mã…" : "Tạo mã QR thanh toán"}
+                </Button>
+              </div>
+            )}
+          </>
+        )
       ) : (
         <p>
           Vé {booking.status === "CANCELLED" ? "đã hủy" : "đã hết hạn"}. Bạn có

@@ -23,7 +23,6 @@ function AccessCard({ title, children, action, onAction }) {
         <span className="admin-access-icon">
           <Icon name="dashboard" size={28} />
         </span>
-        <span className="eyebrow">CINEROOM / QUẢN TRỊ</span>
         <h1>{title}</h1>
         <p>{children}</p>
         <Button primary onClick={onAction}>
@@ -117,7 +116,6 @@ function AdminConsole({ api, user }) {
 
   return (
     <div className="container page-section admin-page">
-      <span className="eyebrow">CINEROOM / QUẢN TRỊ HỆ THỐNG</span>
       <div className="admin-shell">
         <aside className="admin-sidebar" aria-label="Khu vực quản trị">
           <div className="admin-sidebar-head">

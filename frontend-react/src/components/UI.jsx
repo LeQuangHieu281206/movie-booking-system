@@ -14,6 +14,7 @@ export function Icon({ name, size = 20, ...props }) {
         <path d="M4 12h16m-6-6 6 6-6 6" />
       </>
     ),
+    chevron: <path d="m6 9 6 6 6-6" />,
     search: (
       <>
         <circle cx="10.5" cy="10.5" r="6.5" />
@@ -369,7 +370,6 @@ export function Modal({
     >
       <div className="modal-heading">
         <div>
-          <span className="eyebrow">CINEROOM / TRẢI NGHIỆM ĐIỆN ẢNH</span>
           <h2 id={titleId}>{title}</h2>
         </div>
         <button

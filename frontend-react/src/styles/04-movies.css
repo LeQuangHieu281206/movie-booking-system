@@ -48,7 +48,7 @@
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 3px;
+  padding: 3px 3px 10px;
   max-width: 100%;
 }
 .date-tabs button {
@@ -292,4 +292,242 @@
   align-items: center;
   justify-content: center;
   font-size: 11px;
+}
+
+/* Luồng đặt vé: Phim → Thành phố → Rạp chiếu → Ngày → Suất chiếu → Ghế */
+.flow-steps {
+  list-style: none;
+  display: flex;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  overflow-x: auto;
+}
+.flow-steps li {
+  flex: 1 1 0;
+  min-width: 108px;
+}
+.flow-steps button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 11px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--muted);
+  transition:
+    border-color var(--duration-quick) var(--ease-smooth-out),
+    background var(--duration-quick) var(--ease-smooth-out),
+    color var(--duration-quick) var(--ease-smooth-out);
+}
+.flow-steps button:hover:not(:disabled) {
+  border-color: var(--primary-strong);
+}
+.flow-steps .flow-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 11px;
+}
+.flow-steps .flow-text {
+  min-width: 0;
+}
+.flow-steps .flow-text b {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.flow-steps .flow-text small {
+  display: block;
+  max-width: 150px;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.flow-steps li.done button {
+  color: var(--ink);
+}
+.flow-steps li.active button {
+  border-color: var(--primary-strong);
+  background: var(--primary-soft);
+  color: var(--ink);
+}
+.flow-steps li.active .flow-index {
+  border-color: var(--primary-strong);
+  background: var(--primary);
+  color: #1d1d1f;
+}
+/* Bước chưa mở vẫn đọc được: không dùng opacity toàn khối như .button:disabled. */
+.flow-steps button:disabled {
+  opacity: 1;
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: default;
+}
+.flow-panel {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+}
+.flow-panel .date-tabs {
+  padding: 0 0 10px;
+}
+
+/* Thanh cuộn ngang gọn, chừa chỗ để không đè lên nội dung. */
+.flow-steps,
+.date-tabs,
+.modal {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-deep) transparent;
+}
+.flow-steps,
+.date-tabs {
+  padding-bottom: 10px;
+}
+.flow-steps::-webkit-scrollbar,
+.date-tabs::-webkit-scrollbar,
+.modal::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.flow-steps::-webkit-scrollbar-track,
+.date-tabs::-webkit-scrollbar-track,
+.modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+.flow-steps::-webkit-scrollbar-thumb,
+.date-tabs::-webkit-scrollbar-thumb,
+.modal::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--gold-deep);
+  background-clip: content-box;
+}
+.flow-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.flow-note strong {
+  color: var(--ink);
+}
+.flow-hint {
+  margin: 14px 0 0;
+}
+.choice-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.choice-chips button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 48px;
+  padding: 8px 15px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--muted);
+}
+.choice-chips button b {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.choice-chips button small {
+  font-size: 11px;
+}
+.choice-chips button:hover {
+  border-color: var(--primary-strong);
+}
+.choice-chips button.active {
+  border-color: var(--primary-strong);
+  background: var(--primary-soft);
+  color: var(--gold-deep);
+}
+.choice-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.choice-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  transition:
+    border-color var(--duration-quick) var(--ease-smooth-out),
+    background var(--duration-quick) var(--ease-smooth-out);
+}
+.choice-card:hover {
+  border-color: var(--primary-strong);
+}
+.choice-card.active {
+  border-color: var(--primary-strong);
+  background: var(--primary-soft);
+}
+.choice-card .round-icon {
+  width: 34px;
+  height: 34px;
+}
+.choice-text {
+  flex: 1;
+  min-width: 0;
+}
+.choice-text strong {
+  display: block;
+  font-size: 13px;
+  color: var(--ink);
+}
+.choice-text small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.choice-count {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.showtime-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+@media (max-width: 720px) {
+  .flow-steps li {
+    flex: 0 0 auto;
+  }
+  .flow-steps .flow-text small {
+    max-width: 96px;
+  }
+  .choice-list {
+    grid-template-columns: 1fr;
+  }
+  .flow-panel {
+    padding: 14px;
+  }
 }

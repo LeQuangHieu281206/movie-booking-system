@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   bookableShowtimes,
+  cinemaList,
   cityList,
   groupByCinema,
   movieOptions,
@@ -125,4 +126,22 @@ test("Số điện thoại chỉ thành liên kết gọi khi đủ chữ số",
   assert.equal(telHref("028 3822 1234"), "tel:02838221234");
   assert.equal(telHref("12"), "");
   assert.equal(telHref(null), "");
+});
+
+test("Bước chọn rạp chỉ trả rạp có suất chiếu, kèm thành phố và suất của rạp", () => {
+  const cinemas = cinemaList([
+    show(1, { cinemaId: 2, cinemaName: "Rạp B", cinemaCity: "Hồ Chí Minh" }),
+    show(2, { cinemaId: 1, cinemaName: "Rạp A", cinemaCity: "Hà Nội" }),
+    show(3, { cinemaId: 1, cinemaName: "Rạp A", cinemaCity: "Hà Nội" }),
+  ]);
+  assert.deepEqual(
+    cinemas.map((cinema) => cinema.name),
+    ["Rạp A", "Rạp B"],
+  );
+  assert.deepEqual(
+    cinemas[0].shows.map((item) => item.showtimeId),
+    [2, 3],
+  );
+  assert.equal(cinemas[0].city, "Hà Nội");
+  assert.equal(cinemas[0].cinemaId, 1);
 });
