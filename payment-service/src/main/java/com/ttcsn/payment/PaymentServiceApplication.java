@@ -5,6 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Payment Service — Phân rã theo mô hình Microservices / SOA.
@@ -23,6 +24,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication(scanBasePackages = "com.ttcsn")
 @ConfigurationPropertiesScan("com.ttcsn.payment.config")
 @EnableFeignClients(basePackages = "com.ttcsn.payment.client")
+@EnableScheduling
 public class PaymentServiceApplication {
 
     public static void main(String[] args) {

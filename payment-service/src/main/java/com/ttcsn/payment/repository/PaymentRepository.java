@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -22,6 +23,26 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findFirstByBookingIdAndStatusOrderByPaymentIdDesc(Long bookingId, PaymentStatus status);
 
     boolean existsByProviderAndProviderTxnId(String provider, String providerTxnId);
+
+    /** Payment PENDING cũ, dùng cho job đối soát trạng thái booking. */
+    List<Payment> findTop50ByStatusAndCreatedAtBeforeOrderByPaymentIdAsc(
+            PaymentStatus status, OffsetDateTime before);
+
+    /**
+     * Đóng payment PENDING theo trạng thái booking. Điều kiện status = PENDING
+     * trong câu lệnh bảo đảm webhook đến trước thì không bị ghi đè.
+     */
+    @Modifying
+    @Transactional
+    @Query("""
+            UPDATE Payment p
+               SET p.status = :status, p.updatedAt = :now
+             WHERE p.paymentId = :paymentId
+               AND p.status = com.ttcsn.payment.entity.PaymentStatus.PENDING
+            """)
+    int closeIfPending(@Param("paymentId") Long paymentId,
+                       @Param("status") PaymentStatus status,
+                       @Param("now") OffsetDateTime now);
 
     /**
      * Tạo hoặc cập nhật payment PENDING của booking trong một câu lệnh.

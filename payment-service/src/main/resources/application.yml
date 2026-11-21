@@ -12,6 +12,8 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+    properties:
+      hibernate.dialect: com.ttcsn.common.config.CineRoomPostgresDialect
 
   rabbitmq:
     host: localhost
@@ -31,6 +33,11 @@ eureka:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
 
 app:
+  payment:
+    # Payment PENDING cũ hơn số phút này sẽ được đối soát với booking.
+    pending-reconcile-minutes: 2
+    reconcile-delay-ms: 60000
+    reconcile-initial-delay-ms: 30000
   sepay:
     webhook-api-key: ${SEPAY_WEBHOOK_API_KEY:}
     bank-name: ${SEPAY_BANK_NAME:MBBank}
