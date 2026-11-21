@@ -111,13 +111,15 @@ docker compose up -d --build
 
 ### Áp migration database
 
-Schema hiện tại cần bảng `payments` và một số index/ràng buộc mới. Chạy một lần trên Supabase (SQL Editor hoặc psql):
+Schema hiện tại cần bảng `payments`, các PostgreSQL enum cho cột trạng thái, và một số index/ràng buộc mới. Chạy một lần trên Supabase (SQL Editor hoặc psql):
 
 ```bash
 psql "$SUPABASE_DB_URL" -f database/migrations/001_payments_and_hardening.sql
+psql "$SUPABASE_DB_URL" -f database/migrations/002_enums_and_text.sql
+psql "$SUPABASE_DB_URL" -f database/migrations/003_phone_varchar12.sql
 ```
 
-Script idempotent, chạy lại không lỗi. Sau khi áp migration, khởi động lại `payment-service` và `booking-service`.
+Script idempotent, chạy lại không lỗi. Sau khi áp migration, khởi động lại các service backend.
 
 ## Chạy không qua Docker (tuỳ chọn)
 

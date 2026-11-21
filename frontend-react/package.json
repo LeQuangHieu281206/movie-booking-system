@@ -13,11 +13,12 @@
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.13.5",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "devDependencies": {
-    "vite": "8.3.5",
-    "@vitejs/plugin-react": "6.1.2"
+    "@vitejs/plugin-react": "6.1.2",
+    "vite": "8.3.5"
   }
 }

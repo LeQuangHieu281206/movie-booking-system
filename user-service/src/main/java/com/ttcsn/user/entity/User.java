@@ -10,7 +10,9 @@ import jakarta.persistence.*;
 import com.ttcsn.user.entity.enums.UserRole;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 /**
@@ -37,14 +39,22 @@ public class User {
     @Column(nullable = false, unique = true, columnDefinition = "text")
     private String email;
 
-    @Column(name = "password_hash", nullable = false, columnDefinition = "text")
+    @Column(name = "password_hash", columnDefinition = "text")
     private String passwordHash;
 
-    @Column(name = "phone_number", columnDefinition = "text")
+    @Builder.Default
+    @Column(name = "auth_provider", nullable = false, length = 20)
+    private String authProvider = "LOCAL";
+
+    @Column(name = "google_id", unique = true, length = 255)
+    private String googleId;
+
+    @Column(name = "phone_number", columnDefinition = "varchar(12)")
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "varchar(32)")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false, columnDefinition = "user_role_enum")
     private UserRole role;
 
     @CreationTimestamp

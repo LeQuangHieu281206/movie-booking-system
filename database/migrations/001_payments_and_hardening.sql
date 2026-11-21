@@ -177,6 +177,50 @@ ALTER TABLE public.bookings ALTER COLUMN booking_time SET NOT NULL;
 -- ============================================================
 -- 5. Ràng buộc toàn vẹn dữ liệu
 -- ============================================================
+
+-- showtime_seats.seat_id -> seats.seat_id
+-- Đây là mắt nối còn thiếu giữa tồn kho ghế-theo-suất và ghế vật lý.
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'showtime_seats_seat_id_fkey') THEN
+        ALTER TABLE public.showtime_seats
+            ADD CONSTRAINT showtime_seats_seat_id_fkey
+            FOREIGN KEY (seat_id) REFERENCES public.seats (seat_id);
+    END IF;
+END $$;
+
+-- Đổi tên FK tự sinh của showtime_id cho dễ đọc trên Supabase.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fkdcy3vgv0vf44n12fq5vouan3b') THEN
+        ALTER TABLE public.showtime_seats
+            RENAME CONSTRAINT fkdcy3vgv0vf44n12fq5vouan3b TO showtime_seats_showtime_id_fkey;
+    END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_showtime_seats_seat ON public.showtime_seats (seat_id);
+
+-- Bảo đảm cặp (showtime_seat_id, seat_id) trong booking_details trỏ đúng
+-- cùng một dòng tồn kho ghế, tránh trường hợp hai FK riêng lẻ đều hợp lệ
+-- nhưng lệch nhau.
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uk_showtime_seats_id_seat') THEN
+        ALTER TABLE public.showtime_seats
+            ADD CONSTRAINT uk_showtime_seats_id_seat UNIQUE (showtime_seat_id, seat_id);
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'booking_details_showtime_seat_pair_fkey') THEN
+        ALTER TABLE public.booking_details
+            ADD CONSTRAINT booking_details_showtime_seat_pair_fkey
+            FOREIGN KEY (showtime_seat_id, seat_id)
+            REFERENCES public.showtime_seats (showtime_seat_id, seat_id);
+    END IF;
+END $$;
+
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uk_seats_room_pos') THEN

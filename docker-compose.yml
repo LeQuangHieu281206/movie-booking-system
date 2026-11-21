@@ -14,6 +14,7 @@ x-common-env: &common-env
   JWT_SECRET: ${JWT_SECRET:-dev-only-jwt-secret-0123456789abcdef0123456789}
   INTERNAL_TOKEN: ${INTERNAL_TOKEN:-dev-only-internal-token-0123456789abcdef0123456789}
   SEPAY_WEBHOOK_API_KEY: ${SEPAY_WEBHOOK_API_KEY:-}
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-your-google-client-id.apps.googleusercontent.com}
 
 x-backend: &backend
   image: movie-booking-backend:latest

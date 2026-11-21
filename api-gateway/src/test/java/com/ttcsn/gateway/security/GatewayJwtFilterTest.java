@@ -324,6 +324,15 @@ class GatewayJwtFilterTest {
     }
 
     @Test
+    void googleAuthPathIsPublic() {
+        Result result = run(MockServerHttpRequest.post("/api/auth/google").build());
+
+        assertNotNull(result.forwarded(), "/api/auth/google phải public");
+        assertEquals(INTERNAL_TOKEN,
+                result.forwarded().getRequest().getHeaders().getFirst(GatewayJwtFilter.INTERNAL_TOKEN_HEADER));
+    }
+
+    @Test
     void customerCanHoldSeat() {
         Result result = run(MockServerHttpRequest.post("/api/holdShowtimeSeat")
                 .header("Authorization", "Bearer " + accessToken("CUSTOMER"))

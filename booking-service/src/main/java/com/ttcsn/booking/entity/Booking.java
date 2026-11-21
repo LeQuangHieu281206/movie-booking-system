@@ -6,7 +6,9 @@ import com.ttcsn.booking.entity.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -42,11 +44,13 @@ public class Booking {
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar(32)")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "booking_status_enum")
     private BookingStatus status;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method", columnDefinition = "varchar(32)")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "payment_method", columnDefinition = "payment_method_enum")
     private PaymentMethod paymentMethod;
 
     @Column(name = "booking_time")

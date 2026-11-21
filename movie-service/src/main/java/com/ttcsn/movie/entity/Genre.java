@@ -29,7 +29,7 @@ public class Genre {
     @Column(name = "genre_id")
     private Long genreId;
  
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name", nullable = false, unique = true, columnDefinition = "text")
     private String name;
  
     @ManyToMany(mappedBy = "genres", fetch = FetchType.LAZY)
