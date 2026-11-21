@@ -7,13 +7,13 @@ package com.ttcsn.movie.showtime.entity;
 import com.ttcsn.movie.entity.Movie;
 import com.ttcsn.movie.showtime.entity.enums.ShowtimeStatus;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;

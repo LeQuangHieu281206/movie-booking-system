@@ -4,13 +4,13 @@
  */
 package com.ttcsn.movie.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 
 import com.ttcsn.movie.entity.enums.AgeRestriction;
 import com.ttcsn.movie.entity.enums.MovieStatus;
 
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

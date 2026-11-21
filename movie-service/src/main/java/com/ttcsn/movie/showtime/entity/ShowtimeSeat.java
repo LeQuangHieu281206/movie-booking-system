@@ -6,11 +6,11 @@ package com.ttcsn.movie.showtime.entity;
 
 import com.ttcsn.movie.showtime.entity.enums.SeatStatus;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 /**

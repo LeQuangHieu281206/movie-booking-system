@@ -56,7 +56,8 @@ public class Payment {
     private String currency;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 16)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false, columnDefinition = "payment_status_enum")
     private PaymentStatus status;
 
     @Column(nullable = false, columnDefinition = "text")
