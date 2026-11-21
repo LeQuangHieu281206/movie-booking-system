@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { Button, ErrorBox, Icon } from "../components/UI.jsx";
+import ProfilePanel from "../components/ProfilePanel.jsx";
 import { labelOf } from "../lib/domain.js";
 
 const PHONE_PATTERN = "[0-9]{8,11}|[+]84[0-9]{9}";
@@ -129,11 +130,6 @@ export default function Auth({ auth, api, user, onUser, onDone }) {
         <div className="auth-card">
           <div className="auth-intro">
             <h1>{tab === "login" ? "Chào mừng trở lại" : "Tạo tài khoản mới"}</h1>
-            <p>
-              {tab === "login"
-                ? "Đăng nhập để đặt vé và xem vé của bạn."
-                : "Chỉ mất một phút để bắt đầu đặt vé."}
-            </p>
           </div>
           {error && <ErrorBox message={error} />}
           <form ref={formRef} onSubmit={submit} key={tab}>

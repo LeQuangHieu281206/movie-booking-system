@@ -109,6 +109,8 @@ export function createLiveApi(request = createHttpClient()) {
     me: (options) => request("/users/me", options),
     updateProfile: (body) =>
       request("/users/me", { method: "PUT", body }),
+    changePassword: (body) =>
+      request("/users/me/password", { method: "PUT", body }),
     bookings: (userId, options) =>
       list(`/getBookingsByUserId?userId=${id(userId)}`, options),
     booking: (bookingId, options) =>

@@ -86,16 +86,12 @@ footer .brand svg {
 }
 .auth-intro {
   margin-bottom: 2px;
+  text-align: center;
 }
 .auth-intro h1 {
   margin: 6px 0 4px;
   font-size: 26px;
   letter-spacing: -0.03em;
-}
-.auth-intro p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--muted);
 }
 .auth-card form fieldset {
   display: grid;
@@ -176,6 +172,22 @@ footer .brand svg {
 [data-theme="dark"] .google-auth-button:hover:not(:disabled) {
   background: var(--surface-2);
   border-color: var(--gold-deep);
+}
+#profile-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+#root > main:has(#profile-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 66px);
+}
+#profile-page .profile-card {
+  width: 100%;
+  margin: auto;
 }
 .profile-card {
   max-width: 760px;
