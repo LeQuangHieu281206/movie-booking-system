@@ -16,6 +16,14 @@ public interface BookingService {
     BookingStatsResponse getBookingStats(String role, String period);
     BookingResponse createBooking(BookingCreateRequest request, Long userId);
     BookingResponse updateBooking(Long id, BookingUpdateRequest request, Long userId, String role);
+
+    /**
+     * Admin xác nhận đã thu tiền mặt tại quầy: PENDING -> PAID cho booking CASH.
+     * PAID qua API thường bị chặn vì chỉ payment listener được đặt, nên vé tiền
+     * mặt cần lối xác nhận riêng này.
+     */
+    BookingResponse confirmCashPayment(Long id, String role);
+
     void deleteBooking(Long id, Long userId, String role);
     BookingPaymentView getPaymentView(Long id);
 

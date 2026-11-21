@@ -79,6 +79,14 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.updateBooking(id, request, userId, role));
     }
 
+    /** Admin xác nhận đã thu tiền mặt tại quầy cho vé CASH đang chờ thanh toán. */
+    @PostMapping("/confirmCashPayment")
+    public ResponseEntity<BookingResponse> confirmCashPayment(
+            @RequestParam Long id,
+            @RequestHeader("X-User-Role") String role) {
+        return ResponseEntity.ok(bookingService.confirmCashPayment(id, role));
+    }
+
     @DeleteMapping("/deleteBooking")
     public ResponseEntity<String> deleteBooking(
             @RequestParam Long id,

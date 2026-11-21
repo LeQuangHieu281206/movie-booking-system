@@ -92,6 +92,8 @@ final class GatewayAuthorizationRules {
             // Quản trị viên không đặt vé; chỉ tài khoản khách hàng được tạo booking.
             rule(HttpMethod.POST, "/api/createBooking", Access.CUSTOMER),
             rule(HttpMethod.PUT, "/api/updateBooking", Access.CUSTOMER_OR_ADMIN),
+            // Vé tiền mặt: chỉ quản trị viên xác nhận đã thu tiền tại quầy.
+            rule(HttpMethod.POST, "/api/confirmCashPayment", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteBooking", Access.CUSTOMER_OR_ADMIN),
             rule(HttpMethod.POST, "/api/createPayment", Access.CUSTOMER_OR_ADMIN),
             rule(HttpMethod.GET, "/api/getPayments/**", Access.CUSTOMER_OR_ADMIN),

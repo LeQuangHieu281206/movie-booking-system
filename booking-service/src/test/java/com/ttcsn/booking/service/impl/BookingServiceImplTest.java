@@ -193,6 +193,45 @@ class BookingServiceImplTest {
     }
 
     @Test
+    void adminConfirmsCashPaymentWithoutReleasingSeats() {
+        Booking booking = booking(1L, 1L, BookingStatus.PENDING);
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        BookingResponse response = service.confirmCashPayment(1L, "ADMIN");
+
+        assertEquals(BookingStatus.PAID, response.status());
+        assertEquals(BookingStatus.PAID, booking.getStatus());
+        verify(seatReleaser, never()).release(any(Booking.class));
+    }
+
+    @Test
+    void cannotConfirmCashPaymentForBankTransferBooking() {
+        Booking booking = Booking.builder()
+                .bookingId(1L)
+                .userId(1L)
+                .showtimeId(10L)
+                .bookingCode("BK-1")
+                .totalAmount(new BigDecimal("100000"))
+                .status(BookingStatus.PENDING)
+                .paymentMethod(PaymentMethod.BANK_TRANSFER)
+                .bookingTime(OffsetDateTime.now())
+                .build();
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThrows(ConflictException.class, () -> service.confirmCashPayment(1L, "ADMIN"));
+
+        assertEquals(BookingStatus.PENDING, booking.getStatus());
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
+    void customerCannotConfirmCashPayment() {
+        assertThrows(ForbiddenException.class, () -> service.confirmCashPayment(1L, "CUSTOMER"));
+        verifyNoInteractions(bookingRepository);
+    }
+
+    @Test
     void customerCannotCancelAnotherUsersBooking() {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking(1L, 2L, BookingStatus.PENDING)));
 
@@ -252,6 +291,11 @@ class BookingServiceImplTest {
     }
 
     private static Booking booking(Long bookingId, Long userId, BookingStatus status) {
+        return booking(bookingId, userId, status, PaymentMethod.CASH);
+    }
+
+    private static Booking booking(Long bookingId, Long userId, BookingStatus status,
+            PaymentMethod paymentMethod) {
         return Booking.builder()
                 .bookingId(bookingId)
                 .userId(userId)
@@ -259,7 +303,7 @@ class BookingServiceImplTest {
                 .bookingCode("BK-" + bookingId)
                 .totalAmount(new BigDecimal("100000"))
                 .status(status)
-                .paymentMethod(PaymentMethod.CASH)
+                .paymentMethod(paymentMethod)
                 .bookingTime(OffsetDateTime.now())
                 .build();
     }
@@ -274,7 +318,7 @@ class BookingServiceImplTest {
     @Test
     void expiresStalePendingBookingAndReleasesSeats() {
         expireTestSetup();
-        Booking stale = booking(1L, 2L, BookingStatus.PENDING);
+        Booking stale = booking(1L, 2L, BookingStatus.PENDING, PaymentMethod.BANK_TRANSFER);
         when(bookingRepository.findByStatusAndBookingTimeBefore(
                 org.mockito.ArgumentMatchers.eq(BookingStatus.PENDING), any(OffsetDateTime.class)))
                 .thenReturn(List.of(stale));
@@ -287,9 +331,24 @@ class BookingServiceImplTest {
     }
 
     @Test
+    void cashPendingBookingIsNotAutoExpired() {
+        expireTestSetup();
+        Booking cash = booking(1L, 2L, BookingStatus.PENDING, PaymentMethod.CASH);
+        when(bookingRepository.findByStatusAndBookingTimeBefore(
+                org.mockito.ArgumentMatchers.eq(BookingStatus.PENDING), any(OffsetDateTime.class)))
+                .thenReturn(List.of(cash));
+
+        int expired = service.expireStalePendingBookings();
+
+        assertEquals(0, expired);
+        verify(bookingRepository, never()).expireIfPending(1L);
+        verifyNoInteractions(seatReleaser);
+    }
+
+    @Test
     void skipsBookingWhoseStatusChangedConcurrently() {
         expireTestSetup();
-        Booking stale = booking(1L, 2L, BookingStatus.PENDING);
+        Booking stale = booking(1L, 2L, BookingStatus.PENDING, PaymentMethod.BANK_TRANSFER);
         when(bookingRepository.findByStatusAndBookingTimeBefore(
                 org.mockito.ArgumentMatchers.eq(BookingStatus.PENDING), any(OffsetDateTime.class)))
                 .thenReturn(List.of(stale));

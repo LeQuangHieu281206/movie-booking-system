@@ -38,7 +38,7 @@ spring:
             - id: booking-service
               uri: lb://booking-service
               predicates:
-                - Path=/api/getBookings,/api/getBookingById,/api/getBookingsByUserId,/api/getBookingsByShowtimeId,/api/getBookingStats,/api/createBooking,/api/updateBooking,/api/deleteBooking
+                - Path=/api/getBookings,/api/getBookingById,/api/getBookingsByUserId,/api/getBookingsByShowtimeId,/api/getBookingStats,/api/createBooking,/api/updateBooking,/api/deleteBooking,/api/confirmCashPayment
 
             # ---------------- payment-service :8086 ----------------
             - id: payment-service

@@ -11,6 +11,7 @@ import com.ttcsn.booking.dto.response.BookingStatsResponse;
 import com.ttcsn.booking.entity.Booking;
 import com.ttcsn.booking.entity.BookingDetail;
 import com.ttcsn.booking.entity.enums.BookingStatus;
+import com.ttcsn.booking.entity.enums.PaymentMethod;
 import com.ttcsn.booking.exception.BookingNotFoundException;
 import com.ttcsn.booking.exception.SeatAlreadyBookedException;
 import com.ttcsn.booking.repository.BookingDetailRepository;
@@ -330,6 +331,28 @@ public class BookingServiceImpl implements BookingService {
         return convertToResponse(updatedBooking);
     }
 
+    @Override
+    @Transactional
+    public BookingResponse confirmCashPayment(Long id, String role) {
+        requireAdmin(role);
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new BookingNotFoundException(id));
+        if (booking.getStatus() == BookingStatus.PAID) {
+            return convertToResponse(booking);
+        }
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new ConflictException(
+                    "Chỉ xác nhận thanh toán cho vé đang chờ thanh toán");
+        }
+        if (booking.getPaymentMethod() != PaymentMethod.CASH) {
+            throw new ConflictException(
+                    "Chỉ xác nhận tiền mặt cho vé thanh toán bằng tiền mặt");
+        }
+        // Ghế vẫn BOOKED: vé tiền mặt đã được thu tiền tại quầy, không nhả ghế.
+        booking.setStatus(BookingStatus.PAID);
+        return convertToResponse(bookingRepository.save(booking));
+    }
+
     /**
      * Hết hạn booking PENDING quá hạn chờ thanh toán (scheduler định kỳ gọi).
      * Giữ ghế BOOKED mãi nếu user đóng trang không thanh toán — nhả ghế để khách khác đặt.
@@ -347,6 +370,11 @@ public class BookingServiceImpl implements BookingService {
 
         int expired = 0;
         for (Booking booking : stale) {
+            // Vé tiền mặt chờ thu tại quầy: không tự hết hạn, nếu không vé sẽ
+            // EXPIRED trước khi khách tới rạp. Admin hủy tay nếu cần.
+            if (booking.getPaymentMethod() == PaymentMethod.CASH) {
+                continue;
+            }
             // Guarded update: chỉ nhả ghế khi chính mình đưa được booking ra khỏi PENDING.
             // Nếu event thanh toán (SUCCESS/FAILED) xử lý trước đó thì trạng thái đã đổi,
             // update ảnh hưởng 0 dòng -> bỏ qua, tuyệt đối không nhả ghế của đơn đã PAID.
