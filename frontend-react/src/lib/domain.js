@@ -92,7 +92,7 @@ export function joinSeats(showtimeSeats, physicalSeats) {
       const seat = physical.get(String(item.seatId));
       if (!seat || !seat.seatRow || !Number.isFinite(Number(seat.seatNumber))) {
         throw new Error(
-          "Dữ liệu ghế giữa suất chiếu và phòng chưa khớp. Vui lòng kiểm tra lại dữ liệu phòng.",
+          "Sơ đồ ghế của suất chiếu này đang được cập nhật. Vui lòng chọn suất chiếu khác.",
         );
       }
       return { ...seat, ...item, label: `${seat.seatRow}${seat.seatNumber}` };

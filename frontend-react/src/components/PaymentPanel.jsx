@@ -156,7 +156,7 @@ export default function PaymentPanel({
       </div>
       {confirmCancel && (
         <div className="notice">
-          <p>Hủy booking này và yêu cầu backend trả ghế?</p>
+          <p>Hủy vé này và trả ghế về sơ đồ?</p>
           <div className="button-row">
             <Button disabled={busy} className="small danger" onClick={cancel}>
               Xác nhận hủy vé

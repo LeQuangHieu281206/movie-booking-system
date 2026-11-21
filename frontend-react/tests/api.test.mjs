@@ -51,7 +51,7 @@ test("Phản hồi HTML không bị hiểu nhầm thành thành công", async ()
   const request = createHttpClient(
     async () => new Response("<html>Error</html>", { status: 502 }),
   );
-  await assert.rejects(request("/getMovies"), /không phải JSON/);
+  await assert.rejects(request("/getMovies"), /định dạng/);
 });
 test("Ghế phải gọi 2 API public và ghép bằng đúng ID", async () => {
   const paths = [];

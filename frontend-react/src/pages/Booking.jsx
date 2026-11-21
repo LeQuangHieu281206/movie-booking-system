@@ -182,13 +182,12 @@ export default function Booking({
                   </Button>
                 </div>
                 <p className="hint">
-                  Ghế được xác nhận khi backend tạo booking. Tối đa{" "}
+                  Ghế được giữ sau khi bạn xác nhận đặt vé. Tối đa{" "}
                   {MAX_SEATS_PER_BOOKING} ghế mỗi lần đặt.
                 </p>
                 {!seats.length ? (
                   <Empty title="Suất chiếu chưa có ghế">
-                    Nhóm cần kiểm tra ghế của phòng và dữ liệu ghế theo suất
-                    chiếu.
+                    Suất chiếu này chưa có sơ đồ ghế. Vui lòng chọn suất khác.
                   </Empty>
                 ) : (
                   <>
@@ -245,8 +244,7 @@ export default function Booking({
                       </span>
                     </div>
                     <p className="hint">
-                      Giá theo suất chiếu áp dụng cho mỗi ghế; backend hiện chưa
-                      có bảng phụ thu VIP.
+                      Giá áp dụng cho mỗi ghế theo suất chiếu.
                     </p>
                   </>
                 )}

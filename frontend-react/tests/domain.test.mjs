@@ -34,7 +34,7 @@ test("Ghép vị trí ghế bằng seatId và gửi seatId khi đặt vé", () =
   });
 });
 test("Không dựng vị trí giả nếu thiếu metadata ghế", () =>
-  assert.throws(() => joinSeats(seats, []), /chưa khớp/));
+  assert.throws(() => joinSeats(seats, []), /đang được cập nhật/));
 test("Từ chối ghế bị đặt, ghế trùng, ghế suất khác, không có ghế", () => {
   for (const ids of [[11], [10, 10], [], [100]])
     assert.throws(() => bookingPayload(show, seats, ids));

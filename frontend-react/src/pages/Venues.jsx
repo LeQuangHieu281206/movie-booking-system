@@ -51,7 +51,7 @@ export function Cinemas({ api, onSchedule }) {
         <Empty title="Chưa có rạp phù hợp">
           {all.length
             ? "Hãy chọn thành phố khác."
-            : "Backend chưa trả về rạp nào. Hãy kiểm tra dữ liệu rạp trong venue-service."}
+            : "Danh sách rạp đang được cập nhật. Vui lòng quay lại sau."}
         </Empty>
       ) : (
         <div className="cinema-grid">

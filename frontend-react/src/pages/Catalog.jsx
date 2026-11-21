@@ -70,6 +70,15 @@ export function Catalog({
     [query, setQuery] = useState(""),
     [genre, setGenre] = useState("");
   const movies = filterMovies(data?.movies || [], { query, genre, status });
+  let emptyTitle = "Hiện chưa có phim đang chiếu";
+  let emptyHint = "Các suất chiếu mới sẽ được cập nhật sớm.";
+  if (query.trim() || genre) {
+    emptyTitle = "Không tìm thấy phim phù hợp";
+    emptyHint = "Thử đổi từ khóa hoặc chọn thể loại khác.";
+  } else if (status === "UPCOMING") {
+    emptyTitle = "Hiện chưa có phim sắp chiếu";
+    emptyHint = "Phim mới sẽ xuất hiện ở đây ngay khi có lịch khởi chiếu.";
+  }
   return (
     <section
       className={`catalog section ${home ? "" : "page-section"}`}
@@ -128,10 +137,7 @@ export function Catalog({
       ) : movies.length ? (
         <MovieGrid movies={movies} onMovie={onMovie} />
       ) : (
-        <Empty title="Chưa tìm thấy phim">
-          Thử đổi từ khóa hoặc bộ lọc. Nếu đang dùng backend, hãy kiểm tra dữ
-          liệu phim của nhóm.
-        </Empty>
+        <Empty title={emptyTitle}>{emptyHint}</Empty>
       )}
     </section>
   );

@@ -41,7 +41,7 @@ export function createHttpClient(fetchImpl = globalThis.fetch) {
         )
           return text;
         throw new Error(
-          "Phản hồi không phải JSON. Kiểm tra Gateway và BACKEND_URL.",
+          "Dữ liệu máy chủ trả về không đúng định dạng. Vui lòng thử lại.",
         );
       }
       if (!response.ok || data?.success === false) {
@@ -52,7 +52,7 @@ export function createHttpClient(fetchImpl = globalThis.fetch) {
           new Error(
             details ||
               data?.message ||
-              `API báo lỗi HTTP ${response.status}. Kiểm tra dịch vụ backend tương ứng.`,
+              `Máy chủ đang gặp sự cố (${response.status}). Vui lòng thử lại sau ít phút.`,
           ),
           { status: response.status },
         );
@@ -67,11 +67,11 @@ export function createHttpClient(fetchImpl = globalThis.fetch) {
         });
       if (controller.signal.aborted)
         throw new Error(
-          "Backend phản hồi quá lâu. Hãy kiểm tra kết nối trước khi thử lại.",
+          "Máy chủ phản hồi quá lâu. Vui lòng kiểm tra kết nối và thử lại.",
         );
       if (error instanceof TypeError)
         throw new Error(
-          "Không kết nối được backend. Kiểm tra Gateway và các dịch vụ Java.",
+          "Không kết nối được máy chủ. Vui lòng thử lại sau ít phút.",
         );
       throw error;
     } finally {
