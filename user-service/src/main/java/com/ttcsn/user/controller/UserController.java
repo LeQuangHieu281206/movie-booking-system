@@ -1,6 +1,7 @@
 package com.ttcsn.user.controller;
 
 import com.ttcsn.user.dto.request.UserCreateRequest;
+import com.ttcsn.user.dto.request.ChangePasswordRequest;
 import com.ttcsn.user.dto.request.ProfileUpdateRequest;
 import com.ttcsn.user.dto.request.UserUpdateRequest;
 import com.ttcsn.user.dto.response.UserResponse;
@@ -45,6 +46,15 @@ public class UserController {
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @Valid @RequestBody ProfileUpdateRequest request) {
         return ResponseEntity.ok(userService.updateProfile(currentUser.id(), request));
+    }
+
+    /** Đổi mật khẩu của chính mình; kiểm tra mật khẩu hiện tại trước khi đổi. */
+    @PutMapping("/users/me/password")
+    public ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(currentUser.id(), request);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/getUsers")

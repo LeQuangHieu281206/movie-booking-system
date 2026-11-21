@@ -5,6 +5,7 @@
 package com.ttcsn.user.service.impl;
 
 import com.ttcsn.user.dto.request.UserCreateRequest;
+import com.ttcsn.user.dto.request.ChangePasswordRequest;
 import com.ttcsn.user.dto.request.ProfileUpdateRequest;
 import com.ttcsn.user.dto.request.UserUpdateRequest;
 import com.ttcsn.user.dto.response.UserResponse;
@@ -96,6 +97,25 @@ public class UserServiceImpl implements UserService {
         String phone = request.phoneNumber();
         user.setPhoneNumber(phone == null || phone.isBlank() ? null : phone.trim());
         return convertToResponse(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long id, ChangePasswordRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        // Tài khoản Google chưa có mật khẩu: cho đặt mật khẩu lần đầu.
+        if (user.getPasswordHash() != null) {
+            String current = request.currentPassword();
+            if (current == null || current.isBlank()
+                    || !passwordEncoder.matches(current, user.getPasswordHash())) {
+                throw new IllegalArgumentException("Mật khẩu hiện tại không đúng");
+            }
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
     }
 
     @Override
