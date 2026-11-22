@@ -60,6 +60,7 @@ export default function Booking({
     );
   function toggle(seat) {
     setError("");
+    setAgreed(false);
     if (selected.includes(seat.seatId))
       setSelected(selected.filter((id) => id !== seat.seatId));
     else if (selected.length >= 8)
@@ -67,6 +68,7 @@ export default function Booking({
     else setSelected([...selected, seat.seatId]);
   }
   function reloadSeats() {
+    setAgreed(false);
     setSelected([]);
     setFreshSeats(null);
     setError("");
@@ -288,7 +290,10 @@ export default function Booking({
                 <Button
                   primary
                   disabled={!selected.length || !seats.length}
-                  onClick={() => setStep(2)}
+                  onClick={() => {
+                    setAgreed(false);
+                    setStep(2);
+                  }}
                 >
                   Tiếp tục
                   <Icon name="arrow" size={16} />
