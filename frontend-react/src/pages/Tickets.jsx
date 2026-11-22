@@ -76,6 +76,10 @@ function TicketList({ api, user, movies, revision }) {
           .sort((a, b) => new Date(b.bookingTime) - new Date(a.bookingTime))
           .map((original) => {
             const booking = updates[original.bookingId] || original;
+            // Giữ tên ghế khi API cập nhật trạng thái không trả lại seatLabels.
+            const seatLabels = [booking.seatLabels, original.seatLabels].find(
+              (labels) => Array.isArray(labels) && labels.length > 0,
+            ) ?? [];
             const show = shows[booking.showtimeId],
               movie = movies.find((movie) => movie.movieId === show?.movieId);
             return (
@@ -121,17 +125,29 @@ function TicketList({ api, user, movies, revision }) {
                   </div>
                 </div>
                 {expanded === booking.bookingId && (
-                  <PaymentPanel
-                    key={booking.bookingId}
-                    api={api}
-                    booking={booking}
-                    onUpdate={(latest) =>
-                      setUpdates((current) => ({
-                        ...current,
-                        [latest.bookingId]: latest,
-                      }))
-                    }
-                  />
+                  <>
+                    <section className="payment-panel" aria-label="Ghế đã đặt">
+                      <div className="subheading">
+                        <h3>Ghế đã đặt</h3>
+                      </div>
+                      {seatLabels.length > 0 ? (
+                        <p><strong>{seatLabels.join(", ")}</strong></p>
+                      ) : (
+                        <p className="hint">Hệ thống chưa trả dữ liệu ghế cho vé này.</p>
+                      )}
+                    </section>
+                    <PaymentPanel
+                      key={booking.bookingId}
+                      api={api}
+                      booking={booking}
+                      onUpdate={(latest) =>
+                        setUpdates((current) => ({
+                          ...current,
+                          [latest.bookingId]: latest,
+                        }))
+                      }
+                    />
+                  </>
                 )}
               </article>
             );
