@@ -87,6 +87,9 @@ export function createLiveApi(request = createHttpClient()) {
   return {
     movies: (options) => list("/getMovies", options),
     genres: (options) => list("/getGenres", options),
+    // Chỉ ADMIN. movieIds theo thứ tự hạng 1..5.
+    setHotMovies: (movieIds) =>
+      request("/setHotMovies", { method: "PUT", body: { movieIds } }),
     cinemas: (options) => list("/getCinemas", options),
     showtimes: (movieId, options) =>
       list(`/getShowtimes${movieId ? `?movieId=${id(movieId)}` : ""}`, options),

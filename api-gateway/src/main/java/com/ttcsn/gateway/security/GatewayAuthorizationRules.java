@@ -60,6 +60,7 @@ final class GatewayAuthorizationRules {
             rule(HttpMethod.POST, "/api/createMovie", Access.ADMIN),
             rule(HttpMethod.PUT, "/api/updateMovie", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteMovie", Access.ADMIN),
+            rule(HttpMethod.PUT, "/api/setHotMovies", Access.ADMIN),
             rule(HttpMethod.POST, "/api/createGenre", Access.ADMIN),
             rule(HttpMethod.PUT, "/api/updateGenre", Access.ADMIN),
             rule(HttpMethod.DELETE, "/api/deleteGenre", Access.ADMIN),

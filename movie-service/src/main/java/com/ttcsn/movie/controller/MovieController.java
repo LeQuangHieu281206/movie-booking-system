@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import com.ttcsn.movie.dto.request.HotMoviesRequest;
 import com.ttcsn.movie.dto.request.MovieRequest;
 import com.ttcsn.movie.dto.response.MovieResponse;
 import com.ttcsn.movie.service.MovieService;
@@ -59,6 +60,11 @@ public class MovieController {
             @RequestParam Long id,
             @Valid @RequestBody MovieRequest request) {
         return ResponseEntity.ok(movieService.updateMovie(id, request));
+    }
+
+    @PutMapping("/setHotMovies")
+    public ResponseEntity<List<MovieResponse>> setHotMovies(@Valid @RequestBody HotMoviesRequest request) {
+        return ResponseEntity.ok(movieService.setHotMovies(request.movieIds()));
     }
 
     @DeleteMapping("/deleteMovie")

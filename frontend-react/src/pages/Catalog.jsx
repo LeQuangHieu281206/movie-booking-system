@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { filterMovies, youtubeEmbed } from "../lib/domain.js";
+import React, { useEffect, useState } from "react";
+import { filterMovies, hotMovies, youtubeEmbed } from "../lib/domain.js";
+import HeroHotList from "../components/HeroHotList.jsx";
 import {
   Button,
   Empty,
@@ -140,19 +141,44 @@ export function Catalog({
 }
 
 export function Home({ catalog, onMovie, onNavigate, onSchedule }) {
-  const hero = catalog.data?.movies.find((movie) => movie.status === "SHOWING");
+  const hot = hotMovies(catalog.data?.movies || []);
+  const [activeId, setActiveId] = useState(null),
+    [paused, setPaused] = useState(false);
+  const active = hot.find((movie) => movie.movieId === activeId) || hot[0];
+  // Chưa có phim hot nào được chọn thì giữ hero cũ: một phim đang chiếu.
+  const hero =
+    active || catalog.data?.movies.find((movie) => movie.status === "SHOWING");
   const [quickId, setQuickId] = useState("");
+  const nextId =
+    hot.length > 1 ? hot[(hot.indexOf(active) + 1) % hot.length].movieId : null;
+  useEffect(() => {
+    if (
+      paused ||
+      nextId === null ||
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
+    const timer = setTimeout(() => setActiveId(nextId), 6000);
+    return () => clearTimeout(timer);
+  }, [paused, nextId]);
   return (
     <>
-      <section className="hero">
+      <section
+        className="hero"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+        onBlur={() => setPaused(false)}
+      >
         <div className="hero-orbit" />
-        {hero && (
-          <div className="hero-art">
-            <Poster movie={hero} />
-          </div>
-        )}
         <div className="hero-shade" />
-        <div className="container hero-content">
+        <div className="hero-stage">
+          {hero && (
+            <div className="hero-art">
+              <Poster movie={hero} key={hero.movieId} />
+            </div>
+          )}
+          <div className="container hero-content">
           <span className="eyebrow">
             <span className="gold-line" />
             MÀN ẢNH LỚN. CẢM XÚC TRỌN VẸN.
@@ -184,20 +210,32 @@ export function Home({ catalog, onMovie, onNavigate, onSchedule }) {
               onClick={() => (hero ? onMovie(hero) : onNavigate("movies"))}
             >
               <Icon name="ticket" size={18} />
-              Khám phá & đặt vé
+              {hero?.status === "UPCOMING"
+                ? "Khám phá phim"
+                : "Khám phá & đặt vé"}
               <Icon name="arrow" size={18} />
             </Button>
             {hero && (
               <Button onClick={() => onMovie(hero)}>Thông tin phim</Button>
             )}
           </div>
-          <div className="hero-footnote">
-            <span className="hero-number">
-              01<span> / CINEROOM</span>
-            </span>
-            <span>Hẹn bạn ở rạp.</span>
+          {!hot.length && (
+            <div className="hero-footnote">
+              <span className="hero-number">
+                01<span> / CINEROOM</span>
+              </span>
+              <span>Hẹn bạn ở rạp.</span>
+            </div>
+          )}
           </div>
         </div>
+        {hot.length > 0 && (
+          <HeroHotList
+            movies={hot}
+            activeId={hero.movieId}
+            onPick={setActiveId}
+          />
+        )}
       </section>
       <div className="container">
         <form
