@@ -8,6 +8,7 @@ import { Cinemas, Showtimes } from "./pages/Venues.jsx";
 import Booking from "./pages/Booking.jsx";
 import Tickets from "./pages/Tickets.jsx";
 import Auth from "./pages/Auth.jsx";
+import AdminHot from "./pages/AdminHot.jsx";
 
 const nav = [
   ["home", "Trang chủ"],
@@ -17,8 +18,9 @@ const nav = [
   ["tickets", "Vé của tôi"],
   ["auth", "Tài khoản"],
 ];
+const adminNav = [["hot", "Phim hot"]];
 const readRoute = () =>
-  nav.some(([key]) => key === location.hash.slice(1))
+  [...nav, ...adminNav].some(([key]) => key === location.hash.slice(1))
     ? location.hash.slice(1)
     : "home";
 const scrollBehavior = () =>
@@ -144,7 +146,7 @@ function Workspace() {
             <Icon name="ticket" size={23} />
           </a>
           <nav aria-label="Điều hướng chính">
-            {nav.map(([key, label]) => (
+            {(user?.role === "ADMIN" ? [...nav, ...adminNav] : nav).map(([key, label]) => (
               <a
                 key={key}
                 href={`#${key}`}
@@ -241,6 +243,9 @@ function Workspace() {
           />
         )}
         {route === "cinemas" && <Cinemas api={api} onSchedule={openSchedule} />}
+        {route === "hot" && (
+          <AdminHot api={api} user={user} catalog={catalog} />
+        )}
         {route === "auth" && (
           <Auth
             auth={auth}

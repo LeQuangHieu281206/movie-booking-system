@@ -79,6 +79,24 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
+    @Transactional
+    public List<MovieResponse> setHotMovies(List<Long> movieIds) {
+        if (new HashSet<>(movieIds).size() != movieIds.size()) {
+            throw new IllegalArgumentException("Danh sách phim hot bị trùng phim");
+        }
+        List<Movie> selected = movieIds.stream().map(this::findMovieOrThrow).toList();
+        if (selected.stream().anyMatch(movie -> movie.getStatus() == MovieStatus.ENDED)) {
+            throw new IllegalArgumentException("Không thể chọn phim đã kết thúc vào top hot");
+        }
+
+        movieRepository.findByHotRankNotNull().forEach(movie -> movie.setHotRank(null));
+        for (int i = 0; i < selected.size(); i++) {
+            selected.get(i).setHotRank((short) (i + 1));
+        }
+        return selected.stream().map(this::toResponse).toList();
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<MovieResponse> searchMovies(MovieStatus status, List<Long> genreIds, String title) {
         // Không có điều kiện lọc → 1 câu JOIN FETCH (tránh N+1: 50 phim × 1 query thể loại × ~0.4s/pooler ≈ 20s)
@@ -197,7 +215,8 @@ public class MovieServiceImpl implements MovieService {
                 movie.getActors(),
                 genres,
                 movie.getCreatedAt(),
-                movie.getUpdatedAt()
+                movie.getUpdatedAt(),
+                movie.getHotRank()
         );
     }
 }

@@ -25,6 +25,8 @@ public interface MovieService {
 
     void deleteMovie(Long movieId);
 
+    List<MovieResponse> setHotMovies(List<Long> movieIds);
+
     List<MovieResponse> searchMovies(MovieStatus status, List<Long> genreIds, String title);
 
     List<MovieResponse> searchByKeyword(String keyword, int limit);

@@ -26,4 +26,6 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     @Query("SELECT DISTINCT m FROM Movie m LEFT JOIN FETCH m.genres WHERE m.movieId IN :ids")
     List<Movie> findWithGenresByIds(@Param("ids") Set<Long> ids);
 
+    List<Movie> findByHotRankNotNull();
+
 }

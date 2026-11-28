@@ -97,6 +97,14 @@ export function bookingPayload(
   };
 }
 
+// Top phim hot do admin chọn, theo hạng. Phim đã kết thúc không hiển thị nữa.
+export function hotMovies(movies) {
+  return movies
+    .filter((movie) => movie.hotRank && movie.status !== "ENDED")
+    .sort((a, b) => a.hotRank - b.hotRank)
+    .slice(0, 5);
+}
+
 // Nhận link watch/youtu.be/shorts/embed và trả URL nhúng cho iframe.
 export function youtubeEmbed(url) {
   const match = String(url || "").match(

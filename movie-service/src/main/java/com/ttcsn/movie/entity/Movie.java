@@ -80,6 +80,10 @@ public class Movie {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
  
+    /** Hạng trong top phim hot (1..5) do admin chọn; null = không nằm trong top. */
+    @Column(name = "hot_rank")
+    private Short hotRank;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "movie_genres",

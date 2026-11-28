@@ -91,3 +91,17 @@ test("Tìm phim không dấu, phối hợp thể loại và trạng thái", () =
 });
 test("Lịch chiếu lấy ngày Việt Nam kể cả qua nửa đêm UTC", () =>
   assert.equal(dayKey("2026-10-22T18:00:00Z"), "2026-10-23"));
+
+test("hotMovies: theo hạng, bỏ phim đã kết thúc và phim không chọn", async () => {
+  const { hotMovies } = await import("../src/lib/domain.js");
+  const result = hotMovies([
+    { movieId: 1, status: "SHOWING", hotRank: 2 },
+    { movieId: 2, status: "SHOWING", hotRank: null },
+    { movieId: 3, status: "UPCOMING", hotRank: 1 },
+    { movieId: 4, status: "ENDED", hotRank: 3 },
+  ]);
+  assert.deepEqual(
+    result.map((movie) => movie.movieId),
+    [3, 1],
+  );
+});
